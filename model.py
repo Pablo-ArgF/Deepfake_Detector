@@ -69,7 +69,7 @@ df_test = df_test.sample(5, random_state=42)
 
 
 
-face_extractor = FaceExtractor(n=10)
+face_extractor = FaceExtractor(n=10, output_dir='imgs')
 X_train, y_train = face_extractor.transform(df_train)
 X_test, y_test = face_extractor.transform(df_test)
 
