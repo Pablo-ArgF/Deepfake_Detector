@@ -9,7 +9,6 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import image_dataset_from_directory
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras import layers, models, Input
-from tensorflow.keras.datasets import imdb, mnist, reuters
 from tensorflow.keras.layers import Dense, MaxPooling2D, Conv2D, Flatten
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import to_categorical
@@ -24,29 +23,31 @@ from faceRecon import FaceExtractor
 # guardado en el archivo con estructura <0/1 ruta_video>
 # 0 -> fake
 # 1 -> real
-def testingDataset():
+def testingDataset(baseDir):
     testing_videos = []
     testing_labels = []
     with open('Datasets\CelebDB\Celeb-DF-v2\List_of_testing_videos.txt', 'r') as file:
         for line in file:
-            testing_videos.append(line.split()[1])
+            testing_videos.append(os.path.join(baseDir,line.split()[1]))
             testing_labels.append(line.split()[0])
     dataFrame = pd.DataFrame({'video': testing_videos, 'label': testing_labels})
     return dataFrame
 
 #cargamos los videos el dataset de entrenamiento, para ello iternamos por la carpeta de videos y guardamos en 
 # el datasframe el nombre y categoría de aquellos que no han aparecido en el dataset de test
-def trainingDataset():
+def trainingDataset(baseDir):
     training_videos = []
     training_labels = []
-    testingVideos =  testingDataset()['video'].values.tolist()
-    #iternamos por las carpetas de videos dentro de Celeb-DF-v2
-    for folder in os.listdir('Datasets\CelebDB\Celeb-DF-v2'):
-        if(folder == 'List_of_testing_videos.txt'):
+    testingVideos =  testingDataset(baseDir)['video'].values.tolist()
+    # Iterate over the folders of videos inside Celeb-DF-v2
+    for folder in os.listdir(baseDir):
+        folder_path = os.path.join(baseDir, folder)
+        if not os.path.isdir(folder_path):
             continue
-        for video in os.listdir('Datasets\CelebDB\Celeb-DF-v2\\' + folder):
+        for video in os.listdir(folder_path):
+            video_path = os.path.join(folder_path, video)
             if video not in testingVideos:
-                training_videos.append(video)
+                training_videos.append(video_path)
                 if (folder.split('-')[1] == 'real'):
                     training_labels.append(1)
                 else:
@@ -55,30 +56,26 @@ def trainingDataset():
     return dataFrame
 
 
-df_train = trainingDataset()
-df_test = testingDataset()
+df_train = trainingDataset(baseDir='Datasets\CelebDB\Celeb-DF-v2')
+df_test = testingDataset(baseDir='Datasets\CelebDB\Celeb-DF-v2')
 
 
 
 # Reducir el tamaño de los dataframes a 200 filas para entrenamiento y 100 filas para test, de forma reproducible
-df_train = df_train.sample(200, random_state=42)
-df_test = df_test.sample(100, random_state=42)
+df_train = df_train.sample(10, random_state=42)
+df_test = df_test.sample(5, random_state=42)
 
 
 
 
 
 face_extractor = FaceExtractor(n=10)
-X_train = face_extractor.transform(df_train['video'])
-X_test = face_extractor.transform(df_test['video'])
+X_train, y_train = face_extractor.transform(df_train)
+X_test, y_test = face_extractor.transform(df_test)
 
-# Normaliza las imágenes
-X_train = X_train.astype('float32') / 255
-X_test = X_test.astype('float32') / 255
+y_train = y_train.astype(float)
+y_test = y_test.astype(float)
 
-# Codifica las etiquetas
-y_train = to_categorical(df_train['label'])
-y_test = to_categorical(df_test['label'])
 
 model = Sequential()
 model.add(Input(shape=(64, 64, 3)))
@@ -89,13 +86,18 @@ model.add(MaxPooling2D((2, 2)))
 model.add(Conv2D(64, (3, 3), activation='relu'))
 model.add(Flatten())
 model.add(Dense(64, activation='relu'))
-model.add(Dense(2, activation='softmax'))
+model.add(Dense(1, activation='softmax'))
 
 model.compile(optimizer='adam',
-              loss='categorical_crossentropy',
+              loss='binary_crossentropy',
               metrics=['accuracy'])
 
 model.fit(X_train, y_train, epochs=10, validation_data=(X_test, y_test))
+
+#evaluamos el modelo
+loss, acc = model.evaluate(X_test, y_test, verbose=0)
+print('Test Accuracy: %.3f' % acc)
+print('Test Loss: %.3f' % loss)
 
 
 

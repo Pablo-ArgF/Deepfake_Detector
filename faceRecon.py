@@ -16,8 +16,11 @@ class FaceExtractor(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=None):
         faces = []
+        labels = []
         img_count = 0
-        for video_path in X:
+        for index, row in X.iterrows():
+            video_path = row['video']
+            label = row['label']
             cap = cv2.VideoCapture(video_path)
             frame_count = 0
             while cap.isOpened():
@@ -29,15 +32,15 @@ class FaceExtractor(BaseEstimator, TransformerMixin):
                         detected_faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
                         for (x, y, w, h) in detected_faces:
                             face_img = cv2.resize(frame[y:y+h, x:x+w], (64, 64))  # Redimensiona la imagen a 64x64
+                            # Normalización de la imagen
+                            face_img = face_img.astype('float64') / 255
+                            # Añade la imagen y la etiqueta a los arrays
                             faces.append(face_img)
+                            labels.append(label)
                             if self.output_dir:
                                 img_count += 1
                                 cv2.imwrite(os.path.join(self.output_dir, f'face_{img_count}.jpg'), face_img)
                 else:
                     break
             cap.release()
-        return np.array(faces)
-
-
-extractor = FaceExtractor(output_dir='imgs')
-faces = extractor.fit_transform(['Datasets\CelebDB\Celeb-DF-v2\Celeb-real\id0_0001.mp4'])
+        return np.array(faces), np.array(labels)
