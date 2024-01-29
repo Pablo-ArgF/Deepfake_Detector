@@ -2,6 +2,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.utils import shuffle
 import tensorflow as tf
 from sklearn.datasets import load_breast_cancer, make_circles, make_classification
 from sklearn.metrics import confusion_matrix, classification_report
@@ -44,7 +45,13 @@ def loadData(baseDir):
     return dataFrame
 
 
-df = loadData(baseDir='Datasets\CelebDB\Celeb-DF-v2')
+#df = loadData(baseDir='Datasets\CelebDB\Celeb-DF-v2')
+#load from files dataframe0...5.h5 to df
+df = pd.DataFrame()
+
+fragments =[ pd.read_hdf(f'dataframe{i}.h5', key=f'df{i}') for i in range(6)]
+df = pd.concat(fragments)
+df = shuffle(df)
 
 print('Dividing dataset into train and test...')
 # Dividir el dataset en train y test
@@ -64,13 +71,13 @@ y_test = y_test.astype(float)
 
 model = Sequential()
 model.add(Input(shape=(64, 64, 3)))
-model.add(Conv2D(10, (3, 3), activation='relu'))
-model.add(MaxPooling2D((2, 2)))
+model.add(Conv2D(10, (5, 5), activation='relu'))
+model.add(MaxPooling2D((3, 3)))
 model.add(Conv2D(20, (3, 3), activation='relu'))
-#model.add(MaxPooling2D((2, 2)))
-#model.add(Conv2D(10, (3, 3), activation='relu'))
+model.add(MaxPooling2D((2, 2)))
+model.add(Conv2D(10, (3, 3), activation='relu'))
 model.add(Flatten())
-model.add(Dense(64, activation='relu'))
+model.add(Dense(128, activation='relu'))
 model.add(Dense(1, activation='softmax'))
 
 model.compile(optimizer='adam',
@@ -79,7 +86,7 @@ model.compile(optimizer='adam',
 
 print('Started training...')
 
-model.fit(X_train, y_train, epochs=10, validation_data=(X_test, y_test))
+model.fit(X_train, y_train, epochs=60, validation_data=(X_test, y_test))
 
 #evaluamos el modelo
 loss, acc = model.evaluate(X_test, y_test, verbose=0)
@@ -87,7 +94,7 @@ print('Test Accuracy: %.3f' % acc)
 print('Test Loss: %.3f' % loss)
 
 #exportamos el modelo
-model.save('model.h5')
+model.save('model_600videos_n5frames.h5')
 
 
 
