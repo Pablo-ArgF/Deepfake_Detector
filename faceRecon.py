@@ -85,7 +85,7 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                     detected_faces = face_cascade.detectMultiScale(gray, 1.3, 5)
                     for (x, y, w, h) in detected_faces:
-                        face_img = cv2.resize(frame[y:y+h, x:x+w], (64, 64))  # Redimensiona la imagen a 64x64
+                        face_img = cv2.resize(frame[y:y+h, x:x+w], (100, 100))  # Redimensiona la imagen a 100*100
                         #normalizamos la imagen
                         face_img = face_img / 255.0
                         # Añade la imagen y la etiqueta a los arrays

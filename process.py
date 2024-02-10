@@ -29,7 +29,7 @@ for folder in os.listdir(baseDir):
 dataFrame = pd.DataFrame({'video': videos, 'label': labels})
 
 # Reduce el tamaño del dataset para que sea más fácil de manejar
-#dataFrame = dataFrame.sample(1200, random_state=42)
+dataFrame = dataFrame.sample(600, random_state=42)
 
 face_extractor = FaceExtractorMultithread(n=20)
 print('Extracting faces from videos...')
@@ -39,4 +39,4 @@ for i in range(6):
     print(f'Processing fragment {i+1}/6')
     processed = face_extractor.transform(dataFrame.iloc[fragmentSize*i : fragmentSize*(i+1)])
     # Guardamos el fragmento procesado en un fichero hdf
-    processed.to_hdf(f'.\dataframes\CelebDB\dataframe{i}_{len(dataFrame)}videos.h5', key=f'df{i}', mode='w')
+    processed.to_hdf(f'.\dataframes\CelebDB\dataframe{i}_{len(dataFrame)}videos_upscaled.h5', key=f'df{i}', mode='w')
