@@ -6,7 +6,7 @@ from faceRecon import FaceExtractorMultithread, FaceExtractor
 baseDir='E:\TFG\Datasets\FaceForensics'
 nameDataset = 'FaceForensics'
 destinationDir='E:\TFG\Datasets\dataframes'
-numFragments = 10
+numFragments = 40
 eachNframes = 20
 
 videos = []
@@ -21,13 +21,16 @@ def processFolder(path):
 
     for item in os.listdir(path):
         currentPath = os.path.join(path,item)
-        
         if not os.path.isdir(currentPath):
             processVideo(currentPath)
         else:
             processFolder(currentPath)
 
 def processVideo(path):
+    #check it is an pm4 file, if not return
+    fragments = path.split('.')
+    if(fragments[-1] != 'mp4'):
+        return
     videos.append(path)
     if(currentIsReal):
         labels.append(1) 
@@ -38,15 +41,9 @@ def processVideo(path):
 dataFrame = processFolder(baseDir)
 dataFrame = pd.DataFrame({'video': videos, 'label': labels})
 print(len(dataFrame))
-dataFrame = dataFrame.sample(10, random_state=42)
-
-
-
-        
-
 
 # Reduce el tamaño del dataset para que sea más fácil de manejar
-dataFrame = dataFrame.sample(10, random_state=42)
+#dataFrame = dataFrame.sample(10, random_state=42)
 
 face_extractor = FaceExtractorMultithread(n=eachNframes)
 print('Extracting faces from videos...')
