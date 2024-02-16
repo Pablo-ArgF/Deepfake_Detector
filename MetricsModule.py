@@ -65,15 +65,14 @@ class TrainingMetrics():
         if(self.doSaveResults):
             self.saveStats()
 
-        return self.model
+        return self.history_dict.model
 
         
 
     
     def plot(self):
-        print(self.history_dict.keys())
-        loss_values = self.history_dict["loss"]
-        val_loss_values = self.history_dict["val_loss"]
+        loss_values = self.history_dict.history["loss"]
+        val_loss_values = self.history_dict.history["val_loss"]
         epochs = range(1, len(loss_values) + 1)
         plt.figure()
         plt.plot(epochs, loss_values, "bo", label="Pérdida de entrenamiento (training loss)")
@@ -100,64 +99,11 @@ class TrainingMetrics():
         return
 
     def saveStats(self, filePath = "metrics.csv"):
-        df = pd.DataFrame(self.history_dict)
-        #TODO meter la performance
-        df.to_csv(filePath, index=True)
-
-
-
-
-
-
-from sklearn.utils import shuffle
-from MetricsModule import TrainingMetrics
-import os
-import numpy as np
-import pandas as pd
-from sklearn.metrics import confusion_matrix, classification_report
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from tensorflow.keras import Input
-from tensorflow.keras.layers import Dense, MaxPooling2D, Conv2D,MaxPooling3D, Conv3D, Flatten
-from tensorflow.keras.models import Sequential
-from keras.models import load_model
-from faceRecon import FaceExtractorMultithread, FaceExtractor
-
-
-print('Loading data...')
-fragments =[ pd.read_hdf(f'dataframes/CelebDB/dataframe{i}_600videos.h5', key=f'df{i}') for i in range(2)]#6
-df = pd.concat(fragments)
-df = shuffle(df)
-
-print(df.describe())
-
-
-X = df.drop(['label'], axis = 1)
-y = df['label']
-
-print('Dividing dataset into train and test...')
-X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.2, random_state=42, stratify = y)
-X_train = np.stack(X_train['face'], axis=0)
-X_test = np.stack(X_test['face'], axis=0)
-
-
-
-print('Creating model...')
-model = Sequential()
-model.add(Input(shape=(64, 64, 3)))
-model.add(Conv2D(64, (10, 10), activation='relu'))
-model.add(MaxPooling2D((6, 6)))
-model.add(Conv2D(64, (3, 3), activation='relu'))
-model.add(MaxPooling2D((2, 2)))
-model.add(Conv2D(64, (3, 3), activation='relu'))
-model.add(Flatten())
-model.add(Dense(64, activation='relu'))
-model.add(Dense(64, activation='relu'))
-model.add(Dense(1, activation='softmax'))
-
-model.compile(optimizer='adam',
-              loss='binary_crossentropy',
-              metrics=['accuracy'])
-
-metrics = TrainingMetrics(model,False,False,False)
-metrics.train(X_train, y_train, X_test, y_test, epochs=2)
+        df = pd.DataFrame()
+        df['trainTime'] = [self.trainTime]
+        df['cpuUsage'] = [np.mean(self.cpu_percentages)]
+        df['memoryUsage'] = [np.mean(self.memory_percentages)]
+        df['epochs'] = [self.history_dict.params['epochs']]
+        df['loss'] = [self.history_dict.history['loss'][-1]]
+        df['accuracy'] = [self.history_dict.history['accuracy'][-1]]
+        df.to_csv(filePath, index=False)
