@@ -1,16 +1,17 @@
 import os
 import pandas as pd
 from faceRecon import FaceExtractorMultithread,FaceExtractorMultithread_DeepLearning, FaceExtractor
+from sklearn.utils import shuffle
 
 
 
 class VideoProcessor():
-    def __init__(self,baseDir,nameDataset,destinationDir,numFragments,eachNfragments):
+    def __init__(self,baseDir,nameDataset,destinationDir,numFragments,eachNframes):
         self.baseDir=baseDir
         self.nameDataset = nameDataset
         self.destinationDir= destinationDir
         self.numFragments = numFragments
-        self.eachNframes = eachNfragments
+        self.eachNframes = eachNframes
 
         self.videos = []
         self.labels = []
@@ -48,11 +49,12 @@ class VideoProcessor():
 
     def getDataFrame(self):
         self.processFolder()
-        return pd.DataFrame({'video': self.videos, 'label': self.labels})
+        df = pd.DataFrame({'video': self.videos, 'label': self.labels})
+        df = shuffle(df)
+        return df
     
     def processFaces(self):
         dataFrame = self.getDataFrame()
-
 
         #dataFrame = dataFrame.sample(10, random_state=42)
         print(f'Processing {len(dataFrame)} videos')
@@ -67,6 +69,6 @@ class VideoProcessor():
             processed.to_hdf(f'{self.destinationDir}\dataframe{i}_{self.nameDataset}.h5', key=f'df{i}', mode='w')
 
     
-processor = VideoProcessor('E:\TFG\Datasets\FaceForensics','FaceForensics','E:\TFG\Datasets\dataframes\FaceForensics',100,50 )
+processor = VideoProcessor('E:\TFG\Datasets\FaceForensics','FaceForensics','E:\TFG\Datasets\dataframes_test\FaceForensics',100,50 )
 
 processor.processFaces()
