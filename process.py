@@ -1,12 +1,13 @@
 import os
 import pandas as pd
 from faceRecon import FaceExtractorMultithread, FaceExtractor
+from sklearn.utils import shuffle
 
 
-baseDir='E:\TFG\Datasets\FaceForensics'
+baseDir='P:\TFG\Datasets\FaceForensics'
 nameDataset = 'FaceForensics'
-destinationDir='E:\TFG\Datasets\dataframes'
-numFragments = 40
+destinationDir='P:\TFG\Datasets\dataframes_test'
+numFragments = 100
 eachNframes = 20
 
 videos = []
@@ -40,10 +41,12 @@ def processVideo(path):
 
 dataFrame = processFolder(baseDir)
 dataFrame = pd.DataFrame({'video': videos, 'label': labels})
+# Mezclamos el dataframe para que no aparezcan las categorías seguidas
+#dataFrame = shuffle(dataFrame)
 print(len(dataFrame))
 
 # Reduce el tamaño del dataset para que sea más fácil de manejar
-#dataFrame = dataFrame.sample(10, random_state=42)
+# dataFrame = dataFrame.sample(10, random_state=42)
 
 face_extractor = FaceExtractorMultithread(n=eachNframes)
 print('Extracting faces from videos...')

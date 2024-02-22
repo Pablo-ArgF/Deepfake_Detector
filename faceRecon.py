@@ -86,8 +86,6 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                     detected_faces = face_cascade.detectMultiScale(gray, 1.3, 5)
                     for (x, y, w, h) in detected_faces:
                         face_img = cv2.resize(frame[y:y+h, x:x+w], (100, 100))  # Redimensiona la imagen a 100*100
-                        #normalizamos la imagen
-                        face_img = face_img / 255.0
                         # Añade la imagen y la etiqueta a los arrays
                         faces.append(face_img)
                         labels.append(label)
@@ -117,7 +115,6 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                 faces.extend(result[0])
                 labels.extend(result[1])
                 current += 1
-        # TODO echarle un ojo a ver si las threads estan cerrandose executor.shutdown(wait=False)  # Añadido para asegurar que todos los hilos finalicen
         df = pd.DataFrame({'face': faces, 'label': labels})
         return df
 

@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import image_dataset_from_directory
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras import layers, models, Input
-from tensorflow.keras.layers import Dense, MaxPooling2D, Conv2D, Flatten
+from tensorflow.keras.layers import Dense, MaxPooling2D, Conv2D, Flatten,Lambda
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras import regularizers
@@ -18,6 +18,7 @@ from keras.optimizers import SGD
 from keras.utils import plot_model
 from keras.models import load_model
 from faceRecon import FaceExtractorMultithread, FaceExtractor
+from MetricsModule import TrainingMetrics
 
 def loadData(baseDir):
     videos = []
@@ -48,8 +49,11 @@ def loadData(baseDir):
 #df = loadData(baseDir='Datasets\CelebDB\Celeb-DF-v2')
 #load from files dataframe0...5.h5 to df
 df = pd.DataFrame()
+route = 'P:\TFG\Datasets\dataframes\FaceForensics'
 
-fragments =[ pd.read_hdf(f'dataframe{i}.h5', key=f'df{i}') for i in range(6)]
+print('Loading dataframes...')
+
+fragments =[ pd.read_hdf(f'{route}\dataframe{i}_FaceForensics.h5', key=f'df{i}') for i in range(5)] #64
 df = pd.concat(fragments)
 df = shuffle(df)
 
@@ -70,7 +74,8 @@ y_test = y_test.astype(float)
 
 
 model = Sequential()
-model.add(Input(shape=(64, 64, 3)))
+model.add(Input(shape=(200, 200, 3)))
+model.add(Lambda(lambda x: x/255.0)) #normalizamos los valores de los pixeles
 model.add(Conv2D(10, (5, 5), activation='relu'))
 model.add(MaxPooling2D((3, 3)))
 model.add(Conv2D(20, (3, 3), activation='relu'))
@@ -86,7 +91,8 @@ model.compile(optimizer='adam',
 
 print('Started training...')
 
-model.fit(X_train, y_train, epochs=60, validation_data=(X_test, y_test))
+metrics = TrainingMetrics(model)
+metrics.train(X_train, y_train, X_test, y_test, epochs=20)
 
 #evaluamos el modelo
 loss, acc = model.evaluate(X_test, y_test, verbose=0)
