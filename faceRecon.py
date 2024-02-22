@@ -1,5 +1,6 @@
 import cv2
 import os
+import shutil
 import math
 from sklearn.base import BaseEstimator, TransformerMixin
 import concurrent.futures
@@ -56,10 +57,10 @@ class FaceExtractor(BaseEstimator, TransformerMixin):
         df = pd.DataFrame({'face': faces, 'label': labels})
         return df
     
-
-
-
-class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
+"""
+TAKES TOO LONG
+"""
+class FaceExtractorMultithread_DeepLearning(BaseEstimator, TransformerMixin):
     def __init__(self, n=10, output_dir=None, max_workers=None):
         self.n = n
         self.output_dir = output_dir
@@ -70,8 +71,12 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
 
-    def process_video(self, video_path,label):
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    def process_video(self, video_path, label):
+        # Load the pre-trained deep learning face detector
+        prototxt_path = "FaceReconModels\deploy.prototxt.txt"  # Path to the network definition
+        model_path = "FaceReconModels\\res10_300x300_ssd_iter_140000.caffemodel"  # Path to the pre-trained model
+        net = cv2.dnn.readNetFromCaffe(prototxt_path, model_path)
+
         faces = []
         labels = []
         img_count = 0
@@ -82,24 +87,108 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
             if ret:
                 frame_count += 1
                 if frame_count % self.n == 0:
-                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    detected_faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-                    for (x, y, w, h) in detected_faces:
-                        face_img = cv2.resize(frame[y:y+h, x:x+w], (100, 100))  # Redimensiona la imagen a 100*100
-                        # Añade la imagen y la etiqueta a los arrays
-                        faces.append(face_img)
-                        labels.append(label)
-                        if self.output_dir:
-                            videoName = video_path.split('\\')[-1].split('/')[-1].split('.')[0]
-                            #crea una carpeta para el video en cuestión
-                            if not os.path.exists(os.path.join(self.output_dir, videoName)):
-                                os.makedirs(os.path.join(self.output_dir, videoName))
-                            img_count += 1
-                            cv2.imwrite(os.path.join(os.path.join(self.output_dir,videoName), f'{videoName}_face_{img_count}.jpg'), face_img)
-            else:
-                break
+                    # Detect faces using the deep learning model
+                    blob = cv2.dnn.blobFromImage(frame, 1.0, (300, 300), (104.0, 177.0, 123.0))
+                    net.setInput(blob)
+                    detections = net.forward()
+
+                    for i in range(detections.shape[2]):
+                        confidence = detections[0, 0, i, 2]
+                        if confidence > 0.5:  # Confidence threshold
+                            box = detections[0, 0, i, 3:7] * np.array([frame.shape[1], frame.shape[0], frame.shape[1], frame.shape[0]])
+                            (x, y, w, h) = box.astype(int)
+                            face_img = cv2.resize(frame[y:y+h, x:x+w], (200, 200))
+                            faces.append(face_img)
+                            labels.append(label)
+
+                            if self.output_dir:
+                                video_name = os.path.splitext(os.path.basename(video_path))[0]
+                                if not os.path.exists(os.path.join(self.output_dir, video_name)):
+                                    os.makedirs(os.path.join(self.output_dir, video_name))
+                                img_count += 1
+                                cv2.imwrite(os.path.join(self.output_dir, video_name, f"face_{img_count}.jpg"), face_img)
+
         cap.release()
         return faces, labels
+    
+    def transform(self, X, y=None):
+        faces = []
+        labels = []
+        num_videos = len(X)
+        current = 1
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            # Start the futures and store them in a dictionary
+            futures = {executor.submit(self.process_video, row['video'],row['label']): row for _, row in X.iterrows()}
+            for future in concurrent.futures.as_completed(futures):
+                print(f'Processing video {current}/{num_videos} ----> {math.floor(current/num_videos*100)}%')
+                result = future.result()
+                faces.extend(result[0])
+                labels.extend(result[1])
+                current += 1
+        # TODO echarle un ojo a ver si las threads estan cerrandose executor.shutdown(wait=False)  # Añadido para asegurar que todos los hilos finalicen
+        df = pd.DataFrame({'face': faces, 'label': labels})
+        return df
+
+
+class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
+    def __init__(self, n=20, output_dir=None, max_workers=None):
+        self.n = n
+        self.output_dir = output_dir
+        self.max_workers = max_workers
+        if self.output_dir and not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
+        else:
+            if self.output_dir:
+                #we delete all the data from the directory
+                shutil.rmtree(self.output_dir)
+
+
+    def fit(self, X, y=None):
+        return self
+
+    def process_video(self, video_path, label):
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        n = self.n
+        faces = []
+        labels = []
+        img_count = 0
+        cap = cv2.VideoCapture(video_path)
+        frameCount = 0
+
+        # Get total frame count
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        # Calculate frames per segment
+        frames_per_segment = total_frames // n
+        if frames_per_segment == 0:
+            frames_per_segment = 1
+
+        while cap.isOpened():
+            # Read a frame from the segment
+            ret, frame = cap.read()
+            if ret:
+                if frameCount % frames_per_segment  == 0:
+                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    detected_faces = face_cascade.detectMultiScale(gray, 1.305, 7)
+                    for (x, y, w, h) in detected_faces:
+                        face_img = cv2.resize(frame[y:y+h, x:x+w], (200, 200))
+                        norm_face_img = face_img / 255.0
+                        faces.append(norm_face_img)
+                        labels.append(label)
+
+                        if self.output_dir:
+                            video_name = os.path.splitext(os.path.basename(video_path))[0]
+                            video_dir = os.path.join(self.output_dir, video_name)
+                            os.makedirs(video_dir, exist_ok=True)
+                            img_count += 1
+                            cv2.imwrite(os.path.join(video_dir, f'{label}_{video_name}_face_{img_count}.jpg'), face_img)
+                frameCount += 1
+            else:
+                break
+
+        cap.release()
+        return faces, labels
+
 
     def transform(self, X, y=None):
         faces = []
@@ -115,6 +204,7 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                 faces.extend(result[0])
                 labels.extend(result[1])
                 current += 1
+        # TODO echarle un ojo a ver si las threads estan cerrandose executor.shutdown(wait=False)  # Añadido para asegurar que todos los hilos finalicen
         df = pd.DataFrame({'face': faces, 'label': labels})
         return df
 
