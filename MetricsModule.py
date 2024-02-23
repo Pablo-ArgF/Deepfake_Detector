@@ -109,7 +109,7 @@ class TrainingMetrics():
         plt.ylabel("Pérdida")
         plt.legend()
         #Guardamos el archivo en un fichero
-        plt.savefig(os.path.join(self.resultDataPath,f"loss_{time.strftime("%Y-%m-%d - %H:%M:%S")}.png")) #TODO revisar
+        plt.savefig(os.path.join(self.resultDataPath,f"loss_{time.strftime(f"%Y-%m-%d - %H.%M.%S")}.png")) #TODO revisar
         plt.show()
         return
 
@@ -125,7 +125,7 @@ class TrainingMetrics():
         plt.xlabel('Predicted Label')
         plt.ylabel('True Label')
         #Guardamos el archivo en un fichero
-        plt.savefig(os.path.join(self.resultDataPath,f"confusionMatrix_{time.strftime("%Y-%m-%d - %H:%M:%S")}.png")) #TODO revisar
+        plt.savefig(os.path.join(self.resultDataPath,f"confusionMatrix_{time.strftime(f"%Y-%m-%d - %H.%M.%S")}.png")) #TODO revisar
         plt.show()
         return
 
@@ -133,7 +133,7 @@ class TrainingMetrics():
         filePath = os.path.join(self.resultDataPath,fileName)
         df = pd.DataFrame()
         #Añadimos fecha y hora de estos datos
-        df['date'] = [time.strftime("%Y-%m-%d %H:%M:%S")] #TODO revisar
+        df['date'] = [time.strftime(f"%Y-%m-%d %H.%M.%S")] #TODO revisar
         df['trainTime'] = [self.trainTime]
         df['cpuUsage'] = [np.mean(self.cpu_percentages)]
         df['memoryUsage'] = [np.mean(self.memory_percentages)]

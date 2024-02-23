@@ -172,8 +172,7 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                     detected_faces = face_cascade.detectMultiScale(gray, 1.305, 7)
                     for (x, y, w, h) in detected_faces:
                         face_img = cv2.resize(frame[y:y+h, x:x+w], (200, 200))
-                        norm_face_img = face_img / 255.0
-                        faces.append(norm_face_img)
+                        faces.append(face_img)
                         labels.append(label)
 
                         if self.output_dir:
