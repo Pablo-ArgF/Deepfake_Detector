@@ -51,7 +51,7 @@ def loadData(baseDir):
 #df = loadData(baseDir='Datasets\CelebDB\Celeb-DF-v2')
 #load from files dataframe0...5.h5 to df
 df = pd.DataFrame()
-route = '/home/pabloarga/'
+route = 'P:\TFG\Datasets\dataframes\FaceForensics'
 
 print('Loading dataframes...')
 
