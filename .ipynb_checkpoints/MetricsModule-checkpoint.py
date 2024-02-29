@@ -1,28 +1,28 @@
 # Import the necessary libraries
 import os
+import gc #Garbage collector for freeing memory
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import tensorflow as tf
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import train_test_split
 #Para monitorear el uso de CPU y RAM
 import threading
 import psutil 
 import time 
+import matplotlib as mpl
 
 class TrainingMetrics():
-    def __init__(self,model,resultDataPath,doPlot = True, doConfusionMatrix = True, doSaveResults =True) -> None:
+    def __init__(self,model,resultDataPath,showGraphs = False) -> None:   
+        mpl.use('Agg')
         #Modelo a entrenar
         self.model = model
         #Path donde se guardan los resultados (imagenes, csv, etc)
         self.resultDataPath = resultDataPath
-        #Boolean indicando si se desea hacer un plot de los resultados de entrenamiento
-        self.doPlot = doPlot
-        #Boolean indicando si se desea enseñar un gráfico con los datos de confusion matrix
-        self.doConfusionMatrix = doConfusionMatrix
-        #Boolean indicando si se desea guardar los resultados en un archivo csv
-        self.doSaveResults = doSaveResults
+        #Boolean indicando si se desea enseñar las gráficas de perdida precisioni y la matriz de confusion (aun siendo falsos estos datos se guardaran)
+        self.showGraphs = showGraphs
         #Arrays conteniendo los valores de consumo del entrenamiento del modelo
         self.cpu_percentages = []
         self.memory_percentages = []
@@ -55,19 +55,33 @@ class TrainingMetrics():
         for i in range(nBatches):
             print(f'Training the model with batch: {i+1}/{nBatches}')
             #Cargamos los dataframes del batch y los guardamos en un solo dataframe
-            fragments = [pd.read_hdf(f'{folderPath}\dataframe{j}_FaceForensics.h5', key=f'df{j}') for j in range(fragmentSize*i,fragmentSize*(i+1))]
+            fragments = [pd.read_hdf(f'{folderPath}/dataframe{j}_FaceForensics.h5', key=f'df{j}') for j in range(fragmentSize*i,fragmentSize*(i+1))]
             df = pd.concat(fragments)
 
-            #Dividimos el dataframe en train y test
-            X_train, X_test, y_train, y_test = train_test_split(df.drop('label', axis=1), df['label'], test_size=0.2, random_state=42)
 
-            #Entrenamos el modelo con el dataframe     ----> #TODO mirar esto Keras.fit_generator()
+            #Dividimos el dataframe en train y test
+            X = np.squeeze(df.drop(['label'], axis = 1)) #Eliminamos la columna de etiquetas y lo dejamos como un vector
+            y = df['label'].astype(int)
+            X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.2, random_state=42)
+            X_train = np.stack(X_train, axis=0)
+            X_test = np.stack(X_test, axis=0)
+
+            #Entrenamos el modelo con el dataframe     
             self.train(X_train, y_train, X_test, y_test, epochs)
+            
+            #Liberamos memoria
+            del df
+            del fragments
+            del X_train
+            del X_test
+            del y_train
+            del y_test
+            gc.collect()
 
     def train(self,X_train,y_train,X_test,y_test,epochs):
         #Defino un hilo que va a estar en paralelo tomando datos de consumo de CPU y memoria RAM
         #además del hilo encargado del entrenamiento del modelo
-        print('Started training....')
+        #print('Started training....')
 
         monitor_thread = threading.Thread(target=self.monitor_usage)
         monitor_thread.start()
@@ -82,22 +96,28 @@ class TrainingMetrics():
         self.trainTime = end_time - start_time
         monitor_thread.join()  # Esperamos a que la thread de monitoreo pare
 
+        """
         print(f'Training time: {self.trainTime} seconds')
         print(f'CPU usage: {np.mean(self.cpu_percentages)}%')
         print(f'Memory usage: {np.mean(self.memory_percentages)}%')
+        """
 
-        if(self.doPlot):
-            self.plot()
-        if(self.doConfusionMatrix):
-            y_pred = self.model.predict(X_test)
-            self.confusionMatrix(y_test, y_pred)
-        if(self.doSaveResults):
-            self.saveStats()
+        self.plot()
+        y_pred = self.model.predict(X_test)
+        # Pasamos de probabilidades a una clasificación en fake o on fake
+        y_pred = np.where(y_pred > 0.5, 1, 0)
+        self.confusionMatrix(y_test, y_pred)
+        self.saveStats()
 
         return self.history_dict.model
 
     
     def plot(self):
+        # Si en el path no existe una carpeta plots, la creamos
+        plotsFolder = os.path.join(self.resultDataPath,'plots')
+        if not os.path.exists(plotsFolder):
+            os.makedirs(plotsFolder)
+        
         loss_values = self.history_dict.history["loss"]
         val_loss_values = self.history_dict.history["val_loss"]
         epochs = range(1, len(loss_values) + 1)
@@ -110,25 +130,34 @@ class TrainingMetrics():
         plt.legend()
         #Guardamos el archivo en un fichero
         currentTime = time.strftime("%Y-%m-%d %H.%M.%S")
-        plt.savefig(os.path.join(self.resultDataPath,f"loss_{currentTime}.png")) #TODO revisar
-        plt.show()
+        plt.savefig(os.path.join(plotsFolder,f"loss_{currentTime}.png")) 
+        if self.showGraphs:
+            plt.show()
+        plt.close()
         return
 
     def confusionMatrix(self, real_y, predicted_y):
+        # Si no existe una carpeta para guardar las matrices de confusión, la creamos
+        confusionMatrixFolder = os.path.join(self.resultDataPath,'confusionMatrix')
+        if not os.path.exists(confusionMatrixFolder):
+            os.makedirs(confusionMatrixFolder)
+
         # Create a confusion matrix
         conf_matrix = confusion_matrix(real_y, predicted_y)
 
         # Plot the confusion matrix as a heatmap
         plt.figure(figsize=(5, 5))
         sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False,
-                    xticklabels=['Class 0', 'Class 1'], yticklabels=['Class 0', 'Class 1'])
+                    xticklabels=['Fake', 'Real'], yticklabels=['Fake', 'Real'])
         plt.title('Confusion Matrix')
         plt.xlabel('Predicted Label')
         plt.ylabel('True Label')
         #Guardamos el archivo en un fichero
         currentTime = time.strftime("%Y-%m-%d %H.%M.%S")
-        plt.savefig(os.path.join(self.resultDataPath,f"confusionMatrix_{currentTime}.png")) #TODO revisar
-        plt.show()
+        plt.savefig(os.path.join(confusionMatrixFolder,f"confusionMatrix_{currentTime}.png")) 
+        if self.showGraphs:
+            plt.show()
+        plt.close()
         return
 
     def saveStats(self, fileName = "metrics.csv"):
@@ -136,7 +165,7 @@ class TrainingMetrics():
         df = pd.DataFrame()
         #Añadimos fecha y hora de estos datos
         currentTime = time.strftime("%Y-%m-%d %H.%M.%S")
-        df['date'] = [currentTime] #TODO revisar
+        df['date'] = [currentTime] 
         df['trainTime'] = [self.trainTime]
         df['cpuUsage'] = [np.mean(self.cpu_percentages)]
         df['memoryUsage'] = [np.mean(self.memory_percentages)]

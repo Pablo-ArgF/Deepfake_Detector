@@ -12,9 +12,11 @@ from sklearn.model_selection import train_test_split
 import threading
 import psutil 
 import time 
+import matplotlib as mpl
 
 class TrainingMetrics():
-    def __init__(self,model,resultDataPath,showGraphs = False) -> None:
+    def __init__(self,model,resultDataPath,showGraphs = False) -> None:   
+        mpl.use('Agg')
         #Modelo a entrenar
         self.model = model
         #Path donde se guardan los resultados (imagenes, csv, etc)
@@ -53,7 +55,7 @@ class TrainingMetrics():
         for i in range(nBatches):
             print(f'Training the model with batch: {i+1}/{nBatches}')
             #Cargamos los dataframes del batch y los guardamos en un solo dataframe
-            fragments = [pd.read_hdf(f'{folderPath}\dataframe{j}_FaceForensics.h5', key=f'df{j}') for j in range(fragmentSize*i,fragmentSize*(i+1))]
+            fragments = [pd.read_hdf(f'{folderPath}/dataframe{j}_FaceForensics.h5', key=f'df{j}') for j in range(fragmentSize*i,fragmentSize*(i+1))]
             df = pd.concat(fragments)
 
 
@@ -102,6 +104,8 @@ class TrainingMetrics():
 
         self.plot()
         y_pred = self.model.predict(X_test)
+        # Pasamos de probabilidades a una clasificación en fake o on fake
+        y_pred = np.where(y_pred > 0.5, 1, 0)
         self.confusionMatrix(y_test, y_pred)
         self.saveStats()
 
@@ -129,6 +133,7 @@ class TrainingMetrics():
         plt.savefig(os.path.join(plotsFolder,f"loss_{currentTime}.png")) 
         if self.showGraphs:
             plt.show()
+        plt.close()
         return
 
     def confusionMatrix(self, real_y, predicted_y):
@@ -152,6 +157,7 @@ class TrainingMetrics():
         plt.savefig(os.path.join(confusionMatrixFolder,f"confusionMatrix_{currentTime}.png")) 
         if self.showGraphs:
             plt.show()
+        plt.close()
         return
 
     def saveStats(self, fileName = "metrics.csv"):
