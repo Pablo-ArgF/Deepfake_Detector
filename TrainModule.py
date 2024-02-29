@@ -3,6 +3,9 @@ from tensorflow.keras.layers import Dense, MaxPooling2D, Conv2D, Flatten,Lambda,
 from tensorflow.keras.models import Sequential
 from MetricsModule import TrainingMetrics
 
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' #Para que no muestre los warnings de tensorflow
+
 route = 'P:\TFG\Datasets\dataframes_small' #'/home/pabloarga/Data'
 resultsPath = 'P:\TFG\Datasets\dataframes_small\\results' #'/home/pabloarga/Results2' 
 
@@ -33,5 +36,5 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 
 metrics = TrainingMetrics(model, resultsPath)
-metrics.batches_train(route,nBatches = 1 , epochs = 1) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
+metrics.batches_train(route,nBatches = 1 , epochs = 2) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
 
