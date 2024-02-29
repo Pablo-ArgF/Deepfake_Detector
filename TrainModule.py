@@ -3,8 +3,8 @@ from tensorflow.keras.layers import Dense, MaxPooling2D, Conv2D, Flatten,Lambda,
 from tensorflow.keras.models import Sequential
 from MetricsModule import TrainingMetrics
 
-route ='/home/pabloarga/Data' #'P:\TFG\Datasets\dataframes_small'
-resultsPath = '/home/pabloarga/Results2' #'P:\TFG\Datasets\dataframes_small\\results' 
+route = 'P:\TFG\Datasets\dataframes_small' #'/home/pabloarga/Data'
+resultsPath = 'P:\TFG\Datasets\dataframes_small\\results' #'/home/pabloarga/Results2' 
 
 model = Sequential()
 model.add(Input(shape=(200, 200, 3)))
@@ -33,8 +33,5 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 
 metrics = TrainingMetrics(model, resultsPath)
-metrics.batches_train(route,nBatches = 10 , epochs = 200) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
+metrics.batches_train(route,nBatches = 1 , epochs = 1) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
 
-
-#exportamos el modelo
-model.save(os.path.join(resultsPath,'model.keras'))

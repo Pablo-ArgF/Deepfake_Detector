@@ -20,6 +20,10 @@ class TrainingMetrics():
         #Modelo a entrenar
         self.model = model
         #Path donde se guardan los resultados (imagenes, csv, etc)
+        # Concatenamos la fecha y hora actual al valor de resultDataPath para que cada vez que se ejecute el script se cree una nueva carpeta
+        currentTime = time.strftime("%Y-%m-%d %H.%M.%S")
+        resultDataPath = os.path.join(resultDataPath,currentTime)
+        os.makedirs(resultDataPath)
         self.resultDataPath = resultDataPath
         #Boolean indicando si se desea enseñar las gráficas de perdida precisioni y la matriz de confusion (aun siendo falsos estos datos se guardaran)
         self.showGraphs = showGraphs
@@ -28,6 +32,10 @@ class TrainingMetrics():
         self.memory_percentages = []
         #Boolean indicando si el monitoreo de CPU y RAM está activo
         self.monitoring = False
+
+        #Guardamos una representación del modelo en un archivo txt
+        with open(os.path.join(self.resultDataPath,'model.txt'), 'w') as f:
+            self.model.summary(print_fn=lambda x: f.write(x + '\n'))
 
     """
     Metodo para ser llamado en un hilo paralelo que monitorea el uso de CPU y memoria RAM
@@ -77,6 +85,8 @@ class TrainingMetrics():
             del y_train
             del y_test
             gc.collect()
+            #exportamos el modelo
+            self.model.save(os.path.join(self.resultDataPath,'model.keras'))
 
     def train(self,X_train,y_train,X_test,y_test,epochs):
         #Defino un hilo que va a estar en paralelo tomando datos de consumo de CPU y memoria RAM
