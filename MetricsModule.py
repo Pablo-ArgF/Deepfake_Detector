@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import tensorflow as tf
+from scipy import ndimage
+from sklearn.utils import shuffle
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import train_test_split
 #Para monitorear el uso de CPU y RAM
@@ -61,6 +63,29 @@ class TrainingMetrics():
 
 
     """
+    Metodo para aumentar el dataset con imagenes falsas mediante la rotación y el volteo de las imagenes
+    """
+    def augment(self, row):
+        image = np.array(row['face'])  # Replace height and width with the dimensions of your images
+
+        # Perform augmentations only on fake images
+        if row['label'] == 1:
+            # Add the augmented images as new examples
+            new_row_flipped = row.copy()
+            new_row_flipped['face'] = np.fliplr(image)
+            new_row_flipped['label'] = 1
+            new_row_rotated = row.copy()
+            #random angle between -15 and 15
+            rotationAngle = np.random.randint(-15, 15)
+            new_row_rotated['face'] = ndimage.rotate(image, rotationAngle, reshape=False)
+            new_row_rotated['label'] = 1
+
+            return pd.DataFrame([row, new_row_flipped, new_row_rotated])
+
+        return pd.DataFrame([row])
+
+
+    """
     Metodo que recibe el path a una carpeta en la que se encuentran los Dataframes y con ellos
     entrena el modelo. El entrenamiento del modelo se hace cargando N dataframes a la vez, minimizando
     el uso de memoria RAM
@@ -81,14 +106,23 @@ class TrainingMetrics():
 
         #Iteramos por cada batch cargando los dataframes y usandolos para entrenar el modelo
         for i in range(nBatches):
+            #Si ya hemos acabado algun batch, escribimos una linea indicandolo en el archivo txt del modelo 
+            if i > 0:
+                with open(os.path.join(self.resultDataPath,f'model_{self.currentTime}.txt'), 'a') as f:
+                    f.write(f'Finished training batch {i} of {nBatches} at {time.strftime("%Y-%m-%d %H.%M.%S")}\n')
+    
             print(f'Training the model with batch: {i+1}/{nBatches}')
             #Cargamos los dataframes del batch y los guardamos en un solo dataframe
             fragments = [pd.read_hdf(f'{folderPath}/dataframe{j}_FaceForensics.h5', key=f'df{j}') for j in range(fragmentSize*i,fragmentSize*(i+1))]
             df = pd.concat(fragments)
 
+            #Aumentamos el numero de imagenes fake con rotaciones y volteos
+            df = pd.concat(df.apply(self.augment, axis=1).tolist(), ignore_index=True)
+            #aplicamos shuffle al dataframe para que el modelo no aprenda de la secuencia de los datos
+            df = shuffle(df)
 
             #Dividimos el dataframe en train y test
-            X = np.squeeze(df.drop(['label'], axis = 1)) #Eliminamos la columna de etiquetas y lo dejamos como un vector
+            X = np.array(df['face']) #Eliminamos la columna de etiquetas y lo dejamos como un vector
             y = df['label'].astype(int)
             
             #Contamos el número de imagenes fake y reales
