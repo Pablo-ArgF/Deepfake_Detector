@@ -11,6 +11,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' #Para que no muestre los warnings de te
 route = 'P:\TFG\Datasets\dataframes_small' #'/home/pabloarga/Data'
 resultsPath = 'P:\TFG\Datasets\dataframes_small\\results' #'/home/pabloarga/Results2' 
 
+routeServer = '/home/pabloarga/Data'
+resultsPathServer = '/home/pabloarga/Results' 
+
 #---------------------------------------------------------------------------------------------------------------------------------------------
 
 model = Sequential()
@@ -74,11 +77,14 @@ model3.add(layers.Dense(1, activation='sigmoid'))
 
 model3.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
 
+#---------------------------------------------------------------------------------------------------------------------------------------------
 
 #entremamos secuencialmente los modelos
-models = [model, model2, model3]
+#models = [model, model2, model3]
+models = [model2]
 
 for model in models:
-    metrics = TrainingMetrics(model, resultsPath)
-    metrics.batches_train(route,nBatches = 1 , epochs = 2) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
+    metrics = TrainingMetrics(model, resultsPathServer)
+    metrics.batches_train(routeServer,nBatches = 10 , epochs = 10) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
+
 

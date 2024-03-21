@@ -77,7 +77,7 @@ class TrainingMetrics():
             new_row_rotated = row.copy()
             #random angle between -15 and 15
             rotationAngle = np.random.randint(-15, 15)
-            new_row_rotated['face'] = ndimage.rotate(image, rotationAngle, reshape=False)
+            new_row_rotated['face'] = ndimage.rotate(image, rotationAngle, reshape=False, mode='reflect') # reflect = los bordes se aumentan y no se dejan de un solo color, sino que se continua interpolando los bordes
             new_row_rotated['label'] = 1
 
             return pd.DataFrame([row, new_row_flipped, new_row_rotated])
