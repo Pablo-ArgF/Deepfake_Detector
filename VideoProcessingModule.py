@@ -62,13 +62,17 @@ class VideoProcessor():
         face_extractor = FaceExtractorMultithread(n=self.eachNframes)
         print('Extracting faces from videos...')
         fragmentSize = int(len(dataFrame)/self.numFragments)
-        for i in range(63, self.numFragments):
+        for i in range( self.numFragments):
             print(f'Processing fragment {i+1}/{self.numFragments}')
             processed = face_extractor.transform(dataFrame.iloc[fragmentSize*i : fragmentSize*(i+1)])
             # Guardamos el fragmento procesado en un fichero hdf
             processed.to_hdf(f'{self.destinationDir}\dataframe{i}_{self.nameDataset}.h5', key=f'df{i}', mode='w')
 
     
-processor = VideoProcessor('E:\TFG\Datasets\FaceForensics','FaceForensics','E:\TFG\Datasets\dataframes_test\FaceForensics',100,50 )
+processor = VideoProcessor(baseDir='E:\TFG\Datasets\moreFake',
+                           nameDataset='FaceForensics_moreFakes',
+                           destinationDir='E:\TFG\Datasets\\results_moreFake',
+                           numFragments=100,
+                           eachNframes = 50 )
 
 processor.processFaces()
