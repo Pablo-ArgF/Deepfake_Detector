@@ -116,8 +116,8 @@ class TrainingMetrics():
             fragments = [pd.read_hdf(f'{folderPath}/dataframe{j}_FaceForensics.h5', key=f'df{j}') for j in range(fragmentSize*i,fragmentSize*(i+1))]
             df = pd.concat(fragments)
 
-            #Aumentamos el numero de imagenes fake con rotaciones y volteos
-            df = pd.concat(df.apply(self.augment, axis=1).tolist(), ignore_index=True)
+            #Aumentamos el numero de imagenes fake con rotaciones y volteos -------------------> DESACTIVADO #TODO
+            #df = pd.concat(df.apply(self.augment, axis=1).tolist(), ignore_index=True)
             #aplicamos shuffle al dataframe para que el modelo no aprenda de la secuencia de los datos
             df = shuffle(df)
 
