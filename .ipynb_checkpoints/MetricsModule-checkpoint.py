@@ -1,5 +1,6 @@
 # Import the necessary libraries
 import os
+import re #Regular expressions
 import gc #Garbage collector for freeing memory
 import matplotlib.pyplot as plt
 import numpy as np
@@ -91,8 +92,9 @@ class TrainingMetrics():
     el uso de memoria RAM
     """
     def batches_train(self,folderPath,nBatches,epochs):
+        fileNames = [name for name in os.listdir(folderPath) if os.path.isfile(os.path.join(folderPath, name))]
         #Obtenemos el numero de dataframes que hay en la carpeta
-        numDataframes = len([name for name in os.listdir(folderPath) if os.path.isfile(os.path.join(folderPath, name))])
+        numDataframes = len(fileNames)
         #Calculamos el tamaño de cada fragmento
         fragmentSize = int(numDataframes/nBatches)
 
@@ -112,12 +114,12 @@ class TrainingMetrics():
                     f.write(f'Finished training batch {i} of {nBatches} at {time.strftime("%Y-%m-%d %H.%M.%S")}\n')
     
             print(f'Training the model with batch: {i+1}/{nBatches}')
-            #Cargamos los dataframes del batch y los guardamos en un solo dataframe
-            fragments = [pd.read_hdf(f'{folderPath}/dataframe{j}_FaceForensics.h5', key=f'df{j}') for j in range(fragmentSize*i,fragmentSize*(i+1))]
+            #Cargamos los dataframes del batch y los guardamos en un solo dataframe (usamos una regex para obtener el número de dentro del nombre de archivo)
+            fragments = [pd.read_hdf(f'{folderPath}/{fileNames[j]}', key='df' +re.findall(r'\d+', fileNames[j])[0]) for j in range(fragmentSize*i,fragmentSize*(i+1))]
             df = pd.concat(fragments)
 
-            #Aumentamos el numero de imagenes fake con rotaciones y volteos
-            df = pd.concat(df.apply(self.augment, axis=1).tolist(), ignore_index=True)
+            #Aumentamos el numero de imagenes fake con rotaciones y volteos -------------------> DESACTIVADO #TODO
+            #df = pd.concat(df.apply(self.augment, axis=1).tolist(), ignore_index=True)
             #aplicamos shuffle al dataframe para que el modelo no aprenda de la secuencia de los datos
             df = shuffle(df)
 
