@@ -206,10 +206,6 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                 for (x, y, w, h) in detected_faces:
                     face_img = cv2.resize(frame[y:y+h, x:x+w], (200, 200))
                     faces.append(face_img)
-
-                    if self.output_dir:
-                        img_count += 1
-                        cv2.imwrite(os.path.join(self.output_dir, f'{label}_face_{img_count}.jpg'), face_img)
             else:
                 break
         return faces
