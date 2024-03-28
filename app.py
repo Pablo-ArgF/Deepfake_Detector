@@ -8,7 +8,7 @@ import base64
 from PIL import Image
 from io import BytesIO
 #My modules
-from training.FaceReconModule import FaceExtractorMultithread
+from training.DataProcessing.FaceReconModule import FaceExtractorMultithread
 
 import sys
 sys.path.append("..")

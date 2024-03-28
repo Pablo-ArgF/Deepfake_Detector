@@ -2,6 +2,7 @@ import cv2
 import os
 import shutil
 import math
+import random
 from sklearn.base import BaseEstimator, TransformerMixin
 import concurrent.futures
 import pandas as pd
@@ -131,58 +132,30 @@ class FaceExtractorMultithread_DeepLearning(BaseEstimator, TransformerMixin):
 
 
 class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
-    def __init__(self, n=20, output_dir=None, max_workers=None):
-        self.n = n
-        self.output_dir = output_dir
+    def __init__(self, percentageExtractionFake=0.5, percentageExtractionReal=0.5, max_workers=None):
+        self.percentageExtractionFake = percentageExtractionFake # Porcentaje de frames a extraer de los videos fake
+        self.percentageExtractionReal = percentageExtractionReal # Porcentaje de frames a extraer de los videos reales
         self.max_workers = max_workers
-        if self.output_dir and not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
-        else:
-            if self.output_dir:
-                #we delete all the data from the directory
-                shutil.rmtree(self.output_dir)
-
-
-    def fit(self, X, y=None):
-        return self
-    
+        
 
     def process_video(self, video_path, label):
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        n = self.n
         faces = []
         labels = []
-        img_count = 0
         cap = cv2.VideoCapture(video_path)
-        frameCount = 0
-
-        # Get total frame count
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-        # Calculate frames per segment
-        frames_per_segment = total_frames // n
-        if frames_per_segment == 0:
-            frames_per_segment = 1
 
         while cap.isOpened():
-            # Read a frame from the segment
+            # Leemos un frame del video
             ret, frame = cap.read()
             if ret:
-                if frameCount % frames_per_segment  == 0:
+                # Generación aleatoria de número para decidir si el frame se extrae o no
+                if (label == 1 and random.random() < self.percentageExtractionFake) or (label == 0 and random.random() < self.percentageExtractionReal): 
                     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                     detected_faces = face_cascade.detectMultiScale(gray, 1.305, 7)
                     for (x, y, w, h) in detected_faces:
                         face_img = cv2.resize(frame[y:y+h, x:x+w], (200, 200))
                         faces.append(face_img)
                         labels.append(label)
-
-                        if self.output_dir:
-                            video_name = os.path.splitext(os.path.basename(video_path))[0]
-                            video_dir = os.path.join(self.output_dir, video_name)
-                            os.makedirs(video_dir, exist_ok=True)
-                            img_count += 1
-                            cv2.imwrite(os.path.join(video_dir, f'{label}_{video_name}_face_{img_count}.jpg'), face_img)
-                frameCount += 1
             else:
                 break
 
@@ -192,11 +165,9 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
     def process_video_to_predict(self, video_path):
         # Initialize face cascade
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        n = self.n
         faces = []
         cap = cv2.VideoCapture(video_path)
-        # Get total frame count
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        
         while cap.isOpened():
             # Read a frame from the segment
             ret, frame = cap.read()
@@ -211,26 +182,25 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
         return faces
 
 
-    def transform(self, X, y=None):
+    def transform(self, videos, videoLabels):
         faces = []
         labels = []
-        num_videos = len(X)
+        num_videos = len(videos)
         current = 1
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             # Start the futures and store them in a dictionary
-            futures = {executor.submit(self.process_video, row['video'],row['label']): row for _, row in X.iterrows()}
+            futures = {executor.submit(self.process_video, videos[i],videoLabels[i]): i for i in range(num_videos)}
             for future in concurrent.futures.as_completed(futures):
                 print(f'Processing video {current}/{num_videos} ----> {math.floor(current/num_videos*100)}%')
                 result = future.result()
                 faces.extend(result[0])
                 labels.extend(result[1])
                 current += 1
-        df = pd.DataFrame({'face': faces, 'label': labels})
-        return df
+        return faces,labels
 
 """
 #probamos la version multithread
-df0 = pd.DataFrame({'video': ['Datasets\CelebDB\Celeb-DF-v2\Celeb-real\id0_0000.mp4'
+paths = ['Datasets\CelebDB\Celeb-DF-v2\Celeb-real\id0_0000.mp4'
                              ,'Datasets\CelebDB\Celeb-DF-v2\Celeb-real\id0_0000.mp4'
                              ,'Datasets\CelebDB\Celeb-DF-v2\Celeb-real\id0_0000.mp4'
                              ,'Datasets\CelebDB\Celeb-DF-v2\Celeb-real\id0_0000.mp4'
@@ -238,18 +208,14 @@ df0 = pd.DataFrame({'video': ['Datasets\CelebDB\Celeb-DF-v2\Celeb-real\id0_0000.
                              ,'Datasets\CelebDB\Celeb-DF-v2\Celeb-real\id0_0000.mp4'
                              ,'Datasets\CelebDB\Celeb-DF-v2\Celeb-real\id0_0000.mp4'
                              ,'Datasets\CelebDB\Celeb-DF-v2\Celeb-real\id0_0000.mp4'
-                             ,'Datasets\CelebDB\Celeb-DF-v2\Celeb-real\id0_0000.mp4'], 'label': [1,1,1,1,1,1,1,1,1]})
-face_extractor = FaceExtractorMultithread(n=100, output_dir='imgs')
-df= face_extractor.transform(df0)
-print(df.head())
-print(df.info())
-print(df.describe())
-print('------------------------------------------------------')
-face_extractor = FaceExtractor(n=100)
-df= face_extractor.transform(df0)
-print(df.head())
-print(df.info())
-print(df.describe())
+                             ,'Datasets\CelebDB\Celeb-DF-v2\Celeb-real\id0_0000.mp4']
+labels =  [1,1,1,1,1,1,1,1,1]
+face_extractor = FaceExtractorMultithread()
+faces,labels= face_extractor.transform(paths,labels)
+print(len(faces))
+print(len(labels))
+#numero de 0 y 1s en labels
+print(sum(labels))
 """
 
 """
