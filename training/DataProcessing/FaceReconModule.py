@@ -161,6 +161,23 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
 
         cap.release()
         return faces, labels
+    
+    def process_image(self,image_path,label):
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        faces = []
+        labels = []
+        img = cv2.imread(image_path)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        detected_faces = face_cascade.detectMultiScale(gray, 1.305, 7)
+        for (x, y, w, h) in detected_faces:
+            face_img = cv2.resize(img[y:y+h, x:x+w], (200, 200))
+            faces.append(face_img)
+            labels.append(label)
+        
+        return faces,labels
+
+
+
 
     def process_video_to_predict(self, video_path):
         # Initialize face cascade

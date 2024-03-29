@@ -1,12 +1,13 @@
 import os
 import random
+import math
 from datetime import datetime
 import pandas as pd
 import cv2
 from FaceReconModule import FaceExtractorMultithread
 
 class DataProcessor:
-    def __init__(self, baseDirectory, destinationDirectory, sampleDirectory = None, sampleProbability = 0.1):
+    def __init__(self, baseDirectory, destinationDirectory, sampleDirectory = None, sampleProbability = 0.004):
         self.baseDirectory = baseDirectory
         self.destinationDirectory = destinationDirectory
         self.currentDirectoryFake = False
@@ -18,6 +19,8 @@ class DataProcessor:
         self.imagesLabels = []
         self.videosPaths = []
         self.videosLabels = []
+
+        self.face_extractor = FaceExtractorMultithread(percentageExtractionFake=0.9, percentageExtractionReal=0.5)
 
         #resulting data
         self.faces = []
@@ -33,8 +36,16 @@ class DataProcessor:
         df.to_csv(f'{self.destinationDirectory}/filesFound.csv', index=False)
 
         #comenzamos a procesar las imagenes y videos
-        self.processImages()
         self.processVideos()
+        self.processImages()
+        #guardamos aquellos que no hayan sido guardados en bloques de 5000
+        self.saveDataset()
+
+        #guardamos las estadísticas de número de fotos de cada una en un archivo llamado 'Results.txt'
+        with open(os.path.join(self.destinationDirectory,'Results.txt'), 'w') as f:
+            f.write(f'total faces = {self.totalFaces}\n')
+            f.write(f'total fake = {self.totalFake}\n')
+            f.write(f'total real = {self.totalReal}')
 
     def processFolder(self, path):
         #check if current folder indicates real/fake
@@ -78,44 +89,50 @@ class DataProcessor:
             if not os.path.exists(self.sampleDirectory):
                 os.makedirs(self.sampleDirectory)
             if random.random() < self.sampleProbability:
-                cv2.imwrite(f'{self.sampleDirectory}/{label}_{datetime.now()}.jpg', img)
+                cv2.imwrite(f'{self.sampleDirectory}/{label}_image_{len(self.faces) + self.totalFaces}.jpg', img)
 
-        # Si tenemos 10000 imagenes guardadas, creamos un dataset con ellas y las guardamos en un fichero h5, borrando las imagenes de la memoria
-        if len(self.faces) == 10000:
-            #guardamos el número de imagenes, reales y falsas
-            self.totalFaces += len(self.faces)
-            self.totalFake += sum(self.labels)
-            self.totalReal += len(self.faces) - sum(self.labels)
-            #guardamos los datos y hacemos reset de arrays
-            df = pd.DataFrame({'face': self.faces, 'label': self.labels})
-            if not os.path.exists(os.path.join(self.destinationDirectory, 'dataframes')):
-                os.makedirs(os.path.join(self.destinationDirectory, 'dataframes'))
-            df.to_hdf(f'{os.path.join(self.destinationDirectory, 'dataframes')}/dataframe_{self.currentDatasetCounter}.h5', key=f'df{self.currentDatasetCounter}', mode='w')
-            self.faces = []
-            self.labels = []
-            self.currentDatasetCounter += 1
+        # Si tenemos 5000 imagenes guardadas, creamos un dataset con ellas y las guardamos en un fichero h5, borrando las imagenes de la memoria
+        if len(self.faces) == 5000:
+           self.saveDataset()
+
+    def saveDataset(self):
+        #guardamos el número de imagenes, reales y falsas
+        self.totalFaces += len(self.faces)
+        self.totalFake += sum(self.labels)
+        self.totalReal += len(self.faces) - sum(self.labels)
+        #guardamos los datos y hacemos reset de arrays
+        df = pd.DataFrame({'face': self.faces, 'label': self.labels})
+        dataframeFolder = os.path.join(self.destinationDirectory, 'dataframes')
+        if not os.path.exists(dataframeFolder):
+            os.makedirs(dataframeFolder)
+        df.to_hdf(f'{dataframeFolder}/dataframe_{self.currentDatasetCounter}.h5', key=f'df{self.currentDatasetCounter}', mode='w')
+        self.faces = []
+        self.labels = []
+        self.currentDatasetCounter += 1
 
     def processImages(self):
         for index,path in enumerate(self.imagesPaths):
-            # Procesamos la imagen y la guardamos como un vector de vectores rgb
-            img = cv2.imread(path)
-            # Descartamos la imagen si tiene tamaño 1x1 o si tiene tamaño 85x180 (tamaños observados de imágenes cargadas mal en el dataset)
-            if img.shape[0] == 1 or img.shape[0] == 85:
-                continue # La saltamos
-            img = cv2.resize(img, (200, 200))
-            self.storeImage(img, self.imagesLabels[index])
+            tmpFaces, tmpLabels = self.face_extractor.process_image(path, self.imagesLabels[index])
+            for i in range(len(tmpFaces)):
+                self.storeImage(tmpFaces[i], tmpLabels[i])
+
 
     def processVideos(self):    
-        face_extractor = FaceExtractorMultithread(percentageExtractionFake=0.9, percentageExtractionReal=0.75)
-    
-        tmpFaces,tmpLabels = face_extractor.transform(self.videosPaths, self.videosLabels)
-        for i in range(len(tmpFaces)):
-            self.storeImage(tmpFaces[i], tmpLabels[i])
+        #dividimos la cantidad de videos de forma que se procesen de 100 en 100
+        numberOfChunks = math.ceil(len(self.videosPaths) / 100) 
+        for chunk in range(numberOfChunks):
+            print(f'###################################### chunck {chunk}/{numberOfChunks} ################################')
+            pathsChunk = self.videosPaths[chunk*100 : min(chunk*100 + 100, len(self.videosPaths))] 
+            labelsChunk = self.videosLabels[chunk*100 : min(chunk*100 + 100, len(self.videosPaths))] 
+            tmpFaces,tmpLabels = self.face_extractor.transform(pathsChunk, labelsChunk)
+            for i in range(len(tmpFaces)):
+                self.storeImage(tmpFaces[i], tmpLabels[i])      
+                
 
             
-processor = DataProcessor(baseDirectory='P:\TFG\Datasets',
-                          destinationDirectory='P:\TFG\Datasets\dataframes\\valid\dataframes_correct',
-                          sampleDirectory='P:\TFG\Datasets\dataframes\\valid\samples')
+processor = DataProcessor(baseDirectory='E:\TFG\Datasets',
+                          destinationDirectory='E:\TFG\Datasets\dataframes\\valid\dataframes_correct',
+                          sampleDirectory='E:\TFG\Datasets\dataframes\\valid\samples')
         
 
       
