@@ -7,7 +7,7 @@ import cv2
 from FaceReconModule import FaceExtractorMultithread
 
 class DataProcessor:
-    def __init__(self, baseDirectory, destinationDirectory, sampleDirectory = None, sampleProbability = 0.004):
+    def __init__(self, baseDirectory, destinationDirectory, sampleDirectory = None, sampleProbability = 0.001):
         self.baseDirectory = baseDirectory
         self.destinationDirectory = destinationDirectory
         self.currentDirectoryFake = False
@@ -20,7 +20,7 @@ class DataProcessor:
         self.videosPaths = []
         self.videosLabels = []
 
-        self.face_extractor = FaceExtractorMultithread(percentageExtractionFake=0.9, percentageExtractionReal=0.5)
+        self.face_extractor = FaceExtractorMultithread(percentageExtractionFake=0.09, percentageExtractionReal=0.02)
 
         #resulting data
         self.faces = []
@@ -35,17 +35,16 @@ class DataProcessor:
         df = pd.DataFrame({'paths': self.imagesPaths + self.videosPaths, 'labels': self.imagesLabels + self.videosLabels})
         df.to_csv(f'{self.destinationDirectory}/filesFound.csv', index=False)
 
+        #añadimos las headers al Progress.csv 
+        with open(os.path.join(self.destinationDirectory,'Progress.csv'), 'w') as f:
+            f.write('datasetNumber, totalFaces, totalFake, totalReal\n')
+
         #comenzamos a procesar las imagenes y videos
         self.processVideos()
         self.processImages()
         #guardamos aquellos que no hayan sido guardados en bloques de 5000
         self.saveDataset()
 
-        #guardamos las estadísticas de número de fotos de cada una en un archivo llamado 'Results.txt'
-        with open(os.path.join(self.destinationDirectory,'Results.txt'), 'w') as f:
-            f.write(f'total faces = {self.totalFaces}\n')
-            f.write(f'total fake = {self.totalFake}\n')
-            f.write(f'total real = {self.totalReal}')
 
     def processFolder(self, path):
         #check if current folder indicates real/fake
@@ -91,8 +90,8 @@ class DataProcessor:
             if random.random() < self.sampleProbability:
                 cv2.imwrite(f'{self.sampleDirectory}/{label}_image_{len(self.faces) + self.totalFaces}.jpg', img)
 
-        # Si tenemos 5000 imagenes guardadas, creamos un dataset con ellas y las guardamos en un fichero h5, borrando las imagenes de la memoria
-        if len(self.faces) == 5000:
+        # Si tenemos x imagenes guardadas, creamos un dataset con ellas y las guardamos en un fichero h5, borrando las imagenes de la memoria
+        if len(self.faces) == 10000:
            self.saveDataset()
 
     def saveDataset(self):
@@ -109,6 +108,14 @@ class DataProcessor:
         self.faces = []
         self.labels = []
         self.currentDatasetCounter += 1
+
+        #escribimos en el archivo Progress.csv los datos de progreso actuales
+        with open(os.path.join(self.destinationDirectory,'Progress.csv'), 'w') as f:
+            f.write(f'{self.currentDatasetCounter -1 },')
+            f.write(f'{self.totalFaces},')
+            f.write(f'{self.totalFake},')
+            f.write(f'{self.totalReal}\n')
+
 
     def processImages(self):
         for index,path in enumerate(self.imagesPaths):
@@ -127,7 +134,7 @@ class DataProcessor:
             tmpFaces,tmpLabels = self.face_extractor.transform(pathsChunk, labelsChunk)
             for i in range(len(tmpFaces)):
                 self.storeImage(tmpFaces[i], tmpLabels[i])      
-                
+
 
             
 processor = DataProcessor(baseDirectory='E:\TFG\Datasets',
