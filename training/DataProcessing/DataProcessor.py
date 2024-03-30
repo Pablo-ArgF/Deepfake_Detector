@@ -65,7 +65,7 @@ class DataProcessor:
     def processFile(self, path):
         #Registramos la imagen o video en la lista correspondiente
         fragments = path.split('.')
-        if fragments[-1] == 'jpg':
+        if fragments[-1] == 'jpg' or fragments[-1] == 'png':
             self.imagesPaths.append(path)
             if self.currentDirectoryFake:
                 self.imagesLabels.append(1)
@@ -125,6 +125,8 @@ class DataProcessor:
 
     def processImages(self):
         for index,path in enumerate(self.imagesPaths):
+            if index % 100 == 0:
+                print(f'image {index}/{len(self.imagesPaths)}')
             tmpFaces, tmpLabels = self.face_extractor.process_image(path, self.imagesLabels[index])
             for i in range(len(tmpFaces)):
                 self.storeImage(tmpFaces[i], tmpLabels[i])

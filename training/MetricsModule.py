@@ -95,6 +95,8 @@ class TrainingMetrics():
     """
     def batches_train(self,folderPath,nBatches,epochs):
         fileNames = [name for name in os.listdir(folderPath) if os.path.isfile(os.path.join(folderPath, name))]
+        #Hacemos un shuffle a los archivos para mezclar los dataframes
+        fileNames = shuffle(fileNames)
         #Obtenemos el numero de dataframes que hay en la carpeta
         numDataframes = len(fileNames)
         #Calculamos el tamaño de cada fragmento
@@ -113,7 +115,7 @@ class TrainingMetrics():
             #Si ya hemos acabado algun batch, escribimos una linea indicandolo en el archivo txt del modelo 
             if i > 0:
                 with open(os.path.join(self.resultDataPath,f'model_{self.currentTime}.txt'), 'a') as f:
-                    f.write(f'Finished training batch {i} of {nBatches} at {time.strftime("%Y-%m-%d %H.%M.%S")}\n')
+                    f.write(f'Finished training batch {i+1} of {nBatches} at {time.strftime("%Y-%m-%d %H.%M.%S")}\n')
     
             print(f'Training the model with batch: {i+1}/{nBatches}')
             #Cargamos los dataframes del batch y los guardamos en un solo dataframe (usamos una regex para obtener el número de dentro del nombre de archivo)
