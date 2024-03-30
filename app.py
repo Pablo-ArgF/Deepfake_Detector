@@ -3,8 +3,12 @@ from flask import Flask, request, jsonify
 import tensorflow as tf
 import cv2
 import numpy as np
+#Base 64 frame transformation
+import base64
+from PIL import Image
+from io import BytesIO
 #My modules
-from training.FaceReconModule import FaceExtractorMultithread
+from training.DataProcessing.FaceReconModule import FaceExtractorMultithread
 
 import sys
 sys.path.append("..")
@@ -26,6 +30,15 @@ def predict():
     # Process the video
     frames = faceExtractor.process_video_to_predict(video_path)
 
+    # Convert frames to base64
+    frames_base64 = []
+    for frame in frames:
+        pil_img = Image.fromarray(frame)
+        buff = BytesIO()
+        pil_img.save(buff, format="JPEG")
+        img_str = base64.b64encode(buff.getvalue()).decode("utf-8")
+        frames_base64.append(img_str)
+
     # Make predictions
     predictions = model.predict(np.stack(frames, axis=0))
 
@@ -34,7 +47,7 @@ def predict():
 
     mean = np.mean(predictions)
 
-    return jsonify({'predictions': predictions , 'mean' : mean, "nFrames" : len(predictions)}), 200
+    return jsonify({'predictions': predictions , 'mean' : mean, "nFrames" : len(predictions), 'frames': frames_base64}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

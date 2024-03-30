@@ -1,6 +1,6 @@
 from keras.models import load_model
 import cv2
-from FaceReconModule import FaceExtractorMultithread
+from training.DataProcessing.FaceReconModule import FaceExtractorMultithread
 import numpy as np
 
 #cargamos el modelo del escritorio
