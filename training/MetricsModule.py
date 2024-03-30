@@ -182,23 +182,35 @@ class TrainingMetrics():
     
     def plot(self):        
         # Plot the training and validation accuracy
-        epochs = range(1, self.loss_history.size + 1)
-        plt.figure()
-        plt.plot(epochs, self.loss_history, "bo", label="Pérdida de entrenamiento (training loss)")
-        plt.plot(epochs, self.val_loss_history, "b", label="Pérdida de validación (validation loss)")
-        plt.plot(epochs, self.acc_history, "ro", label="Precisión de entrenamiento (training accuracy)")
-        plt.plot(epochs, self.val_acc_history, "r", label="Precisión de validación (validation accuracy)")
-        plt.title("Pérdida y precisión de entrenamiento y validación")
-        plt.xlabel("Épocas")
-        plt.ylabel("Pérdida y precisión")
-        plt.legend()
-        #Guardamos el archivo en un fichero
-        currentTime = time.strftime("%Y-%m-%d %H.%M.%S")
-        plt.savefig(os.path.join(self.resultDataPath,"plot.png")) 
+        epochs = range(1, len(self.loss_history) + 1)
+
+        # Crear una figura con subgráficos
+        fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+        
+        # Gráfico de Pérdida
+        axs[0].plot(epochs, self.loss_history, "bo", label="Pérdida de entrenamiento")
+        axs[0].plot(epochs, self.val_loss_history, "b", label="Pérdida de validación")
+        axs[0].set_title("Pérdida de entrenamiento y validación")
+        axs[0].set_xlabel("Épocas")
+        axs[0].set_ylabel("Pérdida")
+        axs[0].legend()
+
+        # Gráfico de Precisión
+        axs[1].plot(epochs, self.acc_history, "ro", label="Precisión de entrenamiento")
+        axs[1].plot(epochs, self.val_acc_history, "r", label="Precisión de validación")
+        axs[1].set_title("Precisión de entrenamiento y validación")
+        axs[1].set_xlabel("Épocas")
+        axs[1].set_ylabel("Precisión")
+        axs[1].legend()
+
+        # Ajustar diseño para evitar solapamiento
+        plt.tight_layout()
+
+        # Guardar la figura en un archivo
+        plt.savefig(os.path.join(self.resultDataPath, "combined_plots.png")) 
         if self.showGraphs:
             plt.show()
         plt.close()
-        return
 
     def confusionMatrix(self):
     
