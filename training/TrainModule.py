@@ -11,7 +11,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' #Para que no muestre los warnings de te
 route = 'P:\TFG\Datasets\dataframes_small' #'/home/pabloarga/Data'
 resultsPath = 'P:\TFG\Datasets\dataframes_small\\results' #'/home/pabloarga/Results2' 
 
-routeServer = '/home/pabloarga/Data_moreFakes/dataframes_combined'
+routeServer = '/home/pabloarga/Data_expanded/dataframes_combined'
 resultsPathServer = '/home/pabloarga/Results' 
 
 """
@@ -83,10 +83,10 @@ model3.compile(optimizer='adam',
 #---------------------------------------------------------------------------------------------------------------------------------------------
 
 #entremamos secuencialmente los modelos
-models = [model, model2, model3]
+models = [model3]
 
 for model in models:
     metrics = TrainingMetrics(model, resultsPathServer)
-    metrics.batches_train(routeServer,nBatches = 20 , epochs = 5) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
+    metrics.batches_train(routeServer,nBatches = 41 , epochs = 5) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
 
 
