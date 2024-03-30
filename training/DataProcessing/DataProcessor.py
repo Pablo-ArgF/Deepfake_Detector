@@ -37,7 +37,7 @@ class DataProcessor:
 
         #añadimos las headers al Progress.csv 
         with open(os.path.join(self.destinationDirectory,'Progress.csv'), 'w') as f:
-            f.write('datasetNumber, totalFaces, totalFake, totalReal\n')
+            f.write('datasetNumber, datasetImages, datasetFake, datasetReal , totalFaces, totalFake, totalReal\n')
 
         #comenzamos a procesar las imagenes y videos
         self.processVideos()
@@ -99,6 +99,17 @@ class DataProcessor:
         self.totalFaces += len(self.faces)
         self.totalFake += sum(self.labels)
         self.totalReal += len(self.faces) - sum(self.labels)
+
+        #escribimos en el archivo Progress.csv los datos de progreso actuales
+        with open(os.path.join(self.destinationDirectory,'Progress.csv'), 'a') as f:
+            f.write(f'{self.currentDatasetCounter},')
+            f.write(f'{len(self.faces)},')
+            f.write(f'{sum(self.labels)},')
+            f.write(f'{len(self.faces) - sum(self.labels)},')
+            f.write(f'{self.totalFaces},')
+            f.write(f'{self.totalFake},')
+            f.write(f'{self.totalReal}\n')
+
         #guardamos los datos y hacemos reset de arrays
         df = pd.DataFrame({'face': self.faces, 'label': self.labels})
         dataframeFolder = os.path.join(self.destinationDirectory, 'dataframes')
@@ -109,12 +120,7 @@ class DataProcessor:
         self.labels = []
         self.currentDatasetCounter += 1
 
-        #escribimos en el archivo Progress.csv los datos de progreso actuales
-        with open(os.path.join(self.destinationDirectory,'Progress.csv'), 'w') as f:
-            f.write(f'{self.currentDatasetCounter -1 },')
-            f.write(f'{self.totalFaces},')
-            f.write(f'{self.totalFake},')
-            f.write(f'{self.totalReal}\n')
+        
 
 
     def processImages(self):
