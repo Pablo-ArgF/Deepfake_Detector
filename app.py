@@ -16,7 +16,7 @@ sys.path.append("..")
 app = Flask(__name__)
 
 # Load your TensorFlow model
-model = tf.keras.models.load_model('/home/pabloarga/Results/2024-03-04 14.39.53/model2024-03-04 14.39.53.keras',safe_mode=False,compile=False)
+model = tf.keras.models.load_model('/home/pabloarga/Results/2024-03-31 15.17.12/model2024-03-31 15.17.12.keras',safe_mode=False,compile=False)
 faceExtractor = FaceExtractorMultithread() 
 video_path = '/tmp/video.mp4'
 

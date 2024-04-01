@@ -2,6 +2,7 @@
 import os
 import re #Regular expressions
 import gc #Garbage collector for freeing memory
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -100,7 +101,7 @@ class TrainingMetrics():
         #Obtenemos el numero de dataframes que hay en la carpeta
         numDataframes = len(fileNames)
         #Calculamos el tamaño de cada fragmento
-        fragmentSize = int(numDataframes/nBatches)
+        fragmentSize = math.ceil(numDataframes/nBatches)
 
         #Defino un hilo que va a estar en paralelo tomando datos de consumo de CPU y memoria RAM
         #además del hilo encargado del entrenamiento del modelo
@@ -119,7 +120,7 @@ class TrainingMetrics():
     
             print(f'Training the model with batch: {i+1}/{nBatches}')
             #Cargamos los dataframes del batch y los guardamos en un solo dataframe (usamos una regex para obtener el número de dentro del nombre de archivo)
-            fragments = [pd.read_hdf(f'{folderPath}/{fileNames[j]}', key='df' +re.findall(r'\d+', fileNames[j])[0]) for j in range(fragmentSize*i,fragmentSize*(i+1))]
+            fragments = [pd.read_hdf(f'{folderPath}/{fileNames[j]}', key='df' +re.findall(r'\d+', fileNames[j])[0]) for j in range(fragmentSize*i,min(len(fileNames),fragmentSize*(i+1)))]
             df = pd.concat(fragments)
 
             #Aumentamos el numero de imagenes fake con rotaciones y volteos -------------------> DESACTIVADO #TODO

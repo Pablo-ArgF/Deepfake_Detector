@@ -11,7 +11,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' #Para que no muestre los warnings de te
 route = 'P:\TFG\Datasets\dataframes_small' #'/home/pabloarga/Data'
 resultsPath = 'P:\TFG\Datasets\dataframes_small\\results' #'/home/pabloarga/Results2' 
 
-routeServer = '/home/pabloarga/Data_expanded/dataframes_combined'
+routeServer = '/home/pabloarga/Data'
 resultsPathServer = '/home/pabloarga/Results' 
 
 """
@@ -36,12 +36,16 @@ model3 = Sequential()
 model3.add(Input(shape=(200, 200, 3))) 
 model3.add(Conv2D(32, (3, 3), activation='relu'))
 model3.add(MaxPooling2D((2, 2)))
+model3.add(Dropout(0.25))  # Add dropout after the first convolutional layer
 model3.add(Conv2D(64, (3, 3), activation='relu'))
 model3.add(MaxPooling2D((2, 2)))
+model3.add(Dropout(0.25))  # Add dropout after the second convolutional layer
 model3.add(Conv2D(64, (3, 3), activation='relu'))
 model3.add(MaxPooling2D((2, 2)))
+model3.add(Dropout(0.25))  # Add dropout after the third convolutional layer
 model3.add(Flatten())
 model3.add(Dense(64, activation='relu'))
+model3.add(Dropout(0.5))  # Add dropout before the final dense layer
 model3.add(Dense(32, activation='relu'))
 model3.add(Dense(1, activation='sigmoid'))
 model3.compile(optimizer='adam',
@@ -63,18 +67,18 @@ model4.add(layers.Flatten())
 model4.add(layers.Dense(256, activation='relu'))
 model4.add(layers.Dense(1, activation='sigmoid'))
 
-model3.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
+model4.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
 
 #---------------------------------------------------------------------------------------------------------------------------------------------
 
 #entremamos secuencialmente los modelos
 models = {
-    model3 : "Modelo con el mejor rendimiento y tiempos de entrenamiento hasta la fecha",
+    model3 : "Mejor estructura hasta la fecha + dropouts",
     model4 : "Modelo que utiliza VGG16 pretrained model como base y añade unas capas extra"
 }
 
 for model,description in models.items():
     metrics = TrainingMetrics(model, resultsPathServer, modelDescription = description)
-    metrics.batches_train(routeServer,nBatches = 41 , epochs = 5) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
+    metrics.batches_train(routeServer,nBatches = 16 , epochs = 5) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
 
 
