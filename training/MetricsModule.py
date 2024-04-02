@@ -63,7 +63,7 @@ class TrainingMetrics():
         while self.monitoring:
             self.cpu_percentages = np.append(self.cpu_percentages,psutil.cpu_percent())
             self.memory_percentages = np.append(self.memory_percentages,psutil.virtual_memory().percent)
-            time.sleep(5)  # Paramos la thread durante 5seg para tomar las mediciones cada 5seg
+            time.sleep(40)  # Paramos la thread durante 40seg para tomar las mediciones cada 5seg
 
 
     """
@@ -121,6 +121,11 @@ class TrainingMetrics():
             print(f'Training the model with batch: {i+1}/{nBatches}')
             #Cargamos los dataframes del batch y los guardamos en un solo dataframe (usamos una regex para obtener el número de dentro del nombre de archivo)
             fragments = [pd.read_hdf(f'{folderPath}/{fileNames[j]}', key='df' +re.findall(r'\d+', fileNames[j])[0]) for j in range(fragmentSize*i,min(len(fileNames),fragmentSize*(i+1)))]
+            
+            if len(fragments) ==  0: #Si ya hemos completado todos los fragmentos dejamos de iterar
+                print('------> Todos los dataframes han sido usados, parando de entrenar')
+                break;
+            
             df = pd.concat(fragments)
 
             #Aumentamos el numero de imagenes fake con rotaciones y volteos -------------------> DESACTIVADO #TODO

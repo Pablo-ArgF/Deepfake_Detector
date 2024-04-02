@@ -79,6 +79,6 @@ models = {
 
 for model,description in models.items():
     metrics = TrainingMetrics(model, resultsPathServer, modelDescription = description)
-    metrics.batches_train(routeServer,nBatches = 16 , epochs = 5) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
+    metrics.batches_train(routeServer,nBatches = 25 , epochs = 5) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
 
 
