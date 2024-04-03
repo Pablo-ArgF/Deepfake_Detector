@@ -247,8 +247,8 @@ class TrainingMetrics():
         #Añadimos fecha y hora de estos datos
         df['date'] = [self.currentTime] 
         df['totalNumberOfImages'] = [self.numFakeImages + self.numRealImages]
-        df['numberOfFakeImages'] = [self.numFakeImages]
         df['numberOfRealImages'] = [self.numRealImages]
+        df['numberOfFakeImages'] = [self.numFakeImages]
         df['epochs'] = [self.loss_history.size]
         df['loss'] = [self.loss_history[-1]]
         df['accuracy'] = [self.acc_history[-1]]
