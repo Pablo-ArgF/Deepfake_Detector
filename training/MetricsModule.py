@@ -53,7 +53,7 @@ class TrainingMetrics():
         with open(os.path.join(self.resultDataPath,f'model_{self.currentTime}.txt'), 'w') as f:
             self.model.summary(print_fn=lambda x: f.write(x + '\n'))
             if modelDescription != None:
-                f.write(modelDescription)
+                f.write(modelDescription+'\n')
 
     """
     Metodo para ser llamado en un hilo paralelo que monitorea el uso de CPU y memoria RAM
@@ -138,8 +138,8 @@ class TrainingMetrics():
             y = df['label'].astype(int)
             
             #Contamos el número de imagenes fake y reales
-            self.numFakeImages += y[y == 0].size
-            self.numRealImages += y[y == 1].size
+            self.numFakeImages += y[y == 1].size
+            self.numRealImages += y[y == 0].size
 
             X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.2, random_state=42)
             X_train = np.stack(X_train, axis=0)
@@ -230,7 +230,7 @@ class TrainingMetrics():
         # Plot the confusion matrix as a heatmap
         plt.figure(figsize=(5, 5))
         sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False,
-                    xticklabels=['Fake', 'Real'], yticklabels=['Fake', 'Real'])
+                    xticklabels=['Real', 'Fake'], yticklabels=['Real', 'Fake'])
         plt.title('Confusion Matrix')
         plt.xlabel('Predicted Label')
         plt.ylabel('True Label')
