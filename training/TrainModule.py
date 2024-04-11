@@ -34,18 +34,16 @@ model2.compile(optimizer='adam',
 
 model3 = Sequential()
 model3.add(Input(shape=(200, 200, 3))) 
-model3.add(Conv2D(32, (3, 3), activation='relu'))
+model3.add(Conv2D(32, (5, 5), activation='relu'))
+model3.add(MaxPooling2D((3, 3), strides = 2))
 model3.add(MaxPooling2D((2, 2)))
-model3.add(Dropout(0.25))  # Add dropout after the first convolutional layer
-model3.add(Conv2D(64, (3, 3), activation='relu'))
+model3.add(Conv2D(32, (5, 5), activation='relu'))
+model3.add(MaxPooling2D((3, 3)))
 model3.add(MaxPooling2D((2, 2)))
-model3.add(Dropout(0.25))  # Add dropout after the second convolutional layer
-model3.add(Conv2D(64, (3, 3), activation='relu'))
-model3.add(MaxPooling2D((2, 2)))
-model3.add(Dropout(0.25))  # Add dropout after the third convolutional layer
+model3.add(Conv2D(16, (2, 2), activation='relu'))
 model3.add(Flatten())
+model3.add(Dense(128, activation='relu'))
 model3.add(Dense(64, activation='relu'))
-model3.add(Dropout(0.5))  # Add dropout before the final dense layer
 model3.add(Dense(32, activation='relu'))
 model3.add(Dense(1, activation='sigmoid'))
 model3.compile(optimizer='adam',
@@ -73,12 +71,11 @@ model4.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), loss='b
 
 #entremamos secuencialmente los modelos
 models = {
-    model3 : "Mejor estructura hasta la fecha + dropouts",
-    model4 : "Modelo que utiliza VGG16 pretrained model como base y añade unas capas extra"
+    model3 : "Extensión del modelo (con más capas y más neuronas en la parte despues del flatten) siguiendo la estructura del 48-calibration-net de detección facial (ver mendeley dia 7/4 23:15)"
 }
 
 for model,description in models.items():
     metrics = TrainingMetrics(model, resultsPathServer, modelDescription = description)
-    metrics.batches_train(routeServer,nBatches = 25 , epochs = 5) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
+    metrics.batches_train(routeServer,nBatches = 25 , epochs = 3) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
 
 

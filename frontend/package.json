@@ -13,8 +13,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "deploy":"cp -r ./build/* /var/www/html",
     "build": "react-scripts build",
-    "deploy": "cp ./build/* /var/www/html/ -r",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
