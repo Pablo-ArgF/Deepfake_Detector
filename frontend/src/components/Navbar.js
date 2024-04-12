@@ -1,47 +1,34 @@
-// Navbar.js
 import React from 'react';
-import { Box, Text, Flex, IconButton, useDisclosure } from '@chakra-ui/react';
+import { Box, Text, Flex, Image, useDisclosure } from '@chakra-ui/react';
 import { CloseIcon, HamburgerIcon } from '@chakra-ui/icons';
 
 const Navbar = () => {
-  const { isOpen, onToggle } = useDisclosure();
-
   return (
     <Flex
       as="nav"
-      align="center"
+      align="left"
       justify="space-between"
       wrap="wrap"
       padding="1rem"
-      bg="gray.800" // Dark gray background
+      bg="gray" // Dark gray background
       color="white"
+      width="100em"
     >
-      {/* Logo */}
-      <Box>
-        <Text fontSize="lg" fontWeight="bold">
-          Logo
-        </Text>
-      </Box>
+      
+      <Image width="10%" src="./Logo Universidad de Oviedo.png" alt="Logo Universidad de Oviedo" />
+      <Text fontSize="lg" fontWeight="bold">
+        DeepFake Detection Final Degree project
+      </Text> 
 
-      {/* MenuToggle button */}
-      <IconButton
-        display={{ base: 'block', md: 'none' }}
-        onClick={onToggle}
-        icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
-        variant="ghost"
-        aria-label="Toggle navigation"
-      />
-
-      {/* MenuLinks */}
-      <Box
-        display={{ base: isOpen ? 'block' : 'none', md: 'block' }}
+      <Flex
+        direction="row"
         mt={{ base: 4, md: 0 }}
-      >
+        padding="2em">
         <Text mr={4} cursor="pointer">
           About
         </Text>
         <Text cursor="pointer">Model</Text>
-      </Box>
+      </Flex>
     </Flex>
   );
 };
