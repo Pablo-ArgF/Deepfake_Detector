@@ -1,6 +1,5 @@
 import React from 'react';
-import { Box, Text, Flex, Image, useDisclosure } from '@chakra-ui/react';
-import { CloseIcon, HamburgerIcon } from '@chakra-ui/icons';
+import {Text, Flex, Image } from '@chakra-ui/react';
 
 const Navbar = () => {
   return (
@@ -11,12 +10,10 @@ const Navbar = () => {
       wrap="wrap"
       padding="1rem"
       bg="gray" // Dark gray background
-      color="white"
-      width="100em"
-    >
+      color="white">
       
       <Image width="10%" src="./Logo Universidad de Oviedo.png" alt="Logo Universidad de Oviedo" />
-      <Text fontSize="lg" fontWeight="bold">
+      <Text fontSize="lg" fontWeight="bold" alignSelf={'center'}>
         DeepFake Detection Final Degree project
       </Text> 
 
@@ -24,10 +21,12 @@ const Navbar = () => {
         direction="row"
         mt={{ base: 4, md: 0 }}
         padding="2em">
-        <Text mr={4} cursor="pointer">
+        <Text mr={50} cursor="pointer">
           About
         </Text>
-        <Text cursor="pointer">Model</Text>
+        <Text cursor="pointer">
+          Model
+        </Text>
       </Flex>
     </Flex>
   );
