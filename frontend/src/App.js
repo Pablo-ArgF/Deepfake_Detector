@@ -1,13 +1,12 @@
-import logo from './logo.svg';
 import './App.css';
-import Navbar from './components/Navbar';
-import FormView from './components/FormView';
+import Navbar from './components/Navbar.js';
+import BodyView from './components/BodyView.js';
 
 function App() {
   return (
     <div className="App">
       <Navbar/>
-      <FormView/>
+      <BodyView/>
     </div>
   );
 }

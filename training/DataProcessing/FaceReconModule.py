@@ -179,10 +179,11 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
 
 
 
-    def process_video_to_predict(self, video_path):
+    def process_video_to_predict(video_path):
         # Initialize face cascade
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        faces = []
+        processed_faces = []  # Processed face frames
+        original_frames = []  # Non-cut frames
         cap = cv2.VideoCapture(video_path)
         
         while cap.isOpened():
@@ -191,12 +192,17 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
             if ret:
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 detected_faces = face_cascade.detectMultiScale(gray, 1.305, 7)
-                for (x, y, w, h) in detected_faces:
+                if len(detected_faces) > 0:
+                    # Get the face that is most centered
+                    x, y, w, h = detected_faces[0]
                     face_img = cv2.resize(frame[y:y+h, x:x+w], (200, 200))
-                    faces.append(face_img)
+                    processed_faces.append(face_img)
+                original_frames.append(frame)
             else:
                 break
-        return faces
+        cap.release()
+
+        return original_frames, processed_faces
 
 
     def transform(self, videos, videoLabels):
