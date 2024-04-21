@@ -1,7 +1,8 @@
 import os
 import tensorflow as tf
 from tensorflow.keras import layers
-from tensorflow.keras.layers import Dense, MaxPooling2D, Conv2D, Flatten,Lambda,  Input,Dropout
+from tensorflow.keras.initializers import Constant
+from tensorflow.keras.layers import Dense, MaxPooling2D, Conv2D, Flatten,Lambda,  Input,Dropout, PReLU
 from tensorflow.keras.models import Sequential
 from MetricsModule import TrainingMetrics
 
@@ -17,7 +18,7 @@ resultsPathServer = '/home/pabloarga/Results'
 """
 model2 = Sequential()
 model2.add(Input(shape=(200, 200, 3))) 
-model2.add(Conv2D(32, (3, 3), activation='relu'))
+model2.add(Conv2D(16, (3, 3), activation='relu'))
 model2.add(MaxPooling2D((2, 2)))
 model2.add(Conv2D(64, (3, 3), activation='relu'))
 model2.add(MaxPooling2D((2, 2)))
@@ -31,51 +32,174 @@ model2.compile(optimizer='adam',
 """
 
 #---------------------------------------------------------------------------------------------------------------------------------------------
+"""
+value_PReLU = 0.25
+model3 = Sequential([
+    Input(shape=(200, 200, 3)),
+    
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (1, 1), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (1, 1), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Conv2D(16, (1, 1), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (1, 1), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Flatten(),
+    Dense(64, activation='softmax'),
+    Dropout(0.25),
+    Dense(1, activation='sigmoid')
+])
 
-model3 = Sequential()
-model3.add(Input(shape=(200, 200, 3))) 
-model3.add(Conv2D(32, (5, 5), activation='relu'))
-model3.add(MaxPooling2D((3, 3), strides = 2))
-model3.add(MaxPooling2D((2, 2)))
-model3.add(Conv2D(32, (5, 5), activation='relu'))
-model3.add(MaxPooling2D((3, 3)))
-model3.add(MaxPooling2D((2, 2)))
-model3.add(Conv2D(16, (2, 2), activation='relu'))
-model3.add(Flatten())
-model3.add(Dense(128, activation='relu'))
-model3.add(Dense(64, activation='relu'))
-model3.add(Dense(32, activation='relu'))
-model3.add(Dense(1, activation='sigmoid'))
 model3.compile(optimizer='adam',
               loss='binary_crossentropy',
               metrics=['accuracy'])
 
+model4 = Sequential([
+    Input(shape=(200, 200, 3)),
+    
+    Conv2D(16, (5, 5), strides=(2, 2), padding='same'),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Conv2D(16, (5, 5), strides=(2, 2), padding='same'),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Conv2D(16, (5, 5), strides=(2, 2), padding='same'),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Conv2D(16, (5, 5), strides=(2, 2), padding='same'),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Flatten(),
+    Dense(64, activation='softmax'),
+    Dropout(0.25),
+    Dense(1, activation='sigmoid')
+])
 
+model4.compile(optimizer='adam',
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
 
-base_model = tf.keras.applications.VGG16(weights='imagenet', include_top=False, input_shape=(200, 200, 3))
+"""
+value_PReLU = 0.25
+model3 = Sequential([
+    Input(shape=(200, 200, 3)),
+    
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (1, 1), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (1, 1), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Conv2D(16, (1, 1), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (1, 1), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    Conv2D(16, (3, 3), strides=(1, 1)),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Flatten(),
+    Dense(64, activation='softmax'),
+    Dropout(0.25),
+    Dense(1, activation='sigmoid')
+])
 
-# Congelar las capas del modelo base
-for layer in base_model.layers:
-    layer.trainable = False
+model3.compile(optimizer='adam',
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
 
-# Crear un nuevo modelo encima del modelo base
-model4 = tf.keras.models.Sequential()
-model4.add(base_model)
-model4.add(layers.Flatten())
-model4.add(layers.Dense(256, activation='relu'))
-model4.add(layers.Dense(1, activation='sigmoid'))
+model4 = Sequential([
+    Input(shape=(200, 200, 3)),
 
-model4.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
+    Conv2D(16, (5, 5), strides=(2, 2), padding='same'),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Conv2D(16, (5, 5), strides=(2, 2), padding='same'),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Conv2D(16, (5, 5), strides=(2, 2), padding='same'),
+    PReLU(alpha_initializer=Constant(value=value_PReLU)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    
+    Flatten(),
+    Dense(64, activation='softmax'),
+    Dropout(0.25),
+    Dense(1, activation='sigmoid')
+])
 
+model4.compile(optimizer='adam',
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
 #---------------------------------------------------------------------------------------------------------------------------------------------
 
 #entremamos secuencialmente los modelos
 models = {
-    model3 : "Extensión del modelo (con más capas y más neuronas en la parte despues del flatten) siguiendo la estructura del 48-calibration-net de detección facial (ver mendeley dia 7/4 23:15)"
+    model4 : "modelo reduced Net1 (modificado en las conv layers para que sea (2,2) en vez de (3,3)) del paper Facial Feature Extraction Method Based on Shallow and Deep Fusion CNN",
+    model3 : "modelo reduced Net2 del paper Facial Feature Extraction Method Based on Shallow and Deep Fusion CNN"
+    
 }
 
 for model,description in models.items():
     metrics = TrainingMetrics(model, resultsPathServer, modelDescription = description)
-    metrics.batches_train(routeServer,nBatches = 25 , epochs = 3) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
+    metrics.batches_train(routeServer,nBatches = 41 , epochs = 3) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
 
 
