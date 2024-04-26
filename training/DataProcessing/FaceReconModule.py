@@ -179,7 +179,7 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
 
 
 
-    def process_video_to_predict(video_path):
+    def process_video_to_predict(self, video_path):
         # Initialize face cascade
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         processed_faces = []  # Processed face frames
@@ -197,7 +197,7 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                     x, y, w, h = detected_faces[0]
                     face_img = cv2.resize(frame[y:y+h, x:x+w], (200, 200))
                     processed_faces.append(face_img)
-                original_frames.append(frame)
+                    original_frames.append(frame)
             else:
                 break
         cap.release()
