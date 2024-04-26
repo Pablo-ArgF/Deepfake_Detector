@@ -10,21 +10,20 @@ import {
   InputGroup,
   Button,
   Box,
-  Center
+  IconButton,
+  Spinner
 } from '@chakra-ui/react';
 import { IoMdVideocam } from 'react-icons/io';
+import { ArrowForwardIcon,ArrowBackIcon } from '@chakra-ui/icons'
 import { ResponsiveLine } from '@nivo/line'
-
-
-// Import the results.json file
-import resultsData from './results.json';
 
 
 const BodyView = () => {
   const [error, setError] = useState('');
-  const [data, setData] = useState(resultsData);
+  const [data, setData] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(1);
-  const [videoUploaded, setVideoUploaded] = useState(true); // Estado para controlar la visibilidad de los resultados
+  const [videoUploaded, setVideoUploaded] = useState(false); // Estado para controlar la visibilidad de los resultados
+  const [loading, setLoading] = useState(false);
 
 
   const handleVideoUpload = async (event) => {
@@ -36,6 +35,7 @@ const BodyView = () => {
       return;
     }
     try {
+      setLoading(true);
       const response = await fetch('http://localhost:5000/predict', {
         method: 'POST',
         body: file,
@@ -45,37 +45,111 @@ const BodyView = () => {
       setData(data);
       setVideoUploaded(true);
     } catch (error) {
-      console.error('Error prediciendo DeepFakes:', error);
+      setError('Error prediciendo DeepFakes:' + error);
+      setLoading(false)
+      setVideoUploaded(false)
+      setData(null)
     }
-  };
+  }; 
 
   return (
     <Box>
       {videoUploaded ? (
         <Box flexDirection={'column'} h={'80%'}>
-          <Flex direction='row' width={'100%'} >
-            <Heading as="h1" size="5xl" mb={15} padding={'0.5em'}>
-              Resultados
-            </Heading>
-            <Flex direction={'row'} alignItems={'center'} w='100%' padding={'2em'} borderWidth='0.2em' borderRadius='lg' borderColor={'black'} >
-              <Image src={`data:image/jpeg;base64,${data.videoFrames[selectedIndex]}`} h={'20em'} padding={'0.2em'} />
-              <Image src={`data:image/jpeg;base64,${data.processedFrames[selectedIndex]}`} h='12.5em' padding={'0.2em'} />
-              <Box>
-                <Text fontSize="lg" >
-                  <b>Frame number</b>: {selectedIndex}
+          <Flex direction='row' width={'100%'} alignContent={'flex-start'} >
+            <Flex direction={'column'} alignContent={'flex-start'}>
+              <Flex direction={'row'} alignItems={'center'}>
+                <IconButton
+                  colorScheme='grey'
+                  borderRadius={'1em'}
+                  width={'3em'}
+                  height={'3em'}
+                  marginLeft={'1em'}
+                  marginRight={'1.5em'}
+                  marginTop={'1em'}
+                  icon={<ArrowBackIcon boxSize={'2.8em'}/>}
+                  onClick={() => {
+                    setVideoUploaded(false) 
+                    setData(null)
+                    setLoading(false)
+                  }}
+                />
+                <Heading alignSelf={'flex-start'} as="h1" size="5xl" padding={'0.1em'}>
+                  Resultados
+                </Heading>
+              </Flex>
+              <Flex
+                direction={'column'} 
+                alignItems={'flex-start'}
+                borderWidth='0.2em'
+                borderRadius='0.5em'
+                backgroundColor={'lightgrey'}
+                padding={'1em'}
+                marginLeft={'0.5em'}
+                width={'25em'}>
+                <Text fontSize="lg">
+                  <b>Nombre del video</b>: {data.predictions.id}
                 </Text>
                 <Text fontSize="lg">
-                  <b>Total frame count</b>: {data.nFrames}
+                  <b>Frames analizados</b>: {data.predictions.data.length}
                 </Text>
-                <Text fontSize="lg">
-                  <b>Fake %</b>: {data.predictions.data[selectedIndex].y * 100}%
+                <Text fontSize="lg" alignContent={'center'}>
+                  <b>Probabilidad de que el video sea fake: </b> <b style={{ fontSize: '2em' ,color:'red'  }} >{(data.mean*100).toFixed(2)}%</b>
                 </Text>
-              </Box>
+              </Flex>
+            </Flex>
+            <Flex 
+              direction={'column'}
+              alignItems={'flex-start'}
+              w='60em'
+              padding={'0.7em'}
+              borderWidth='0.2em'
+              borderColor={'black'} 
+              backgroundColor={'lightgrey'}
+              margin={'0.5em'}
+              borderRadius={'0.5em'}
+              >
+              <Heading as="h2" size="4xl" mb={15}>
+                Frame seleccionado
+              </Heading>
+              <Flex 
+                direction='row'
+                w={'100%'}
+                alignItems={'flex-start'}
+                alignContent={'center'}
+                marginLeft={'1em'}
+                >
+                <Image src={`data:image/jpeg;base64,${data.videoFrames[selectedIndex]}`} maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
+                <ArrowForwardIcon boxSize={'3em'} alignSelf={'center'}/>
+                <Image src={`data:image/jpeg;base64,${data.processedFrames[selectedIndex]}`} maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
+                <Flex direction={'column'} alignItems={'start'} marginLeft={'5em'}>
+                  <Text fontSize="lg" >
+                    <b>Frame number</b>: {selectedIndex}
+                  </Text>
+                  <Text fontSize="lg">
+                    <b>Total frame count</b>: {data.nFrames}
+                  </Text>
+                  <Text fontSize="lg">
+                    <b>Fake %</b>: {data.predictions.data[selectedIndex].y * 100}%
+                  </Text>
+                </Flex>
+              </Flex>
             </Flex>
           </Flex>
-          <Center>
+          <Flex
+            height={'100%'}
+            padding='0.5em'
+            direction='column'
+            alignContent={'flex-start'}
+            alignItems={'start'}
+            backgroundColor={'lightgray'}
+            borderRadius={'0.5em'}
+            margin={'0.2em'}>
             {/* Contenedor para la gráfica */}
-            <div style={{ height: '18em', width: '90%'}}>
+            <Heading as='h2' size='3xl' mb={13} >
+              Análisis por frames
+            </Heading>
+            <div style={{ height: '18em', width: '100%'}} marginLeft='1em' marginRight='1em'>
               <ResponsiveLine
                 data={[data.predictions]}
                 margin={{ top: 20, right: 50, bottom: 70, left: 50 }}
@@ -107,12 +181,13 @@ const BodyView = () => {
                 pointBorderColor={{ from: 'serieColor' }}
                 colors={{ scheme: 'set1' }}
                 curve="monotoneX"
-                  onClick={(data) => {
+                onClick={(data) => {
                   setSelectedIndex(data.index); 
                 }}
+                
               />
             </div>
-          </Center>
+          </Flex>
 
         </Box>
       )
@@ -127,6 +202,9 @@ const BodyView = () => {
             <Text textAlign="center" width="50%">
               El incipiente uso de las inteligencias artificiales ha hecho que la suplantación de identidad a través de deepFakes (contenido sintético generado por algoritmos de inteligencia artificial que combinan y superponen imágenes y vídeos existentes para crear uno nuevo, a menudo reemplazando la apariencia de una persona con la de otra). La herramienta que estás a punto de probar intenta ayudar en la identificación de este tipo de material sintético. Prueba a subir un video a continuación para comprobar si contiene DeepFakes o no.
             </Text>
+            <Text color="red" marginTop="1em">
+              {error}
+            </Text>
             <FormControl padding="0.5em">
               <InputGroup marginTop="1em" marginBottom="1em">
                 <Input
@@ -136,11 +214,16 @@ const BodyView = () => {
                   onChange={handleVideoUpload}
                   style={{ display: 'none' }} // Hide the default file input
                 />
-                <Button as="label" leftIcon={<IoMdVideocam />} htmlFor="videoInput" colorScheme="teal" variant="outline" size="md">
+                <Button as="label" leftIcon={<IoMdVideocam />} htmlFor="videoInput" colorScheme="teal" border='2px' borderColor='black.500' size="md">
                   Sube un video
                 </Button>
               </InputGroup>
             </FormControl>
+            {
+              loading ? (
+                <Spinner size='10xl' boxSize={'3em'}  thickness='0.2em' colorScheme='blue'/>
+              ) : null
+            }
           </Flex>
 
         )}
