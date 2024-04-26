@@ -16,7 +16,7 @@ sys.path.append("..")
 app = Flask(__name__)
 
 # Load your TensorFlow model
-model = tf.keras.models.load_model("/home/pabloarga/Results/2024-03-31 15.17.12/model2024-03-31 15.17.12.keras",safe_mode=False,compile=False)
+model = tf.keras.models.load_model("/home/pabloarga/Results/2024-04-24 12.15.42/model2024-04-24 12.15.42.keras",safe_mode=False,compile=False)
 faceExtractor = FaceExtractorMultithread() 
 video_path = '/tmp/video.mp4'
 
@@ -50,7 +50,7 @@ def predict():
     video_name = video_file.filename
     
     # Process the video
-    videoFrames, videoFramesprocessedFrames = faceExtractor.process_video_to_predict(video_path)
+    videoFrames, processedFrames = faceExtractor.process_video_to_predict(video_path)
 
 
     # Convert frames to base64
