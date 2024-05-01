@@ -26,31 +26,37 @@ const BodyView = () => {
   const [loading, setLoading] = useState(false);
 
 
-  const handleVideoUpload = async (event) => {
-    const file = event.target.files[0];
-    console.log(file.name);
+ const handleVideoUpload = async (event) => {
+      setError('')
+      const file = event.target.files[0];
+      if (!file) {
+        setError('Por favor, selecciona un archivo de video.');
+        return;
+      }
+      try {
+        setLoading(true);
+        const formData = new FormData();
+        formData.append('video', file);
+        const response = await fetch('http://156.35.163.188/api/predict', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'enctype': 'multipart/form-data'
+          }
+        });
+        const data = await response.json();
+        console.log(data);
+        setLoading(false);
+        setVideoUploaded(true);
+        setData(data);
+      } catch (error) {
+        setError('Error prediciendo DeepFakes:' + error);
+        setLoading(false);
+        setVideoUploaded(false);
+        setData(null);
+      }
+};
 
-    if (!file) {
-      setError('Por favor, selecciona un archivo de video.');
-      return;
-    }
-    try {
-      setLoading(true);
-      const response = await fetch('http://localhost:5000/predict', {
-        method: 'POST',
-        body: file,
-      });
-      const data = await response.json();
-      console.log(data);
-      setData(data);
-      setVideoUploaded(true);
-    } catch (error) {
-      setError('Error prediciendo DeepFakes:' + error);
-      setLoading(false)
-      setVideoUploaded(false)
-      setData(null)
-    }
-  }; 
 
   return (
     <Box>
@@ -154,7 +160,7 @@ const BodyView = () => {
                 data={[data.predictions]}
                 margin={{ top: 20, right: 50, bottom: 70, left: 50 }}
                 xScale={{ type: 'linear', min: 'auto', max: 'auto' }}
-                yScale={{ type: 'linear', min: 0, max: 'auto', stacked: true }}
+                yScale={{ type: 'linear', min: 0, max: 1 , stacked: true }}
                 yFormat=" >-.2f"
                 axisBottom={{
                   tickSize: 5,
@@ -223,9 +229,8 @@ const BodyView = () => {
               loading ? (
                 <Spinner size='10xl' boxSize={'3em'}  thickness='0.2em' colorScheme='blue'/>
               ) : null
-            }
+            }  
           </Flex>
-
         )}
     </Box>
   );

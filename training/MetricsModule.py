@@ -163,13 +163,12 @@ class TrainingMetrics():
         self.trainTime = end_time - start_time
         monitor_thread.join()  # Esperamos a que la thread de monitoreo pare
 
-
+        #exportamos el modelo
+        self.model.save(os.path.join(self.resultDataPath,f'model{self.currentTime}.keras'))
         self.plot()
         self.confusionMatrix()
         self.saveStats()
-
-        #exportamos el modelo
-        self.model.save(os.path.join(self.resultDataPath,f'model{self.currentTime}.keras'))
+        self.storeModelStructure()
 
 
 
@@ -187,7 +186,14 @@ class TrainingMetrics():
         self.real_y = np.append(self.real_y, y_test)
         self.predicted_y = np.append(self.predicted_y, self.model.predict(X_test))
         
-
+    """
+    Stores an image containing the layer structure of the model into the model folder
+    """
+    def storeModelStructure(self):
+        # Save the model structure as an image
+        tf.keras.utils.plot_model(self.model, 
+                    to_file=os.path.join(self.resultDataPath, "model_structure.png"),
+                    show_shapes=True, show_layer_names=False)
 
     
     def plot(self):        
