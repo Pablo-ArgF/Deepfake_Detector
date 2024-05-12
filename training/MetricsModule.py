@@ -1,5 +1,6 @@
 # Import the necessary libraries
 import os
+import shutil
 import re #Regular expressions
 import gc #Garbage collector for freeing memory
 import math
@@ -54,6 +55,8 @@ class TrainingMetrics():
             self.model.summary(print_fn=lambda x: f.write(x + '\n'))
             if modelDescription != None:
                 f.write(modelDescription+'\n')
+        #Guardamos una copia del archivo de entrenamiento en la carpeta del modelo
+        shutil.copy2('/home/pabloarga/Deepfake_Detector/training/TrainModule.py', os.path.join(self.resultDataPath,'training_script.py'))
 
     """
     Metodo para ser llamado en un hilo paralelo que monitorea el uso de CPU y memoria RAM
@@ -94,7 +97,7 @@ class TrainingMetrics():
     entrena el modelo. El entrenamiento del modelo se hace cargando N dataframes a la vez, minimizando
     el uso de memoria RAM
     """
-    def batches_train(self,folderPath,nBatches,epochs):
+    def batches_train(self,folderPath,nBatches,epochs):        
         fileNames = [name for name in os.listdir(folderPath) if os.path.isfile(os.path.join(folderPath, name))]
         #Hacemos un shuffle a los archivos para mezclar los dataframes
         fileNames = shuffle(fileNames)
@@ -169,6 +172,7 @@ class TrainingMetrics():
         self.confusionMatrix()
         self.saveStats()
         self.storeModelStructure()
+        
 
 
 
@@ -267,3 +271,4 @@ class TrainingMetrics():
             df.to_csv(filePath, index=False)
         else: #Si ya existe, añadimos la fila al final
             df.to_csv(filePath, mode='a', header=False, index=False)
+        

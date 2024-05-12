@@ -26,36 +26,47 @@ const BodyView = () => {
   const [loading, setLoading] = useState(false);
 
 
- const handleVideoUpload = async (event) => {
-      setError('')
-      const file = event.target.files[0];
-      if (!file) {
-        setError('Por favor, selecciona un archivo de video.');
-        return;
-      }
-      try {
-        setLoading(true);
-        const formData = new FormData();
-        formData.append('video', file);
-        const response = await fetch('http://156.35.163.188/api/predict', {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'enctype': 'multipart/form-data'
-          }
-        });
-        const data = await response.json();
-        console.log(data);
-        setLoading(false);
-        setVideoUploaded(true);
-        setData(data);
-      } catch (error) {
-        setError('Error prediciendo DeepFakes:' + error);
-        setLoading(false);
-        setVideoUploaded(false);
-        setData(null);
-      }
+const handleVideoUpload = async (event) => {
+  setError('');
+  const file = event.target.files[0];
+  if (!file) {
+    setError('Por favor, selecciona un archivo de video.');
+    return;
+  }
+  try {
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('video', file);
+
+    // Set a 10-minute timeout (600,000 milliseconds)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 600000);
+
+    const response = await fetch('http://156.35.163.188/api/predict', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'enctype': 'multipart/form-data'
+      },
+      signal: controller.signal // Attach the signal to the fetch request
+    });
+
+    // Clear the timeout if the request completes before the timeout fires
+    clearTimeout(timeoutId);
+
+    const data = await response.json();
+    console.log(data);
+    setLoading(false);
+    setVideoUploaded(true);
+    setData(data);
+  } catch (error) {
+    setError('Error prediciendo DeepFakes: ' + error);
+    setLoading(false);
+    setVideoUploaded(false);
+    setData(null);
+  }
 };
+
 
 
   return (
@@ -125,9 +136,9 @@ const BodyView = () => {
                 alignContent={'center'}
                 marginLeft={'1em'}
                 >
-                <Image src={`data:image/jpeg;base64,${data.videoFrames[selectedIndex]}`} maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
+                <Image src={`data:image/png;base64,${data.videoFrames[selectedIndex]}`} maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
                 <ArrowForwardIcon boxSize={'3em'} alignSelf={'center'}/>
-                <Image src={`data:image/jpeg;base64,${data.processedFrames[selectedIndex]}`} maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
+                <Image src={`data:image/png;base64,${data.processedFrames[selectedIndex]}`} maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
                 <Flex direction={'column'} alignItems={'start'} marginLeft={'5em'}>
                   <Text fontSize="lg" >
                     <b>Frame number</b>: {selectedIndex}

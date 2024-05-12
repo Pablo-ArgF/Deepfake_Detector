@@ -178,7 +178,6 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
 
 
 
-
     def process_video_to_predict(self, video_path):
         # Initialize face cascade
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -202,8 +201,7 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                 break
         cap.release()
 
-        return original_frames, processed_faces
-
+        return np.array(original_frames), np.array(processed_faces)
 
     def transform(self, videos, videoLabels):
         faces = []

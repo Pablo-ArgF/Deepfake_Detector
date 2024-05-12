@@ -16,109 +16,44 @@ routeServer = '/home/pabloarga/Data'
 resultsPathServer = '/home/pabloarga/Results' 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------
-value_PReLU = 0.25
-# PReLU(alpha_initializer=Constant(value=value_PReLU))   #TODO meter prelu y no poner activationi relu en todas /%)$(/%=)$(=%/=)·(/%=)(·/%=%)(·/%=)(%/·=)(%/·=
-
-"""
-# Create a Sequential model
-model = Sequential()
-
-# Input Layer
-model.add(layers.InputLayer(input_shape=(200, 200, 3))) 
-
-# Conv1_1 and Conv1_2 Layers
-model.add(layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_1'))
-model.add(layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_2'))
-
-# Pool1 Layer
-model.add(layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool1'))
-
-# Conv2_1 and Conv2_2 Layers
-model.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_1'))
-model.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_2'))
-
-# Pool2 Layer
-pool2 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool2')
-model.add(pool2)
-
-seq1 = Sequential()
-seq3 = Sequential()
-seq4 = Sequential()
-
-#Configuring the seq1
-seq1.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv3_1')(pool2))
-conv32 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv3_2')
-seq1.add(conv32)
-seq1.add(layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool3'))
-seq1.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv4_1'))
-seq1.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv4_2'))
-
-#Configuring the seq3
-seq3.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv5_2')(pool2))
-seq3.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv5_3'))
+# Function to add Convolutional layer with PReLU activation
+def conv_prelu(filters, kernel_size, name):
+    return layers.Conv2D(filters, kernel_size, padding='same', name=name,
+                              activation = PReLU(alpha_initializer='zeros', alpha_regularizer=None, alpha_constraint=None, shared_axes=None))
 
 
-#Configuration of the middle sequence
-conv51 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv5_1')(pool2.output)
-model.add(layers.Concatenate(name="concat_1")([conv32.output, conv51.output,seq3.output]))
-pool5 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool5')
-model.add(pool5)
-
-#Configuring the seq4
-seq4.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv6_2')(pool5))
-seq4.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv6_3'))
-
-conv61 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv6_1')(pool5.output)
-model.add(layers.Concatenate(name="concat_2")([seq1.output, conv61.output ,seq4.output]))
-
-model.add(layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool4'))
-
-model.add(layers.Dense(units=1024, name='fc'))
-
-model.add(layers.Dense(units=4096, name='fc_class'))
-
-# Softmax Output Layer
-model.add(layers.Softmax(units=1))
-
-# Compile the model (add optimizer, loss function, etc.)
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-"""
-
-# Input Layer
 inputs = layers.Input(shape=(200, 200, 3))
 
-# Conv1_1 and Conv1_2 Layers
-x = layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_1')(inputs)
-x = layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_2')(x)
+#Normalization layer
+x = Lambda(lambda x: x/255.0)(inputs)
 
-# Pool1 Layer
+x = conv_prelu(64, (3, 3), 'conv1_1')(x)
+x = conv_prelu(64, (3, 3), 'conv1_2')(x)
+
 x = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool1')(x)
 
-# Conv2_1 and Conv2_2 Layers
-x = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_1')(x)
-x = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_2')(x)
+x = conv_prelu(128, (3, 3), 'conv2_1')(x)
+x = conv_prelu(128, (3, 3), 'conv2_2')(x)
 
-# Pool2 Layer
 pool2_output = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool2')(x)
 
-# Now you can use pool2_output as input for other layers
-conv3_1 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv3_1')(pool2_output)
-conv3_2 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv3_2')(conv3_1)
+conv3_1 = conv_prelu(128, (3, 3), 'conv3_1')(pool2_output)
+conv3_2 = conv_prelu(128, (3, 3), 'conv3_2')(conv3_1)
 pool3 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool3')(conv3_2)
-conv4_1 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv4_1')(pool3)
-conv4_2 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv4_2')(conv4_1)
+conv4_1 = conv_prelu(128, (3, 3), 'conv4_1')(pool3)
+conv4_2 = conv_prelu(128, (3, 3), 'conv4_2')(conv4_1)
 
-conv5_2 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv5_2')(pool2_output)
-conv5_3 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv5_3')(conv5_2)
+conv5_2 = conv_prelu(128, (1, 1), 'conv5_2')(pool2_output)
+conv5_3 = conv_prelu(128, (3, 3), 'conv5_3')(conv5_2)
 
-conv5_1 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv5_1')(pool2_output)
+conv5_1 = conv_prelu(128, (1, 1), 'conv5_1')(pool2_output)
 concat_1 = layers.Concatenate(name="concat_1")([conv3_2, conv5_1, conv5_3])
 pool5 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool5')(concat_1)
 
-conv6_2 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv6_2')(pool5)
-conv6_3 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv6_3')(conv6_2)
+conv6_2 = conv_prelu(128, (1, 1), 'conv6_2')(pool5)
+conv6_3 = conv_prelu(128, (3, 3), 'conv6_3')(conv6_2)
 
-conv6_1 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv6_1')(pool5)
+conv6_1 = conv_prelu(128, (1, 1), 'conv6_1')(pool5)
 concat_2 = layers.Concatenate(name="concat_2")([conv4_2, conv6_1, conv6_3])
 
 pool4 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool4')(concat_2)
@@ -126,27 +61,86 @@ pool4 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool4')(concat_2)
 flatten = Flatten()(pool4)
 
 fc = layers.Dense(1024, name='fc')(flatten)
+fc = layers.Dropout(0.5)(fc)
 
-fc_class = layers.Dense(4096, name='fc_class')(fc)
+fc_class = layers.Dense(2048, name='fc_class')(fc)
+fc_class = layers.Dropout(0.5)(fc_class) 
 
-# Softmax Output Layer
-outputs = layers.Dense(1, activation='sigmoid', name='out')(fc_class)
+outputs = layers.Dense(1, activation='softmax', name='out')(fc_class)
 
-# Compile the model (add optimizer, loss function, etc.)
 model = tf.keras.Model(inputs=inputs, outputs=outputs)
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
+
+#---------------------------------------------------------------------------------------------------------------------------------------------
+inputs = layers.Input(shape=(200, 200, 3))
+
+#Normalization layer
+x = Lambda(lambda x: x/255.0)(inputs)
+
+x = conv_prelu(64, (3, 3), 'conv1_1')(x)
+x = conv_prelu(64, (3, 3), 'conv1_2')(x)
+
+x = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool1')(x)
+
+x = conv_prelu(128, (3, 3), 'conv2_1')(x)
+x = conv_prelu(128, (3, 3), 'conv2_2')(x)
+
+pool2_output = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool2')(x)
+
+conv3_1 = conv_prelu(128, (3, 3), 'conv3_1')(pool2_output)
+conv3_2 = conv_prelu(128, (3, 3), 'conv3_2')(conv3_1)
+pool3 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool3')(conv3_2)
+conv4_1 = conv_prelu(128, (3, 3), 'conv4_1')(pool3)
+conv4_2 = conv_prelu(128, (3, 3), 'conv4_2')(conv4_1)
+
+conv5_2 = conv_prelu(128, (1, 1), 'conv5_2')(pool2_output)
+conv5_3 = conv_prelu(128, (3, 3), 'conv5_3')(conv5_2)
+
+conv5_4 = conv_prelu(128, (1, 1), 'conv5_4')(pool2_output)
+conv5_5 = conv_prelu(128, (1, 1), 'conv5_5')(conv5_4)
+conv5_6 = conv_prelu(128, (3, 3), 'conv5_6')(conv5_5)
+
+conv5_1 = conv_prelu(128, (1, 1), 'conv5_1')(pool2_output)
+concat_1 = layers.Concatenate(name="concat_1")([conv3_2, conv5_1, conv5_3, conv5_6])
+pool5 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool5')(concat_1)
+
+conv6_2 = conv_prelu(128, (1, 1), 'conv6_2')(pool5)
+conv6_3 = conv_prelu(128, (3, 3), 'conv6_3')(conv6_2)
+
+conv6_4 = conv_prelu(128, (1, 1), 'conv6_4')(pool5)
+conv6_5 = conv_prelu(128, (1, 1), 'conv6_5')(conv6_4)
+conv6_6 = conv_prelu(128, (3, 3), 'conv6_6')(conv6_5)
+
+conv6_1 = conv_prelu(128, (1, 1), 'conv6_1')(pool5)
+concat_2 = layers.Concatenate(name="concat_2")([conv4_2, conv6_1, conv6_3,conv6_6])
+
+pool4 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool4')(concat_2)
+
+flatten = Flatten()(pool4)
+
+fc = layers.Dense(1024, name='fc')(flatten)
+fc = layers.Dropout(0.5)(fc)
+
+fc_class = layers.Dense(2048, name='fc_class')(fc)
+fc_class = layers.Dropout(0.5)(fc_class) 
+
+outputs = layers.Dense(1, activation='softmax', name='out')(fc_class)
+
+model2 = tf.keras.Model(inputs=inputs, outputs=outputs)
+model2.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------
 
 #entremamos secuencialmente los modelos
 models = {
-    model : "modelo Net2 del paper Facial Feature Extraction Method Based on Shallow and Deep Fusion CNN"
+    model : "WITH LAMBDA - using 1x1 convolutions in shallow features - modelo Net2 - softmax - con Prelus y con dropouts del paper Facial Feature Extraction Method Based on Shallow and Deep Fusion CNN",
+    model2 : "net2 con un tercer livel de shallow features - con lambda - salida softmax"
 }
 
 for model,description in models.items():
     metrics = TrainingMetrics(model, resultsPathServer, modelDescription = description)
-    metrics.batches_train(routeServer,nBatches = 9 , epochs = 3) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
+    metrics.batches_train(routeServer,nBatches = 9 , epochs = 2) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
 
 
