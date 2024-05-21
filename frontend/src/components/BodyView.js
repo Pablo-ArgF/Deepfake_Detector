@@ -104,15 +104,13 @@ const handleVideoUpload = async (event) => {
                 padding={'1em'}
                 marginLeft={'0.5em'}
                 width={'25em'}>
-                <Text fontSize="lg">
-                  <b>Nombre del video</b>: {data.predictions.id}
-                </Text>
-                <Text fontSize="lg">
-                  <b>Frames analizados</b>: {data.predictions.data.length}
-                </Text>
-                <Text fontSize="lg" alignContent={'center'}>
-                  <b>Probabilidad de que el video sea fake: </b> <b style={{ fontSize: '2em' ,color:'red'  }} >{(data.mean*100).toFixed(2)}%</b>
-                </Text>
+                <Text><b>Nombre del video</b>: {data.predictions.id}</Text>
+                <Text><b>Frames analizados</b>: {data.predictions.data.length} </Text>
+                <Text><b>Mínimo registrado</b>: {(data.min*100).toFixed(2)}% </Text>
+                <Text><b>Máximo registrado</b>: {(data.max*100).toFixed(2)}% </Text>
+                <Text><b>Rango de valores</b>: {(data.range*100).toFixed(2)}% </Text>
+                <Text><b>Varianza de los valores</b>: <b style={{ fontSize: '1.5em' ,color:'red'  }} >{(data.var*100).toFixed(2)}%</b> </Text>
+                <Text><b>Media de los valores</b>: <b style={{ fontSize: '1.5em' ,color:'red'  }} >{(data.mean*100).toFixed(2)}%</b></Text>
               </Flex>
             </Flex>
             <Flex 
@@ -136,9 +134,9 @@ const handleVideoUpload = async (event) => {
                 alignContent={'center'}
                 marginLeft={'1em'}
                 >
-                <Image src={`data:image/png;base64,${data.videoFrames[selectedIndex]}`} maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
+                <Image src={data.videoFrames[selectedIndex]} maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
                 <ArrowForwardIcon boxSize={'3em'} alignSelf={'center'}/>
-                <Image src={`data:image/png;base64,${data.processedFrames[selectedIndex]}`} maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
+                <Image src={data.processedFrames[selectedIndex]} maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
                 <Flex direction={'column'} alignItems={'start'} marginLeft={'5em'}>
                   <Text fontSize="lg" >
                     <b>Frame number</b>: {selectedIndex}
@@ -147,7 +145,7 @@ const handleVideoUpload = async (event) => {
                     <b>Total frame count</b>: {data.nFrames}
                   </Text>
                   <Text fontSize="lg">
-                    <b>Fake %</b>: {data.predictions.data[selectedIndex].y * 100}%
+                    <b>Fake %</b>: {(data.predictions.data[selectedIndex].y * 100).toFixed(2)}%
                   </Text>
                 </Flex>
               </Flex>
