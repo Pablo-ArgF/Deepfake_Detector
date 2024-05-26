@@ -85,13 +85,13 @@ class DataProcessor:
 
         # Si hay sample directory y prob, guardamos la imagen en la carpeta sample con probabilidad sampleProbability
         if self.sampleDirectory:
-            if not os.path.exists(self.sampleDirectory):
-                os.makedirs(self.sampleDirectory)
             if random.random() < self.sampleProbability:
+                if not os.path.exists(self.sampleDirectory):
+                    os.makedirs(self.sampleDirectory)
                 cv2.imwrite(f'{self.sampleDirectory}/{label}_image_{len(self.faces) + self.totalFaces}.jpg', img)
 
         # Si tenemos x imagenes guardadas, creamos un dataset con ellas y las guardamos en un fichero h5, borrando las imagenes de la memoria
-        if len(self.faces) == 10000:
+        if len(self.faces) == 25000:
            self.saveDataset()
 
     def saveDataset(self):
