@@ -4,27 +4,34 @@ import math
 from datetime import datetime
 import pandas as pd
 import cv2
+import sys
 from FaceReconModule import FaceExtractorMultithread
 
 class DataProcessor:
-    def __init__(self, baseDirectory, destinationDirectory, sampleDirectory = None, sampleProbability = 0.001):
+    def __init__(self, baseDirectory, destinationDirectory,sequenceLengths = None, sampleDirectory = None, sampleProbability = 0.001):
         self.baseDirectory = baseDirectory
         self.destinationDirectory = destinationDirectory
         self.currentDirectoryFake = False
         self.currentDatasetCounter = 0
+        self.currentSequenceDatasetCounter = 0
         self.sampleDirectory = sampleDirectory
         self.sampleProbability = sampleProbability
+        self.sequenceLengths = sequenceLengths
 
         self.imagesPaths = []
         self.imagesLabels = []
         self.videosPaths = []
         self.videosLabels = []
 
-        self.face_extractor = FaceExtractorMultithread(percentageExtractionFake=0.09, percentageExtractionReal=0.02)
+        #self.face_extractor = FaceExtractorMultithread(percentageExtractionFake=0.09, percentageExtractionReal=0.02) #TODO
+        self.face_extractor = FaceExtractorMultithread(percentageExtractionFake=0.7, percentageExtractionReal=0.7)
 
         #resulting data
         self.faces = []
         self.labels = []
+
+        #For each size passed as parameter in sequenceLengths, we will store an array containing the current sequences not saved yet
+        self.sequencesData = []
 
         self.totalFaces = 0
         self.totalFake = 0
@@ -34,6 +41,7 @@ class DataProcessor:
         #guardamos en un archivo 'filesFound.csv' los paths y labels de las imagenes y videos encontrados
         df = pd.DataFrame({'paths': self.imagesPaths + self.videosPaths, 'labels': self.imagesLabels + self.videosLabels})
         df.to_csv(f'{self.destinationDirectory}/filesFound.csv', index=False)
+        return
 
         #añadimos las headers al Progress.csv 
         with open(os.path.join(self.destinationDirectory,'Progress.csv'), 'w') as f:
@@ -42,8 +50,10 @@ class DataProcessor:
         #comenzamos a procesar las imagenes y videos
         self.processVideos()
         self.processImages()
-        #guardamos aquellos que no hayan sido guardados en bloques de 5000
+        #guardamos aquellos que no hayan sido guardados en bloques 
         self.saveDataset()
+        for i in range(len(self.sequenceLengths)):
+            self.saveSequences(i)
 
 
     def processFolder(self, path):
@@ -141,13 +151,58 @@ class DataProcessor:
             labelsChunk = self.videosLabels[chunk*100 : min(chunk*100 + 100, len(self.videosPaths))] 
             tmpFaces,tmpLabels = self.face_extractor.transform(pathsChunk, labelsChunk)
             for i in range(len(tmpFaces)):
-                self.storeImage(tmpFaces[i], tmpLabels[i])      
+                self.storeImage(tmpFaces[i], tmpLabels[i])    
+            #Si tenemos sequenceLengths, generamos secuencias de longitud sequenceLengths 
+            if self.sequenceLengths:
+                self.registerSequences(tmpFaces,tmpLabels[0])  
 
+    """
+    Recibe todas las imagenes y label de un video y guarda las secuencias con los tamaños especificados por constructor.
+    Por cada tamaño especificado en el constructor se creará una carpeta en la destination directory con el nombre: 'sequences_{sequenceLength}'
+    """
+    def registerSequences(self,faces,label):
+        for index,sequenceLength in enumerate(self.sequenceLengths):
+            sequences = [faces[i:i+sequenceLength] for i in range(0, len(faces), sequenceLength)] #TODO las que se salen las estoy descartando
+            #store in the sequencesData array the sequences that are not saved yet
+            self.sequencesData[index].extend([sequences , label])
+            if len(self.sequencesData[index]) * self.sequenceLengths[index] >= 10000: #TODO modificar esto para que sea más, ahora lo puse así para los tests
+                self.saveSequences(index)
 
+    """
+    Guarda las secuencias almacenadas en el array sequencesData en un fichero h5
+    """
+    def saveSequences(self,index):
+        #guardamos los datos y hacemos reset de arrays
+        df = pd.DataFrame({'sequences': self.sequencesData[index][0], 'label': self.sequencesData[index][1]})
+        dataframeFolder = os.path.join(self.destinationDirectory, f'sequences_{self.sequenceLengths[index]}')
+        if not os.path.exists(dataframeFolder):
+            os.makedirs(dataframeFolder)
+
+        #In order to test correctness we save all images in a sequence inside a folder in the dataframe folder
+        for i,pair in enumerate(self.sequencesData[index]):
+            sequence = pair[0]
+            label = pair[1]
+            sequenceFolder = os.path.join(dataframeFolder, f'sequence_{i}')
+            if not os.path.exists(sequenceFolder):
+                os.makedirs(sequenceFolder)
+            for j,image in enumerate(sequence):
+                cv2.imwrite(f'{sequenceFolder}/image_{j}_{label}.jpg', image)
+
+        df.to_hdf(f'{dataframeFolder}/sequences_{self.currentSequenceDatasetCounter}.h5', key=f'df{self.currentSequenceDatasetCounter}', mode='w')
+        self.sequencesData[index] = []
+        self.currentSequenceDatasetCounter += 1
             
+            
+            
+
+"""          
 processor = DataProcessor(baseDirectory='E:\TFG\Datasets',
                           destinationDirectory='E:\TFG\Datasets\dataframes\\valid\dataframes_correct',
                           sampleDirectory='E:\TFG\Datasets\dataframes\\valid\samples')
-        
+"""
+processor = DataProcessor(baseDirectory='P:\\TFG\\Data',
+                          destinationDirectory='P:\\TFG\\Processed_Data\\valid\\dataframes',
+                          sampleDirectory='P:\\TFG\\Processed_Data\\valid\\samples',
+                          sequenceLengths=[20,50,100,300])        
 
       

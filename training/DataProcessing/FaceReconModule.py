@@ -175,4 +175,4 @@ faces, _ = face_extractor.process_image(image_path , 1)
 #store the images in the folder C:\Users\\pablo\\Desktop\\TFG (1)\test
 for i in range(len(faces)):
     cv2.imwrite(f'C:\\Users\\pablo\\Desktop\\TFG (1)\\test_image\\{i}.jpg',faces[i])
-"""       
+"""      
