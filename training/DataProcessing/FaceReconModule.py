@@ -23,12 +23,12 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
     def align_frame(self, frame, gray, x, y, w, h, face_cascade): 
         alignedImage,angle = self.align_face(frame, gray, x,y,w,h)
         if angle is None: # Si no se han detectado los ojos, se añade la cara sin alinear
-            return frame[y:y+h, x:x+w]
+            return cv2.resize(frame[y:y+h, x:x+w],(200,200))
 
         alignedGray = cv2.cvtColor(alignedImage, cv2.COLOR_BGR2GRAY)
         detected_face = face_cascade.detectMultiScale(alignedGray, 1.255, 4)
         if len(detected_face) == 0: # Si no se ha detectado la cara en la imagen alineada, se añade la cara sin alinear
-            return frame[y:y+h, x:x+w]
+            return cv2.resize(frame[y:y+h, x:x+w],(200,200))
         xalign = detected_face[0][0]
         yalign = detected_face[0][1]
         walign = detected_face[0][2]
@@ -38,7 +38,7 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
         return cv2.resize(rotatedFace, (200, 200))
         
 
-    def process_video(self, video_path, label):
+    def process_video(self, video_path, label, index):
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         faces = []
         labels = []
@@ -59,7 +59,7 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
             else:
                 break
         cap.release()
-        return faces, labels
+        return faces, labels, index
     
     def process_image(self,image_path,label):
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -93,7 +93,7 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                 if len(detected_faces) > 0:
                     x, y, w, h = detected_faces[0]
                     alignedFaceImage = self.align_frame(frame, gray[y:y+h, x:x+w],x,y,w,h, face_cascade)
-                    faces.append(alignedFaceImage)
+                    processed_faces.append(alignedFaceImage)
                     original_frames.append(frame)
             else:
                 break
@@ -101,21 +101,22 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
 
         return np.array(original_frames), np.array(processed_faces)
 
-    def transform(self, videos, videoLabels):
-        faces = []
-        labels = []
+    def transform(self, videos, videoLabels): #TODO algo mal, estoy subiendo imagenes con una linea negra y ya
         num_videos = len(videos)
+        videoFaces = [[] for i in range(num_videos)] # For each video passed, the faces extracted from it will be stored here
+        groupedLabels = [[] for i in range(num_videos)] # For each video passed, the labels for images extracted from it will be stored here
         current = 1
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             # Start the futures and store them in a dictionary
-            futures = {executor.submit(self.process_video, videos[i],videoLabels[i]): i for i in range(num_videos)}
+            futures = {executor.submit(self.process_video, videos[i],videoLabels[i], i): i for i in range(num_videos)}
             for future in concurrent.futures.as_completed(futures):
-                print(f'Processing video {current}/{num_videos} ----> {math.floor(current/num_videos*100)}%')
+                print(f'Completed processing of video {current}/{num_videos} ----> {math.floor(current/num_videos*100)}%')
                 result = future.result()
-                faces.extend(result[0])
-                labels.extend(result[1])
+                #Guardamos en el index del video procesado
+                videoFaces[result[2]].extend(result[0])
+                groupedLabels[result[2]].extend(result[1])
                 current += 1
-        return faces,labels
+        return videoFaces,groupedLabels
     
 
     """ 
@@ -157,22 +158,3 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
         rotated = cv2.warpAffine(faceImg, M, (faceImg.shape[1], faceImg.shape[0]))
         return rotated, angle 
 
-"""
-TESTS FOR ALIGMENT
-
-# Test the process_video_to_predict method
-# https://sefiks.com/2020/02/23/face-alignment-for-face-recognition-in-python-within-opencv/ 
-video_path = "C:\\Users\\pablo\\Desktop\\TFG (1)\\TFG (5).mp4"
-face_extractor = FaceExtractorMultithread()
-faces, _ = face_extractor.process_video(video_path , 1)
-#store the images in the folder C:\Users\pablo\Desktop\TFG (1)\test
-for i in range(len(faces)):
-    cv2.imwrite(f'C:\\Users\\pablo\\Desktop\\TFG (1)\\test\\{i}.jpg',faces[i])
-
-# Test the process_image method
-image_path = "C:\\Users\\pablo\\Desktop\\TFG (1)\\0.png"
-faces, _ = face_extractor.process_image(image_path , 1)
-#store the images in the folder C:\Users\\pablo\\Desktop\\TFG (1)\test
-for i in range(len(faces)):
-    cv2.imwrite(f'C:\\Users\\pablo\\Desktop\\TFG (1)\\test_image\\{i}.jpg',faces[i])
-"""      

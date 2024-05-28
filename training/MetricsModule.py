@@ -127,7 +127,7 @@ class TrainingMetrics():
             
             if len(fragments) ==  0: #Si ya hemos completado todos los fragmentos dejamos de iterar
                 print('------> Todos los dataframes han sido usados, parando de entrenar')
-                break;
+                break
             
             df = pd.concat(fragments)
 
