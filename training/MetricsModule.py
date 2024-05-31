@@ -97,14 +97,14 @@ class TrainingMetrics():
     entrena el modelo. El entrenamiento del modelo se hace cargando N dataframes a la vez, minimizando
     el uso de memoria RAM
     """
-    def batches_train(self,folderPath,nBatches,epochs):        
+    def batches_train(self,folderPath,nPerBatch,epochs):        
         fileNames = [name for name in os.listdir(folderPath) if os.path.isfile(os.path.join(folderPath, name))]
         #Hacemos un shuffle a los archivos para mezclar los dataframes
         fileNames = shuffle(fileNames)
         #Obtenemos el numero de dataframes que hay en la carpeta
         numDataframes = len(fileNames)
         #Calculamos el tamaño de cada fragmento
-        fragmentSize = math.ceil(numDataframes/nBatches)
+        nBatches = math.ceil(numDataframes/nPerBatch)
 
         #Defino un hilo que va a estar en paralelo tomando datos de consumo de CPU y memoria RAM
         #además del hilo encargado del entrenamiento del modelo
@@ -123,7 +123,7 @@ class TrainingMetrics():
     
             print(f'Training the model with batch: {i+1}/{nBatches}')
             #Cargamos los dataframes del batch y los guardamos en un solo dataframe (usamos una regex para obtener el número de dentro del nombre de archivo)
-            fragments = [pd.read_hdf(f'{folderPath}/{fileNames[j]}', key='df' +re.findall(r'\d+', fileNames[j])[0]) for j in range(fragmentSize*i,min(len(fileNames),fragmentSize*(i+1)))]
+            fragments = [pd.read_hdf(f'{folderPath}/{fileNames[j]}', key='df' +re.findall(r'\d+', fileNames[j])[0]) for j in range(nPerBatch*i,min(len(fileNames),nPerBatch*(i+1)))]
             
             if len(fragments) ==  0: #Si ya hemos completado todos los fragmentos dejamos de iterar
                 print('------> Todos los dataframes han sido usados, parando de entrenar')
@@ -134,15 +134,15 @@ class TrainingMetrics():
             #Aumentamos el numero de imagenes fake con rotaciones y volteos -------------------> DESACTIVADO #TODO
             #df = pd.concat(df.apply(self.augment, axis=1).tolist(), ignore_index=True)
             #aplicamos shuffle al dataframe para que el modelo no aprenda de la secuencia de los datos
-            df = shuffle(df)
+            #df = shuffle(df) #TODO quitado para las secuencias
 
             #Dividimos el dataframe en train y test
             X = np.array(df['face']) #Eliminamos la columna de etiquetas y lo dejamos como un vector
-            y = df['label'].astype(int)
+            y = df['label'].astype(np.uint8).to_numpy()
             
             #Contamos el número de imagenes fake y reales
-            self.numFakeImages += y[y == 1].size
-            self.numRealImages += y[y == 0].size
+            self.numFakeImages += sum(y)
+            self.numRealImages += len(y) - sum(y)
 
             X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.2, random_state=42)
             X_train = np.stack(X_train, axis=0)
