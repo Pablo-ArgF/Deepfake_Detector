@@ -97,7 +97,7 @@ class TrainingMetrics():
     entrena el modelo. El entrenamiento del modelo se hace cargando N dataframes a la vez, minimizando
     el uso de memoria RAM
     """
-    def batches_train(self,folderPath,nPerBatch,epochs):        
+    def batches_train(self,folderPath,nPerBatch,epochs, isSequence = False):        
         fileNames = [name for name in os.listdir(folderPath) if os.path.isfile(os.path.join(folderPath, name))]
         #Hacemos un shuffle a los archivos para mezclar los dataframes
         fileNames = shuffle(fileNames)
@@ -137,7 +137,10 @@ class TrainingMetrics():
             #df = shuffle(df) #TODO quitado para las secuencias
 
             #Dividimos el dataframe en train y test
-            X = np.array(df['face']) #Eliminamos la columna de etiquetas y lo dejamos como un vector
+            if isSequence:
+                X = np.array(df['sequences'])
+            else:
+                X = np.array(df['face'])
             y = df['label'].astype(np.uint8).to_numpy()
             
             #Contamos el número de imagenes fake y reales

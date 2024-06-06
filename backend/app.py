@@ -31,7 +31,7 @@ app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024 *1024  # 4Gb
 app.config['VIDEO_UPLOAD_FOLDER'] = '/tmp'
 app.config['UPLOAD_FOLDER'] = '/home/pabloarga/Deepfake_Detector/frontend/build/results'
 app.config['UPLOAD_FOLDER_REF'] = './results' #REference for the frontend src
-app.config['SELECTED_MODEL'] = '2024-05-08 03.07.29'
+app.config['SELECTED_MODEL'] = '2024-06-05 09.29.28'
 
 # Load the model
 path = f"/home/pabloarga/Results/{app.config['SELECTED_MODEL']}/model{app.config['SELECTED_MODEL']}.keras"  
