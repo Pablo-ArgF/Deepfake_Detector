@@ -30,8 +30,8 @@ CORS(app, origins='*', methods=['GET', 'POST'], allow_headers=['Content-Type'])
 app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024 *1024  # 4Gb
 app.config['VIDEO_UPLOAD_FOLDER'] = '/tmp'
 app.config['UPLOAD_FOLDER'] = '/home/pabloarga/Deepfake_Detector/frontend/build/results'
-app.config['UPLOAD_FOLDER_REF'] = './results' #REference for the frontend src
-app.config['SELECTED_MODEL'] = '2024-06-05 09.29.28'
+app.config['UPLOAD_FOLDER_REF'] = './results' #REference for the frontend src 
+app.config['SELECTED_MODEL'] = '2024-06-08 18.09.03'
 
 # Load the model
 path = f"/home/pabloarga/Results/{app.config['SELECTED_MODEL']}/model{app.config['SELECTED_MODEL']}.keras"  
