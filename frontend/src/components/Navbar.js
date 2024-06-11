@@ -1,7 +1,7 @@
 import React from 'react';
 import {Text, Flex, Image } from '@chakra-ui/react';
 
-const Navbar = () => {
+const Navbar = ({setView}) => {
   return (
     <Flex
       as="nav"
@@ -12,7 +12,7 @@ const Navbar = () => {
       bg="gray" // Dark gray background
       color="white">
       
-      <Image width="10%" src="./Logo Universidad de Oviedo.png" alt="Logo Universidad de Oviedo" />
+      <Image width="18em" src="./Logo Universidad de Oviedo.png" alt="Logo Universidad de Oviedo" onClick={() => setView('BodyView')} cursor="pointer"  />
       <Text fontSize="lg" fontWeight="bold" alignSelf={'center'}>
         DeepFake Detection Final Degree project
       </Text> 
@@ -21,10 +21,10 @@ const Navbar = () => {
         direction="row"
         mt={{ base: 4, md: 0 }}
         padding="2em">
-        <Text mr={50} cursor="pointer">
+        <Text mr={50} cursor="pointer" onClick={() => setView('About')} >
           About
         </Text>
-        <Text cursor="pointer">
+        <Text cursor="pointer" onClick={() => setView('ModelDetails')}>
           Model
         </Text>
       </Flex>
