@@ -4,6 +4,7 @@ import tensorflow as tf
 from flask_cors import CORS
 import numpy as np
 from PIL import Image
+import base64
 from logging.handlers import RotatingFileHandler
 from werkzeug.utils import secure_filename
 import sys
@@ -31,13 +32,18 @@ app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024 *1024  # 4Gb
 app.config['VIDEO_UPLOAD_FOLDER'] = '/tmp'
 app.config['UPLOAD_FOLDER'] = '/home/pabloarga/Deepfake_Detector/frontend/build/results'
 app.config['UPLOAD_FOLDER_REF'] = './results' #REference for the frontend src
-app.config['SELECTED_MODEL'] = '2024-06-05 09.29.28'
+app.config['SELECTED_CNN_MODEL'] = '2024-06-05 09.29.28'
+app.config['SELECTED_RNN_MODEL'] = ''
 
 # Load the model
-path = f"/home/pabloarga/Results/{app.config['SELECTED_MODEL']}/model{app.config['SELECTED_MODEL']}.keras"  
+path = f"/home/pabloarga/Results/{app.config['SELECTED_CNN_MODEL']}/model{app.config['SELECTED_CNN_MODEL']}.keras"  
 model = tf.keras.models.load_model(path, safe_mode=False, compile=False)
 
 faceExtractor = FaceExtractorMultithread() 
+
+def image_to_base64(image_path):
+    with open(image_path, 'rb') as img_file:
+        return base64.b64encode(img_file.read()).decode('utf-8')
 
 def save_images(frames, video_name):
     """
@@ -59,6 +65,36 @@ def remove_all_files(folder_path):
             os.remove(file_path)
         except Exception as e:
             print(f"Failed to delete {file_path}. Reason: {e}")
+
+@app.route('/api/model/structure/cnn', methods=['GET'])
+def getCNNStructure():
+    app.logger.info('Request received for getCNNStructure')
+    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_CNN_MODEL"]}/model_structure.png')
+
+@app.route('/api/model/structure/rnn', methods=['GET'])
+def getRNNStructure():
+    app.logger.info('Request received for getRNNStructure')
+    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_RNN_MODEL"]}/model_structure.png')
+
+@app.route('/api/model/graphs/cnn', methods=['GET'])
+def getCNNGraphs():
+    app.logger.info('Request received for getCNNGraphs')
+    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_CNN_MODEL"]}/combined_plots.png')
+
+@app.route('/api/model/graphs/rnn', methods=['GET'])
+def getRNNGraphs():
+    app.logger.info('Request received for getRNNGraphs')
+    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_RNN_MODEL"]}/combined_plots.png')
+
+@app.route('/api/model/confussion/matrix/cnn', methods=['GET'])
+def getCNNConfussionMatrix():
+    app.logger.info('Request received for getCNNConfussionMatrix')
+    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_CNN_MODEL"]}/confussionMatrix_{app.config["SELECTED_CNN_MODEL"]}.png')
+
+@app.route('/api/model/confussion/matrix/rnn', methods=['GET'])
+def getRNNConfussionMatrix():
+    app.logger.info('Request received for getRNNConfussionMatrix')
+    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_RNN_MODEL"]}/confussionMatrix_{app.config["SELECTED_RNN_MODEL"]}.png')
 
 @app.route('/api/predict', methods=['POST'])
 def predict():

@@ -20,7 +20,7 @@ const BodyView = () => {
   const [error, setError] = useState('');
   const [data, setData] = useState(require('./results.json'));
   const [selectedIndex, setSelectedIndex] = useState(1);
-  const [videoUploaded, setVideoUploaded] = useState(true);
+  const [videoUploaded, setVideoUploaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [useRNN, setUseRNN] = useState(false);  // State to control which dashboard to use
 
@@ -67,7 +67,7 @@ const BodyView = () => {
 
   return (
     <Box>
-      <Flex direction='row' width={'100%'} justifyContent={'space-evenly'}>
+      <Flex direction='row' width={'100%'} justifyContent={'space-evenly'} visibility={videoUploaded? 'visible': 'hidden'}>
       <IconButton
             colorScheme='grey'
             padding={'0.7em'}
