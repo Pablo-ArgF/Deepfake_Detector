@@ -20,7 +20,7 @@ const BodyView = () => {
   const [error, setError] = useState('');
   const [data, setData] = useState(require('./results.json'));
   const [selectedIndex, setSelectedIndex] = useState(1);
-  const [videoUploaded, setVideoUploaded] = useState(false);
+  const [videoUploaded, setVideoUploaded] = useState(true);
   const [loading, setLoading] = useState(false);
   const [useRNN, setUseRNN] = useState(false);  // State to control which dashboard to use
 
@@ -127,8 +127,10 @@ const BodyView = () => {
           <Heading as="h1" size="5xl" mb={15}>
             Detección de DeepFakes
           </Heading>
-          <Text textAlign="center" width="50%">
-            El incipiente uso de las inteligencias artificiales ha hecho que la suplantación de identidad a través de deepFakes (contenido sintético generado por algoritmos de inteligencia artificial que combinan y superponen imágenes y vídeos existentes para crear uno nuevo, a menudo reemplazando la apariencia de una persona con la de otra). La herramienta que estás a punto de probar intenta ayudar en la identificación de este tipo de material sintético. Prueba a subir un video a continuación para comprobar si contiene DeepFakes o no.
+          <Text textAlign="justify" width="45%">
+            El incipiente uso de las inteligencias artificiales ha hecho que la suplantación de identidad a través de <b>DeepFakes</b>, contenido sintético generado por algoritmos de inteligencia artificial que combinan y superponen imágenes y vídeos existentes para crear uno nuevo.<br/><br/>
+            El nivel de realismo que se obtiene utilizando algoritmos de DeepFake actuales supone un <b>riesgo a la sociedad</b>. Desde fake news hasta suplantaciones de identidad, la aparición de estas inteligencias artificiales han hecho que el contenido que consumimos cada vez sea menos identificable<br/><br/>
+            Esta herramienta intenta ayudar en la identificación de este tipo de material sintético mediante un análisis aplicando modelos de predicción de DeepFakes.
           </Text>
           <Text color="red" marginTop="1em">
             {error}
@@ -141,8 +143,9 @@ const BodyView = () => {
                 accept="video/mp4"
                 onChange={handleVideoUpload}
                 style={{ display: 'none' }} // Hide the default file input
+                cornerRadius='0.5em'
               />
-              <Button as="label" leftIcon={<IoMdVideocam />} htmlFor="videoInput" colorScheme="teal" border='2px' borderColor='black.500' size="md">
+              <Button as="label" leftIcon={<IoMdVideocam color='white'/>} htmlFor="videoInput" backgroundColor={'black'} textColor={'white'} padding={'1.1em'} fontSize={'1.1em'}>
                 Sube un video
               </Button>
             </InputGroup>
