@@ -32,8 +32,8 @@ app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024 *1024  # 4Gb
 app.config['VIDEO_UPLOAD_FOLDER'] = '/tmp'
 app.config['UPLOAD_FOLDER'] = '/home/pabloarga/Deepfake_Detector/frontend/build/results'
 app.config['UPLOAD_FOLDER_REF'] = './results' #REference for the frontend src
-app.config['SELECTED_CNN_MODEL'] = '2024-06-05 09.29.28'
-app.config['SELECTED_RNN_MODEL'] = ''
+app.config['SELECTED_CNN_MODEL'] = '2024-06-08 18.09.03' 
+app.config['SELECTED_RNN_MODEL'] = '2024-06-13 16.20.00'
 
 # Load the model
 path = f"/home/pabloarga/Results/{app.config['SELECTED_CNN_MODEL']}/model{app.config['SELECTED_CNN_MODEL']}.keras"  
@@ -89,12 +89,12 @@ def getRNNGraphs():
 @app.route('/api/model/confussion/matrix/cnn', methods=['GET'])
 def getCNNConfussionMatrix():
     app.logger.info('Request received for getCNNConfussionMatrix')
-    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_CNN_MODEL"]}/confussionMatrix_{app.config["SELECTED_CNN_MODEL"]}.png')
+    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_CNN_MODEL"]}/confusionMatrix_{app.config["SELECTED_CNN_MODEL"]}.png')
 
 @app.route('/api/model/confussion/matrix/rnn', methods=['GET'])
 def getRNNConfussionMatrix():
     app.logger.info('Request received for getRNNConfussionMatrix')
-    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_RNN_MODEL"]}/confussionMatrix_{app.config["SELECTED_RNN_MODEL"]}.png')
+    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_RNN_MODEL"]}/confusionMatrix_{app.config["SELECTED_RNN_MODEL"]}.png')
 
 @app.route('/api/predict', methods=['POST'])
 def predict():
