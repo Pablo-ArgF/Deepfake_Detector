@@ -5,8 +5,7 @@ import {
     Heading,
     Text,
     Image,
-    Input,
-    Button
+    Input
 } from '@chakra-ui/react';
 import { ArrowForwardIcon } from '@chakra-ui/icons';
 import { ResponsiveLine } from '@nivo/line';
@@ -27,11 +26,14 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
     }]);
 
     const handleThresholdChange = (event) => {
-        var thresholdValue = parseFloat(event.target.value) / 100;
+        // threshold value is the value rounded to 2 decimal positions and divided by 100
+        var thresholdValue = parseFloat(event.target.value).toFixed(2) / 100;
+        if (thresholdValue > 1)
+            thresholdValue = 1;
         if (event.target.value === '') {
             thresholdValue = 0;
         }
-        const aboveThresholdTmp = data.predictions.data.filter(prediction => prediction.y >= thresholdValue).length;
+        const aboveThresholdTmp = data.predictions.data.filter(prediction => prediction.y.toFixed(2)  >= thresholdValue).length;
         setAboveThreshold(aboveThresholdTmp);
         setPieChartData([{
             "id": "Por encima del umbral",
@@ -62,7 +64,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                         width={'35%'}>
 
                         <Flex direction={'column'} w='98%' padding='0.5em' alignItems='flex-start' backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                            <Text textColor={'#050C9C'} margin={'0.25em'}><b>Nombre del video</b></Text>
+                            <Text textColor={'black'} margin={'0.25em'}><b>Nombre del video</b></Text>
                             <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data.predictions.id}</Text>
                         </Flex>
                         <Grid
@@ -72,33 +74,33 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                             gap={'0.25em'}
                         >
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'#050C9C'} margin={'0.25em'}><b>Frames analizados</b></Text>
+                                <Text textColor={'black'} margin={'0.25em'}><b>Frames analizados</b></Text>
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data.predictions.data.length}</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'#050C9C'} margin={'0.25em'}><b>Mínimo registrado</b></Text>
+                                <Text textColor={'black'} margin={'0.25em'}><b>Mínimo registrado</b></Text>
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data.min * 100).toFixed(2)}%</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'#050C9C'} margin={'0.25em'}><b>Máximo registrado</b></Text>
+                                <Text textColor={'black'} margin={'0.25em'}><b>Máximo registrado</b></Text>
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data.max * 100).toFixed(2)}%</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'#050C9C'} margin={'0.25em'}><b>Número de valores distintos</b></Text>
+                                <Text textColor={'black'} margin={'0.25em'}><b>Número de valores distintos</b></Text>
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{new Set(data.predictions.data.map(prediction => prediction.y.toFixed(2))).size}</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'#050C9C'} margin={'0.25em'}><b>Varianza de los valores</b></Text>
+                                <Text textColor={'black'} margin={'0.25em'}><b>Varianza de los valores</b></Text>
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data.var * 100).toFixed(2)}%</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'#050C9C'} margin={'0.25em'}><b>Media de los valores</b></Text>
+                                <Text textColor={'black'} margin={'0.25em'}><b>Media de los valores</b></Text>
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data.mean * 100).toFixed(2)}%</Text>
                             </Flex>
                         </Grid>
 
                         <Flex direction={'column'} padding={'0.5em'} width={'98%'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                            <Text textColor={'#050C9C'} margin={'0.25em'}><b>Proporción por encima del umbral</b>:</Text>
+                            <Text textColor={'black'} margin={'0.25em'}><b>Proporción por encima del umbral</b>:</Text>
                             <Flex direction='row' height='12em' width={'100%'}>                                
                                 <div style={{ height: '17em', width:'75%', overflow:'hidden' }} marginLeft='1em' marginRight='1em'>
                                     <ResponsivePie
@@ -159,7 +161,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                     />
                                 </div>
                                 <Flex direction='column' width={'35%'} h={'100%'} justifyContent={'flex-end'}>
-                                    <Text textColor={'white'} margin={'0.25em'}><b>Introduzca un umbral de decisión</b></Text>
+                                    <Text textColor={'black'} margin={'0.25em'}><b>Introduzca un umbral de decisión</b></Text>
                                     <Input
                                         type="number"
                                         width={'90%'}
@@ -184,7 +186,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                         marginLeft={'0.5em'}
                         marginRight={'0.5em'}
                         borderRadius={'0.5em'}>
-                        <Heading as="h2" size="4xl" mb={15} textColor={'#170C8A'}>
+                        <Heading as="h2" size="4xl" mb={15} textColor={'black'}>
                             Frame seleccionado
                         </Heading>
                         <Flex
@@ -194,13 +196,13 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                             alignContent={'center'}
                             marginLeft={'1em'}
                             gap={'0.5em'}>
-                                <Flex direction={'column'} padding={'0.5em'} backgroundColor='#5548D6' borderRadius={'0.25em'}>
+                                <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                     <Text textColor={'#170C8A'} margin={'0.25em'}><b>Número del frame</b></Text>
-                                    <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{selectedIndex}</Text>
+                                    <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{selectedIndex}</Text>
                                 </Flex>
-                                <Flex direction={'column'} padding={'0.5em'} backgroundColor='#5548D6' borderRadius={'0.25em'}>
+                                <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                     <Text textColor={'#170C8A'} margin={'0.25em'}><b>Predicción para el frame</b></Text>
-                                    <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data.predictions.data[selectedIndex].y * 100).toFixed(2)}% Fake</Text>
+                                    <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data.predictions.data[selectedIndex].y * 100).toFixed(2)}% Fake</Text>
                                 </Flex>
                         </Flex>
                         <Flex
@@ -210,12 +212,12 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                             alignContent={'center'}
                             marginLeft={'1em'}
                             marginTop={'2em'}>
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#5548D6' borderRadius={'0.25em'}>
+                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                 <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame extraido del video</b></Text>
                                 <Image src={data.videoFrames[selectedIndex]} maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
                             </Flex>
                             <ArrowForwardIcon boxSize={'3em'} alignSelf={'center'} />
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#5548D6' borderRadius={'0.25em'}>
+                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                 <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame utilizado para la predicción</b></Text>
                                 <Image src={data.processedFrames[selectedIndex]} maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
                             </Flex>
@@ -229,11 +231,12 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                     direction='column'
                     alignContent={'flex-start'}
                     alignItems={'start'}
-                    backgroundColor={'#199C92'}
+                    backgroundColor={'white'}
+                    borderWidth='0.3em'
+                    borderColor={'black'}
                     borderRadius={'0.5em'}
-                    marginLeft={'0.5em'}
-                    marginRight={'0.5em'}
-                    marginTop={'0.5em'}
+                    borderStyle={'solid'}
+                    margin={'0.5em'}
                 >
                     <Heading as='h2' size='3xl' mb={13} textColor={'#00201D'}>
                         Análisis por frames
