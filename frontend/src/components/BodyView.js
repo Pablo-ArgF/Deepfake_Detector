@@ -18,10 +18,12 @@ import RNNVideoDashboard from './RNNVideoDashboard';  // Import RNNVideoDashboar
 
 const BodyView = () => {
   const [error, setError] = useState('');
-  const [data, setData] = useState(require('./results.json'));
+  const [data, setData] = useState(null);
+  const [RNNdata, setRNNData] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(1);
-  const [videoUploaded, setVideoUploaded] = useState(true);
+  const [videoUploaded, setVideoUploaded] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [RNNloading, setRNNLoading] = useState(true);
   const [useRNN, setUseRNN] = useState(false);  // State to control which dashboard to use
 
   const handleVideoUpload = async (event) => {
@@ -38,9 +40,9 @@ const BodyView = () => {
 
       // Set a 10-minute timeout (600,000 milliseconds)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 600000);
+      var timeoutId = setTimeout(() => controller.abort(), 600000);
 
-      const response = await fetch('http://156.35.163.188:5000/predict', {
+      var response = await fetch('http://156.35.163.188/api/predict', {
         method: 'POST',
         body: formData,
         headers: {
@@ -57,6 +59,28 @@ const BodyView = () => {
       setLoading(false);
       setVideoUploaded(true);
       setData(data);
+
+      //Start the prediction by sequences
+
+      timeoutId = setTimeout(() => controller.abort(), 600000);
+
+      var RNNresponse = await fetch('http://156.35.163.188/api/predict/sequences', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'enctype': 'multipart/form-data'
+        },
+        signal: controller.signal // Attach the signal to the fetch request
+      });
+
+      // Clear the timeout if the request completes before the timeout fires
+      clearTimeout(timeoutId);
+
+      const RNNdata = await RNNresponse.json();
+      console.log(RNNdata);
+      setRNNLoading(false);
+      setRNNData(RNNdata);
+        
     } catch (error) {
       setError('Error prediciendo DeepFakes: ' + error);
       setLoading(false);
@@ -106,9 +130,10 @@ const BodyView = () => {
       {videoUploaded ? (
         useRNN ? (
           <RNNVideoDashboard 
-            setData={setData}
-            setLoading={setLoading}
-            data={data} 
+            setData={setRNNData}
+            setLoading={setRNNLoading}
+            loading = {RNNloading}
+            data={RNNdata} 
             setSelectedIndex={setSelectedIndex} 
             selectedIndex={selectedIndex} 
           />

@@ -12,8 +12,8 @@ import { ResponsiveLine } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
 
 const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSelectedIndex, selectedIndex }) => {
-    const [aboveThreshold, setAboveThreshold] = useState(data.predictions.data.filter(prediction => prediction.y >= 0).length);
-    const [totalNValues] = useState(data.predictions.data.length);
+    const [aboveThreshold, setAboveThreshold] = useState(data?.predictions.data.filter(prediction => prediction.y >= 0).length);
+    const [totalNValues] = useState(data?.predictions.data.length);
     const [pieChartData,setPieChartData] = useState([{
         "id": "Por encima del umbral",
         "label": "Por encima del umbral",
@@ -33,7 +33,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
         if (event.target.value === '') {
             thresholdValue = 0;
         }
-        const aboveThresholdTmp = data.predictions.data.filter(prediction => prediction.y.toFixed(2)  >= thresholdValue).length;
+        const aboveThresholdTmp = data?.predictions.data.filter(prediction => prediction.y.toFixed(2)  >= thresholdValue).length;
         setAboveThreshold(aboveThresholdTmp);
         setPieChartData([{
             "id": "Por encima del umbral",
@@ -65,7 +65,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
 
                         <Flex direction={'column'} w='98%' padding='0.5em' alignItems='flex-start' backgroundColor='#3572EF' borderRadius={'0.25em'}>
                             <Text textColor={'black'} margin={'0.25em'}><b>Nombre del video</b></Text>
-                            <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data.predictions.id}</Text>
+                            <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data?.predictions.id}</Text>
                         </Flex>
                         <Grid
                             w='98%'
@@ -75,27 +75,27 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                         >
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
                                 <Text textColor={'black'} margin={'0.25em'}><b>Frames analizados</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data.predictions.data.length}</Text>
+                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data?.predictions.data.length}</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
                                 <Text textColor={'black'} margin={'0.25em'}><b>Mínimo registrado</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data.min * 100).toFixed(2)}%</Text>
+                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.min * 100).toFixed(2)}%</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
                                 <Text textColor={'black'} margin={'0.25em'}><b>Máximo registrado</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data.max * 100).toFixed(2)}%</Text>
+                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.max * 100).toFixed(2)}%</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
                                 <Text textColor={'black'} margin={'0.25em'}><b>Número de valores distintos</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{new Set(data.predictions.data.map(prediction => prediction.y.toFixed(2))).size}</Text>
+                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{new Set(data?.predictions.data.map(prediction => prediction.y.toFixed(2))).size}</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
                                 <Text textColor={'black'} margin={'0.25em'}><b>Varianza de los valores</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data.var * 100).toFixed(2)}%</Text>
+                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.var * 100).toFixed(2)}%</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
                                 <Text textColor={'black'} margin={'0.25em'}><b>Media de los valores</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data.mean * 100).toFixed(2)}%</Text>
+                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.mean * 100).toFixed(2)}%</Text>
                             </Flex>
                         </Grid>
 
@@ -202,7 +202,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 </Flex>
                                 <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                     <Text textColor={'#170C8A'} margin={'0.25em'}><b>Predicción para el frame</b></Text>
-                                    <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data.predictions.data[selectedIndex].y * 100).toFixed(2)}% Fake</Text>
+                                    <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.predictions.data[selectedIndex].y * 100).toFixed(2)}% Fake</Text>
                                 </Flex>
                         </Flex>
                         <Flex
@@ -214,12 +214,12 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                             marginTop={'2em'}>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                 <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame extraido del video</b></Text>
-                                <Image src={data.videoFrames[selectedIndex]} maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
+                                <Image src={data?.videoFrames[selectedIndex]} maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
                             </Flex>
                             <ArrowForwardIcon boxSize={'3em'} alignSelf={'center'} />
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                 <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame utilizado para la predicción</b></Text>
-                                <Image src={data.processedFrames[selectedIndex]} maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
+                                <Image src={data?.processedFrames[selectedIndex]} maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
                             </Flex>
                         </Flex>
                     </Flex>
@@ -243,7 +243,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                     </Heading>
                     <div style={{ height: '18em', width: '100%' }} marginLeft='1em' marginRight='1em'>
                         <ResponsiveLine
-                            data={[data.predictions]}
+                            data={[data?.predictions]}
                             margin={{ top: 20, right: 50, bottom: 70, left: 50 }}
                             xScale={{ type: 'linear', min: 'auto', max: 'auto' }}
                             yScale={{ type: 'linear', min: 0, max: 1, stacked: true }}
