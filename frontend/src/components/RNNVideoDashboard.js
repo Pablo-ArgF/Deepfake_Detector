@@ -14,7 +14,7 @@ import { ResponsivePie } from '@nivo/pie';
 
 const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data, setSelectedIndex, selectedIndex }) => {
     const [aboveThreshold, setAboveThreshold] = useState(data?.predictions.data.filter(prediction => prediction.y >= 0).length);
-    const [totalNValues] = useState(data?.predictions.data.length);
+    const [totalNValues] = useState(data?.nSequences);
     const [pieChartData,setPieChartData] = useState([{
         "id": "Por encima del umbral",
         "label": "Por encima del umbral",
@@ -52,7 +52,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
       <div>
         {loading ? 
         (
-        <Flex direction='column' width={'100%'} alignContent={'center'} >
+        <Flex direction='column' width={'100%'} alignItems={'center'} >
             <Spinner size='10xl' boxSize={'3em'}  thickness='0.2em' colorScheme='blue'/>
         </Flex>
         )    
@@ -85,7 +85,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                         >
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
                                 <Text textColor={'black'} margin={'0.25em'}><b>Secuencias analizadas</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data?.predictions.data.length}</Text>
+                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data?.nSequences}</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
                                 <Text textColor={'black'} margin={'0.25em'}><b>Mínimo registrado</b></Text>

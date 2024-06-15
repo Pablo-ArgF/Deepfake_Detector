@@ -201,7 +201,7 @@ def predictSequences():
         'max':float(maxVal),
         'min':float(minVal),
         'range':float(range_),
-        'nSequences': len(predictions),
+        'nSequences': len(processedSequences),
         'videoFrames': video_frame_files,
         'processedFrames': processed_frame_files
     }), 200
