@@ -76,8 +76,8 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
         return faces,labels
 
 
-
-    def process_video_to_predict(self, video_path):
+    
+    def process_video_to_predict(self, video_path, sequenceLength = None): # if sequencesLength != None -> division of the video in the passed length
         # Initialize face cascade
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         processed_faces = []  # Processed face frames
@@ -98,8 +98,19 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
             else:
                 break
         cap.release()
-
-        return np.array(original_frames), np.array(processed_faces)
+        if(sequenceLength == None):
+            return np.array(original_frames), np.array(processed_faces)
+        else:
+            # Divide the frames into sequences of the specified length
+            original_sequences = [original_frames[i:i+sequenceLength] for i in range(0, len(original_frames), sequenceLength)]
+            processed_sequences = [processed_faces[i:i+sequenceLength] for i in range(0, len(processed_faces), sequenceLength)]
+            
+            # Ensure all sequences are of the same length
+            if len(original_sequences[-1]) < sequenceLength:
+                original_sequences.pop()
+                processed_sequences.pop()
+            
+            return np.array(original_sequences), np.array(processed_sequences)
 
     def transform(self, videos, videoLabels): #TODO algo mal, estoy subiendo imagenes con una linea negra y ya
         num_videos = len(videos)

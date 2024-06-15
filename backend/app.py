@@ -34,10 +34,16 @@ app.config['UPLOAD_FOLDER'] = '/home/pabloarga/Deepfake_Detector/frontend/build/
 app.config['UPLOAD_FOLDER_REF'] = './results' #REference for the frontend src
 app.config['SELECTED_CNN_MODEL'] = '2024-06-08 18.09.03' 
 app.config['SELECTED_RNN_MODEL'] = '2024-06-13 16.20.00'
+app.config['RNN_MODEL_SEQUENCE_LENGTH'] = 20
 
-# Load the model
+# Load the cnn model
 path = f"/home/pabloarga/Results/{app.config['SELECTED_CNN_MODEL']}/model{app.config['SELECTED_CNN_MODEL']}.keras"  
 model = tf.keras.models.load_model(path, safe_mode=False, compile=False)
+
+# Load the rnn model
+pathSequences = f"/home/pabloarga/Results/{app.config['SELECTED_RNN_MODEL']}/model{app.config['SELECTED_RNN_MODEL']}.keras"  
+modelSequences = tf.keras.models.load_model(pathSequences, safe_mode=False, compile=False)
+
 
 faceExtractor = FaceExtractorMultithread() 
 
@@ -54,6 +60,18 @@ def save_images(frames, video_name):
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{video_name}_frame_{i}.png')
         cv2.imwrite(file_path, frame)
         image_files.append(os.path.join(app.config['UPLOAD_FOLDER_REF'], f'{video_name}_frame_{i}.png'))
+    return image_files
+
+def save_sequences(sequences, video_name):
+    """
+    Guarda las imagenes de las secuencias en el directorio de carga.
+    """
+    image_files = []
+    for sequence in sequences:
+        for i, frame in enumerate(sequence):
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{video_name}_frame_{i}.png')
+            cv2.imwrite(file_path, frame)
+            image_files.append(os.path.join(app.config['UPLOAD_FOLDER_REF'], f'{video_name}_frame_{i}.png'))
     return image_files
     
 def remove_all_files(folder_path):
@@ -140,6 +158,52 @@ def predict():
         'videoFrames': video_frame_files,
         'processedFrames': processed_frame_files
     }), 200
+
+@app.route('/api/predict/sequences', methods=['POST'])
+def predictSequences():
+    app.logger.info('Request received for predict sequences')
+    if 'video' not in request.files:
+        return jsonify({'error': 'No video uploaded'}), 400
+    
+    video_file = request.files['video']
+    video_name = secure_filename(video_file.filename)
+    video_path = os.path.join(app.config['VIDEO_UPLOAD_FOLDER'], video_name)
+    video_file.save(video_path)
+
+    # Process the video
+    videoFrames, processedSequences = faceExtractor.process_video_to_predict(video_path, sequenceLength = app.config['RNN_MODEL_SEQUENCE_LENGTH'])    
+    predictions = modelSequences.predict(np.stack(processedSequences, axis=0))
+    mean = np.mean(predictions)
+    var = np.var(predictions)
+    maxVal = np.max(predictions)
+    minVal = np.min(predictions)
+    range_ = maxVal - minVal
+
+    resultPredictions = []
+    for value in predictions:
+        for i in range(app.config['RNN_MODEL_SEQUENCE_LENGTH']):
+            resultPredictions.append(float(value[0]))  
+        
+    # Save the images and get their paths
+    video_frame_files = save_sequences(videoFrames, video_name)
+    processed_frame_files = save_sequences(processedSequences, f'{video_name}_processed')
+
+
+    return jsonify({
+        'predictions': {
+            'id': video_name,
+            'data': [{'x': index, 'y': value} for index, value in enumerate(resultPredictions)]
+        },
+        'mean': float(mean),
+        'var':float(var),
+        'max':float(maxVal),
+        'min':float(minVal),
+        'range':float(range_),
+        'nSequences': len(predictions),
+        'videoFrames': video_frame_files,
+        'processedFrames': processed_frame_files
+    }), 200
+
 
 if __name__ == '__main__':
     app.run(debug=False)
