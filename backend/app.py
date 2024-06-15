@@ -26,7 +26,9 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 handler.setFormatter(formatter)
 app.logger.addHandler(handler)
 
-CORS(app, origins='*', methods=['GET', 'POST'], allow_headers=['Content-Type'])
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+
 # Increase maximum content length to 4Gb
 app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024 *1024  # 4Gb
 app.config['VIDEO_UPLOAD_FOLDER'] = '/tmp'
