@@ -2,50 +2,41 @@ import os
 import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras.initializers import Constant
-from tensorflow.keras.layers import Dense, MaxPooling2D, Conv2D, Flatten,Lambda ,Input ,Dropout, PReLU
+from tensorflow.keras.layers import Dense, MaxPooling2D, Conv2D, Flatten, Lambda, Input, Dropout, PReLU, BatchNormalization
 from tensorflow.keras.models import Sequential
+from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
+from tensorflow.keras.regularizers import l2
 from MetricsModule import TrainingMetrics
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' #Para que no muestre los warnings de tensorflow
-
-route = 'P:\TFG\Datasets\dataframes_small' #'/home/pabloarga/Data'
-resultsPath = 'P:\TFG\Datasets\dataframes_small\\results' #'/home/pabloarga/Results2' 
+route = 'P:\\TFG\\Datasets\\dataframes_small'
+resultsPath = 'P:\\TFG\\Datasets\\dataframes_small\\results'
 
 routeServer = '/home/pabloarga/Data/dataframes'
-resultsPathServer = '/home/pabloarga/Results' 
+resultsPathServer = '/home/pabloarga/Results'
 
-#---------------------------------------------------------------------------------------------------------------------------------------------
-# Function to add Convolutional layer with PReLU activation
+value_PReLU = 0.25
+
 def conv_prelu(filters, kernel_size, name):
     conv_layer = layers.Conv2D(filters, kernel_size, padding='same', name=name)
     prelu_layer = PReLU(alpha_initializer=Constant(value=value_PReLU))
-    return Sequential([conv_layer, prelu_layer])
-    
-# Define the constant value for PReLU alpha
-value_PReLU = 0.25
+    bn_layer = layers.BatchNormalization()
+    return Sequential([conv_layer, bn_layer, prelu_layer])
 
-#---------------------------------------------------------------------------------------------------------------------------------------------
-# Input Layer
 inputs = layers.Input(shape=(200, 200, 3))
-
-# Conv1_1 and Conv1_2 Layers
 x = conv_prelu(32, (3, 3), 'conv1_1')(inputs)
 x = conv_prelu(32, (3, 3), 'conv1_2')(x)
-x = layers.Dropout(0.25)(x)  # Adding dropout after Conv1_2
+x = layers.Dropout(0.25)(x)
 
-# Pool1 Layer
 x = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool1')(x)
 
-# Conv2_1 and Conv2_2 Layers
 x = conv_prelu(64, (3, 3), 'conv2_1')(x)
 x = conv_prelu(64, (3, 3), 'conv2_2')(x)
-x = layers.Dropout(0.25)(x)  # Adding dropout after Conv2_2
+x = layers.Dropout(0.25)(x)
 
-# Pool2 Layer
 pool2_output = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool2')(x)
 
-# Now you can use pool2_output as input for other layers
 conv3_1 = conv_prelu(64, (3, 3), 'conv3_1')(pool2_output)
 conv3_2 = conv_prelu(64, (3, 3), 'conv3_2')(conv3_1)
 pool3 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool3')(conv3_2)
@@ -69,28 +60,20 @@ pool4 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool4')(concat_2)
 
 flatten = Flatten()(pool4)
 
-fc = layers.Dense(64, name='fc')(flatten)
-fc = layers.Dropout(0.5)(fc)  # Adding dropout before the fully connected layer
+fc = layers.Dense(32, name='fc', kernel_regularizer=l2(0.01))(flatten)
+fc = layers.Dense(128, name='fc_2', kernel_regularizer=l2(0.01))(fc)
+fc = layers.Dropout(0.5)(fc)
+fc_class = layers.Dense(64, name='fc_class', kernel_regularizer=l2(0.01))(fc)
 
-fc_class = layers.Dense(128, name='fc_class')(fc)
-
-# Softmax Output Layer
 outputs = layers.Dense(1, activation='sigmoid', name='out')(fc_class)
 
-# Compile the model (add optimizer, loss function, etc.)
 model2 = tf.keras.Model(inputs=inputs, outputs=outputs)
-model2.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model2.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss='binary_crossentropy', metrics=['accuracy'])
 
-
-#---------------------------------------------------------------------------------------------------------------------------------------------
-
-#entremamos secuencialmente los modelos
 models = {
-    model2 : "modelo Net2 (reducido) - con Prelus y con dropouts - con dataset grande y rotacion de caras - del paper Facial Feature Extraction Method Based on Shallow and Deep Fusion CNN",
+    model2: "modelo Net2 intentando reducir overfitting",
 }
 
-for model,description in models.items():
-    metrics = TrainingMetrics(model, resultsPathServer, modelDescription = description)
-    metrics.batches_train(folderPath = routeServer,nPerBatch = 5 , epochs = 2, isSequence = False) # Divide the hole dataset into <nbatches> fragments and train <epochs> epochs with each
-
-
+for model, description in models.items():
+    metrics = TrainingMetrics(model, resultsPathServer, modelDescription=description)
+    metrics.batches_train(folderPath=routeServer, nPerBatch=4, epochs=3, isSequence=False)
