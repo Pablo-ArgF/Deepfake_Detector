@@ -9,6 +9,7 @@ import concurrent.futures
 import pandas as pd
 import numpy as np
 from scipy import ndimage
+from concurrent.futures import ThreadPoolExecutor
 
 class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
     def __init__(self, percentageExtractionFake=0.5, percentageExtractionReal=0.5, max_workers=None):
@@ -76,7 +77,65 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
         return faces,labels
 
 
+
+
+    def process_frame_chunk(self,frames):
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        processed_faces = []
+        original_frames = []
     
+        for frame in frames:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            detected_faces = face_cascade.detectMultiScale(gray, 1.305, 7)
+            if len(detected_faces) > 0:
+                x, y, w, h = detected_faces[0]
+                alignedFaceImage = self.align_frame(frame, gray[y:y+h], x, y, w, h, face_cascade)
+                processed_faces.append(alignedFaceImage)
+            original_frames.append(frame)
+        
+        return original_frames, processed_faces
+
+    def process_video_to_predict(self, video_path, sequenceLength=None):
+        cap = cv2.VideoCapture(video_path)
+        frames = []
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if ret:
+                frames.append(frame)
+            else:
+                break
+        cap.release()
+
+        num_threads = min(8, len(frames))  # Adjust number of threads based on frame count and a max limit
+        frame_chunks = [frames[i::num_threads] for i in range(num_threads)]
+
+        processed_faces = []
+        original_frames = []
+
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            futures = [executor.submit(self.process_frame_chunk, chunk) for chunk in frame_chunks]
+            for future in futures:
+                original_chunk, processed_chunk = future.result()
+                original_frames.extend(original_chunk)
+                processed_faces.extend(processed_chunk)
+
+        if sequenceLength is None:
+            return np.array(original_frames), np.array(processed_faces)
+        else:
+            # Divide the frames into sequences of the specified length
+            original_sequences = [original_frames[i:i+sequenceLength] for i in range(0, len(original_frames), sequenceLength)]
+            processed_sequences = [processed_faces[i:i+sequenceLength] for i in range(0, len(processed_faces), sequenceLength)]
+
+            # Ensure all sequences are of the same length and not empty
+            if original_sequences and len(original_sequences[-1]) < sequenceLength:
+                original_sequences.pop()
+                processed_sequences.pop()
+
+            return np.array(original_sequences), np.array(processed_sequences)
+
+
+    """
     def process_video_to_predict(self, video_path, sequenceLength = None): # if sequencesLength != None -> division of the video in the passed length
         # Initialize face cascade
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -111,6 +170,7 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                 processed_sequences.pop()
             
             return np.array(original_sequences), np.array(processed_sequences)
+    """
 
     def transform(self, videos, videoLabels): #TODO algo mal, estoy subiendo imagenes con una linea negra y ya
         num_videos = len(videos)

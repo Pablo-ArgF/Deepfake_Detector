@@ -42,45 +42,39 @@ const BodyView = () => {
       const controller = new AbortController();
       var timeoutId = setTimeout(() => controller.abort(), 600000);
 
-      var response = await fetch('http://156.35.163.188/api/predict', {
+      fetch('http://156.35.163.188/api/predict', {
         method: 'POST',
         body: formData,
         headers: {
           'enctype': 'multipart/form-data'
         },
         signal: controller.signal // Attach the signal to the fetch request
+      }).then(async response => {
+          var CNNdata = await response.json();
+          setData(CNNdata);
+          setLoading(false);
+          setVideoUploaded(true);
+          // Clear the timeout if the request completes before the timeout fires
+          clearTimeout(timeoutId);
+
+           //Start the prediction by sequences
+          var timeoutIdRNN = setTimeout(() => controller.abort(), 600000);
+    
+          fetch('http://156.35.163.188/api/predict/sequences', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'enctype': 'multipart/form-data'
+            },
+            signal: controller.signal // Attach the signal to the fetch request
+          }).then(async RNNresponse =>{
+              const RNNdata = await RNNresponse.json();
+              setRNNData(RNNdata);
+              setRNNLoading(false);
+              // Clear the timeout if the request completes before the timeout fires
+              clearTimeout(timeoutIdRNN);
+          });
       });
-
-      // Clear the timeout if the request completes before the timeout fires
-      clearTimeout(timeoutId);
-
-      const data = await response.json();
-      console.log(data);
-      setLoading(false);
-      setVideoUploaded(true);
-      setData(data);
-
-      //Start the prediction by sequences
-
-      timeoutId = setTimeout(() => controller.abort(), 600000);
-
-      var RNNresponse = await fetch('http://156.35.163.188/api/predict/sequences', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'enctype': 'multipart/form-data'
-        },
-        signal: controller.signal // Attach the signal to the fetch request
-      });
-
-      // Clear the timeout if the request completes before the timeout fires
-      clearTimeout(timeoutId);
-
-      const RNNdata = await RNNresponse.json();
-      console.log(RNNdata);
-      setRNNLoading(false);
-      setRNNData(RNNdata);
-        
     } catch (error) {
       setError('Error prediciendo DeepFakes: ' + error);
       setLoading(false);

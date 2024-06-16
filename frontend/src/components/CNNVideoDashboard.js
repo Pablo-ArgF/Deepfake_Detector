@@ -12,8 +12,8 @@ import { ResponsiveLine } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
 
 const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSelectedIndex, selectedIndex }) => {
-    const [aboveThreshold, setAboveThreshold] = useState(data?.predictions.data.filter(prediction => prediction.y >= 0).length);
-    const [totalNValues] = useState(data?.predictions.data.length);
+    const [aboveThreshold, setAboveThreshold] = useState(null);
+    const [totalNValues] = useState(data?.nFrames);
     const [pieChartData,setPieChartData] = useState([{
         "id": "Por encima del umbral",
         "label": "Por encima del umbral",
@@ -22,7 +22,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
     {
         "id": "Por debajo del umbral",  
         "label": "Por debajo del umbral",
-        "value": totalNValues - aboveThreshold
+        "value": data?.nFrames - aboveThreshold
     }]);
 
     const handleThresholdChange = (event) => {
@@ -43,7 +43,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
         {
             "id": "Por debajo del umbral",
             "label": "Por debajo del umbral",
-            "value": totalNValues - aboveThresholdTmp
+            "value": data?.nFrames - aboveThresholdTmp
         }]);
     };
 
@@ -103,6 +103,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                             <Text textColor={'black'} margin={'0.25em'}><b>Proporción por encima del umbral</b>:</Text>
                             <Flex direction='row' height='12em' width={'100%'}>                                
                                 <div style={{ height: '17em', width:'75%', overflow:'hidden' }} marginLeft='1em' marginRight='1em'>
+                                    { aboveThreshold != null?
                                     <ResponsivePie
                                         data={pieChartData}
                                         margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
@@ -159,9 +160,11 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                             }
                                         ]}
                                     />
+                                    :
+                                    <Flex justifyContent={'center'}><Text textColor={'white'} margin={'0.25em'}><b>Introduzca un umbral <br/>de decisión</b></Text></Flex>
+                                    }
                                 </div>
                                 <Flex direction='column' width={'35%'} h={'100%'} justifyContent={'flex-end'}>
-                                    <Text textColor={'black'} margin={'0.25em'}><b>Introduzca un umbral de decisión</b></Text>
                                     <Input
                                         type="number"
                                         width={'90%'}
@@ -275,7 +278,6 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                             onClick={(data) => {
                                 setSelectedIndex(data.index);
                             }}
-                            
                         />
                     </div>
                 </Flex>
