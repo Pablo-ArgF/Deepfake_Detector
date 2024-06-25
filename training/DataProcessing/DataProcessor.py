@@ -8,7 +8,59 @@ import sys
 from FaceReconModule import FaceExtractorMultithread
 
 class DataProcessor:
+    """
+    Clase para procesar datos extrayendo caras de imágenes y videos.
+
+    Args:
+        baseDirectory (str): El directorio base que contiene los datos.
+        destinationDirectory (str): El directorio de destino para guardar los datos procesados.
+        sequenceLengths (list, opcional): Lista de longitudes de secuencia para crear secuencias de fotogramas a partir de videos. Por defecto, None.
+        sampleDirectory (str, opcional): El directorio para guardar una muestra de imágenes procesadas. Por defecto, None.
+        sampleProbability (float, opcional): La probabilidad de guardar una imagen en el directorio de muestra. Por defecto, 0.001.
+
+    Atributos:
+        baseDirectory (str): El directorio base que contiene los datos.
+        destinationDirectory (str): El directorio de destino para guardar los datos procesados.
+        currentDirectoryFake (bool): Indica si el directorio actual es para datos falsos.
+        currentDatasetCounter (int): Contador para el conjunto de datos actual que se está procesando.
+        currentSequenceDatasetCounter (int): Contador para el conjunto de datos de secuencia actual que se está procesando.
+        sampleDirectory (str): El directorio para guardar una muestra de imágenes procesadas.
+        sampleProbability (float): La probabilidad de guardar una imagen en el directorio de muestra.
+        sequenceLengths (list): Lista de longitudes de secuencia para crear secuencias de fotogramas a partir de videos.
+        imagesPaths (list): Lista de rutas de archivos de imágenes.
+        imagesLabels (list): Lista de etiquetas para los archivos de imágenes.
+        videosPaths (list): Lista de rutas de archivos de videos.
+        videosLabels (list): Lista de etiquetas para los archivos de videos.
+        face_extractor (FaceExtractorMultithread): Instancia de la clase FaceExtractorMultithread para extraer caras de imágenes y videos.
+        faces (list): Lista de caras extraídas.
+        labels (list): Lista de etiquetas para las caras extraídas.
+        sequencesData (list): Lista de matrices que contienen las secuencias actuales que aún no se han guardado para cada tamaño en sequenceLengths.
+        totalFaces (int): Número total de caras procesadas.
+        totalFake (int): Número total de caras falsas procesadas.
+        totalReal (int): Número total de caras reales procesadas.
+
+    Métodos:
+        processFolder(path): Procesa de forma recursiva una carpeta y sus subcarpetas.
+        processFile(path): Procesa un archivo y lo registra en la lista correspondiente.
+        storeImage(img, label): Almacena una imagen en las matrices y opcionalmente la guarda en el directorio de muestra.
+        saveDataset(): Guarda las caras y etiquetas almacenadas como un conjunto de datos en un archivo HDF5.
+        processImages(): Procesa los archivos de imágenes y extrae caras.
+        processVideos(): Procesa los archivos de videos y extrae caras.
+        registerSequences(faces, label): Registra secuencias de fotogramas de videos y las guarda como conjuntos de datos en archivos HDF5.
+        saveSequences(index): Guarda las secuencias registradas como conjuntos de datos en archivos HDF5.
+
+    """
     def __init__(self, baseDirectory, destinationDirectory,sequenceLengths = None, sampleDirectory = None, sampleProbability = 0.001):
+        """
+        Inicializa una instancia de la clase DataProcessor.
+
+        Args:
+            baseDirectory (str): El directorio base que contiene los datos.
+            destinationDirectory (str): El directorio de destino para guardar los datos procesados.
+            sequenceLengths (list, opcional): Lista de longitudes de secuencia para crear secuencias de fotogramas a partir de videos. Por defecto, None.
+            sampleDirectory (str, opcional): El directorio para guardar una muestra de imágenes procesadas. Por defecto, None.
+            sampleProbability (float, opcional): La probabilidad de guardar una imagen en el directorio de muestra. Por defecto, 0.001.
+        """
         self.baseDirectory = baseDirectory
         self.destinationDirectory = destinationDirectory
         self.currentDirectoryFake = False
@@ -57,6 +109,12 @@ class DataProcessor:
 
 
     def processFolder(self, path):
+        """
+        Procesa una carpeta y todos sus archivos y subcarpetas.
+
+        :param path: Ruta de la carpeta a procesar.
+        """
+        
         #check if current folder indicates real/fake
         sections = path.split('-')
         if(sections[-1] == 'real' or sections[-1] == 'fake'):
@@ -73,7 +131,12 @@ class DataProcessor:
                 self.processFolder(current_path)
 
     def processFile(self, path):
-        #Registramos la imagen o video en la lista correspondiente
+        """
+        Procesa un archivo y registra la imagen o video en la lista correspondiente.
+
+        :param path: Ruta del archivo a procesar.
+        :type path: str
+        """
         fragments = path.split('.')
         if fragments[-1] == 'jpg' or fragments[-1] == 'png':
             self.imagesPaths.append(path)
@@ -89,6 +152,14 @@ class DataProcessor:
                 self.videosLabels.append(0)
 
     def storeImage(self,img,label):
+        """
+            Almacena una imagen y su etiqueta en los arrays correspondientes.
+
+            :param img: La imagen a almacenar.
+            :type img: numpy.ndarray
+            :param label: La etiqueta de la imagen.
+            :type label: str
+        """
         # Guardamos la imagen en los arrays
         self.faces.append(img)
         self.labels.append(label)
@@ -101,10 +172,19 @@ class DataProcessor:
                 cv2.imwrite(f'{self.sampleDirectory}/{label}_image_{len(self.faces) + self.totalFaces}.jpg', img)
 
         # Si tenemos x imagenes guardadas, creamos un dataset con ellas y las guardamos en un fichero h5, borrando las imagenes de la memoria
-        if len(self.faces) == 9000: #TODO ajustar
+        if len(self.faces) == 9000: 
            self.saveDataset()
 
     def saveDataset(self):
+        """
+            Guarda el dataset actual en disco y actualiza los datos de progreso.
+
+            Este método guarda el dataset actual en disco en formato HDF5 y actualiza los datos de progreso en un archivo CSV.
+            Los datos de progreso incluyen el número de imágenes totales, el número de imágenes falsas y el número de imágenes reales.
+
+            Returns:
+                None
+        """        
         if len(self.faces) == 0:
             return
         print(f'--> saved dataset {self.currentDatasetCounter}')
@@ -137,6 +217,10 @@ class DataProcessor:
 
 
     def processImages(self):
+        """
+            Procesa las imágenes almacenadas en la lista de rutas de imágenes.
+            Extrae las caras de las imágenes y las almacena junto con sus etiquetas en el almacenamiento.
+        """
         for index,path in enumerate(self.imagesPaths):
             if index % 100 == 0:
                 print(f'image {index}/{len(self.imagesPaths)}')
@@ -146,6 +230,19 @@ class DataProcessor:
 
 
     def processVideos(self):    
+        """
+            Procesa los videos divididos en chunks y realiza las siguientes tareas:
+            - Divide la cantidad de videos en chunks de 100 videos cada uno.
+            - Transforma los videos en secuencias de caras y etiquetas utilizando el extractor de caras.
+            - Almacena las imágenes individualmente en dataframes para su uso en una red neuronal convolucional (CNN).
+            - Registra las secuencias en dataframes para su uso en una red neuronal recurrente (RNN).
+
+            Args:
+                self: La instancia del objeto DataProcessor.
+
+            Returns:
+                None
+        """        
         #dividimos la cantidad de videos de forma que se procesen de 100 en 100
         numberOfChunks = math.ceil(len(self.videosPaths) / 100) 
         for chunk in range(numberOfChunks):
@@ -163,23 +260,34 @@ class DataProcessor:
                 if self.sequenceLengths:
                     self.registerSequences(video,labels[0]) #Labels[0] porque todos los frames de un video tienen la misma label
 
-    """
-    Recibe todas las imagenes y label de un video y guarda las secuencias con los tamaños especificados por constructor.
-    Por cada tamaño especificado en el constructor se creará una carpeta en la destination directory con el nombre: 'sequences_{sequenceLength}'
-    """
-    def registerSequences(self,faces,label):
-        for index,sequenceLength in enumerate(self.sequenceLengths):
+    def registerSequences(self, faces, label):
+        """
+        Recibe todas las imagenes y label de un video y guarda las secuencias con los tamaños especificados por constructor.
+        Por cada tamaño especificado en el constructor se creará una carpeta en la destination directory con el nombre: 'sequences_{sequenceLength}'
+
+        :param faces: Lista de caras.
+        :type faces: list
+        :param label: Etiqueta asociada a las secuencias de caras.
+        :type label: str
+        """
+        for index, sequenceLength in enumerate(self.sequenceLengths):
             sequences = [faces[i:i+sequenceLength] for i in range(0, len(faces), sequenceLength)] 
-            #store in the sequencesData array the sequences that are not saved yet
+            # Almacena en el arreglo sequencesData las secuencias que aún no han sido guardadas
             for sequence in sequences:
-                self.sequencesData[index].append([sequence , label]) 
-            if len(self.sequencesData[index]) * self.sequenceLengths[index] >= 300: #TODO modificar esto para que sea más, ahora lo puse así para los tests
+                self.sequencesData[index].append([sequence, label]) 
+            if len(self.sequencesData[index]) * self.sequenceLengths[index] >= 300: # TODO modificar esto para que sea más, ahora lo puse así para los tests
                 self.saveSequences(index)
 
-    """
-    Guarda las secuencias almacenadas en el array sequencesData en un fichero h5
-    """
     def saveSequences(self,index):
+        """
+            Guarda las secuencias de datos en un archivo HDF5 y las imágenes en carpetas correspondientes.
+
+            Parámetros:
+            - index (int): El índice de la lista de secuencias de datos a guardar.
+
+            Retorna:
+            - None
+        """
         #Si no hay nada que guardar, salimos
         if len(self.sequencesData[index]) == 0:
             return

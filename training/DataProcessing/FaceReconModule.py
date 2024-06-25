@@ -12,24 +12,59 @@ from scipy import ndimage
 from concurrent.futures import ThreadPoolExecutor
 
 class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
-    def __init__(self, percentageExtractionFake=0.5, percentageExtractionReal=0.5, max_workers=None):
-        self.percentageExtractionFake = percentageExtractionFake # Porcentaje de frames a extraer de los videos fake
-        self.percentageExtractionReal = percentageExtractionReal # Porcentaje de frames a extraer de los videos reales
-        self.max_workers = max_workers
+    """
+    Clase que se encarga de extraer caras de imágenes y videos utilizando múltiples hilos de ejecución.
+
+    Args:
+        percentageExtractionFake (float): Porcentaje de frames a extraer de los videos fake.
+        percentageExtractionReal (float): Porcentaje de frames a extraer de los videos reales.
+        max_workers (int): Número máximo de hilos de ejecución.
+
+    Attributes:
+        percentageExtractionFake (float): Porcentaje de frames a extraer de los videos fake.
+        percentageExtractionReal (float): Porcentaje de frames a extraer de los videos reales.
+        max_workers (int): Número máximo de hilos de ejecución.
+
+    Methods:
+        align_frame(frame, gray, x, y, w, h, face_cascade): Alinea una cara en un rectángulo del frame.
+        process_video(video_path, label, index): Procesa un video y extrae las caras.
+        process_image(image_path, label): Procesa una imagen y extrae las caras.
+        process_frame_chunk(frames_with_indices): Procesa un fragmento de frames y extrae las caras.
+        process_video_to_predict(video_path, sequenceLength=None): Procesa un video para predecir y extrae las caras.
+        transform(videos, videoLabels): Transforma los videos y extrae las caras.
 
     """
-    Recibe el frame completo, la imagen facial en escala de grises del frame, las coordenadas del rectángulo en el que se encuentra la cara detectada y el clasificador de caras
-    Devuelve la cara alineada en el rectángulo del frame con un tamaño de 200x200 píxeles
-    """
-    def align_frame(self, frame, gray, x, y, w, h, face_cascade): 
-        alignedImage,angle = self.align_face(frame, gray, x,y,w,h)
-        if angle is None: # Si no se han detectado los ojos, se añade la cara sin alinear
-            return cv2.resize(frame[y:y+h, x:x+w],(200,200))
+
+    def __init__(self, percentageExtractionFake=0.5, percentageExtractionReal=0.5, max_workers=None):
+        self.percentageExtractionFake = percentageExtractionFake
+        self.percentageExtractionReal = percentageExtractionReal
+        self.max_workers = max_workers
+
+    def align_frame(self, frame, gray, x, y, w, h, face_cascade):
+        """
+        Alinea una cara en un rectángulo del frame con un tamaño de 200x200 píxeles.
+
+        Args:
+            frame (numpy.ndarray): Frame completo.
+            gray (numpy.ndarray): Imagen facial en escala de grises del frame.
+            x (int): Coordenada x del rectángulo en el que se encuentra la cara detectada.
+            y (int): Coordenada y del rectángulo en el que se encuentra la cara detectada.
+            w (int): Ancho del rectángulo en el que se encuentra la cara detectada.
+            h (int): Alto del rectángulo en el que se encuentra la cara detectada.
+            face_cascade (cv2.CascadeClassifier): Clasificador de caras.
+
+        Returns:
+            numpy.ndarray: Cara alineada en el rectángulo del frame con un tamaño de 200x200 píxeles.
+
+        """
+        alignedImage, angle = self.align_face(frame, gray, x, y, w, h)
+        if angle is None:
+            return cv2.resize(frame[y:y+h, x:x+w], (200, 200))
 
         alignedGray = cv2.cvtColor(alignedImage, cv2.COLOR_BGR2GRAY)
         detected_face = face_cascade.detectMultiScale(alignedGray, 1.255, 4)
-        if len(detected_face) == 0: # Si no se ha detectado la cara en la imagen alineada, se añade la cara sin alinear
-            return cv2.resize(frame[y:y+h, x:x+w],(200,200))
+        if len(detected_face) == 0:
+            return cv2.resize(frame[y:y+h, x:x+w], (200, 200))
         xalign = detected_face[0][0]
         yalign = detected_face[0][1]
         walign = detected_face[0][2]
@@ -37,32 +72,55 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
 
         rotatedFace = alignedImage[yalign:yalign+halign, xalign:xalign+walign]
         return cv2.resize(rotatedFace, (200, 200))
-        
 
     def process_video(self, video_path, label, index):
+        """
+        Procesa un video y extrae las caras.
+
+        Args:
+            video_path (str): Ruta del video.
+            label (int): Etiqueta del video (0 para real, 1 para fake).
+            index (int): Índice del video.
+
+        Returns:
+            list: Lista de caras extraídas.
+            list: Lista de etiquetas correspondientes a las caras extraídas.
+            int: Índice del video.
+
+        """
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         faces = []
         labels = []
         cap = cv2.VideoCapture(video_path)
 
         while cap.isOpened():
-            # Leemos un frame del video
             ret, frame = cap.read()
             if ret:
-                # Generación aleatoria de número para decidir si el frame se extrae o no
-                if (label == 1 and random.random() < self.percentageExtractionFake) or (label == 0 and random.random() < self.percentageExtractionReal): 
+                if (label == 1 and random.random() < self.percentageExtractionFake) or (label == 0 and random.random() < self.percentageExtractionReal):
                     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                     detected_faces = face_cascade.detectMultiScale(gray, 1.255, 3, minSize=(50, 50))
                     for (x, y, w, h) in detected_faces:
-                        alignedFaceImage = self.align_frame(frame, gray[y:y+h, x:x+w],x,y,w,h, face_cascade)
+                        alignedFaceImage = self.align_frame(frame, gray[y:y+h, x:x+w], x, y, w, h, face_cascade)
                         faces.append(alignedFaceImage)
-                        labels.append(label)                 
+                        labels.append(label)
             else:
                 break
         cap.release()
         return faces, labels, index
-    
-    def process_image(self,image_path,label):
+
+    def process_image(self, image_path, label):
+        """
+        Procesa una imagen y extrae las caras.
+
+        Args:
+            image_path (str): Ruta de la imagen.
+            label (int): Etiqueta de la imagen (0 para real, 1 para fake).
+
+        Returns:
+            list: Lista de caras extraídas.
+            list: Lista de etiquetas correspondientes a las caras extraídas.
+
+        """
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         faces = []
         labels = []
@@ -70,16 +128,24 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         detected_faces = face_cascade.detectMultiScale(gray, 1.305, 7)
         for (x, y, w, h) in detected_faces:
-            alignedFaceImage = self.align_frame(img, gray[y:y+h, x:x+w],x,y,w,h, face_cascade)
+            alignedFaceImage = self.align_frame(img, gray[y:y+h, x:x+w], x, y, w, h, face_cascade)
             faces.append(alignedFaceImage)
             labels.append(label)
-        
-        return faces,labels
 
-
-
+        return faces, labels
 
     def process_frame_chunk(self, frames_with_indices):
+        """
+        Procesa un fragmento de frames y extrae las caras.
+
+        Args:
+            frames_with_indices (list): Lista de tuplas que contienen el índice y el frame.
+
+        Returns:
+            list: Lista de tuplas que contienen el índice y el frame original.
+            list: Lista de tuplas que contienen el índice y la cara procesada.
+
+        """
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         processed_faces = []
         original_frames = []
@@ -96,6 +162,18 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
         return original_frames, processed_faces
 
     def process_video_to_predict(self, video_path, sequenceLength=None):
+        """
+        Procesa un video para predecir y extrae las caras.
+
+        Args:
+            video_path (str): Ruta del video.
+            sequenceLength (int, optional): Longitud de las secuencias de frames. Si es None, se devuelve un solo array de frames.
+
+        Returns:
+            numpy.ndarray: Array de frames originales.
+            numpy.ndarray: Array de caras procesadas.
+
+        """
         cap = cv2.VideoCapture(video_path)
         frames = []
 
@@ -107,11 +185,9 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                 break
         cap.release()
 
-        # Calculate the number of chunks using natural logarithm and limit to a manageable number
-        num_chunks = min(max(1, int(math.log(len(frames) + 1))), 8)  # +1 to avoid log(0), max 8 chunks
+        num_chunks = min(max(1, int(math.log(len(frames) + 1))), 8)
         frame_chunks = [frames[i::num_chunks] for i in range(num_chunks)]
-        
-        # Add indices to each frame
+
         frame_chunks_with_indices = [[(idx + i * len(chunk), frame) for idx, frame in enumerate(chunk)] for i, chunk in enumerate(frame_chunks)]
 
         processed_faces = []
@@ -124,74 +200,43 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                 original_frames.extend(original_chunk)
                 processed_faces.extend(processed_chunk)
 
-        # Sort the frames based on their original indices
         original_frames.sort(key=lambda x: x[0])
         processed_faces.sort(key=lambda x: x[0])
 
-        # Remove the indices
         original_frames = [frame for idx, frame in original_frames]
         processed_faces = [face for idx, face in processed_faces]
 
         if sequenceLength is None:
             return np.array(original_frames), np.array(processed_faces)
         else:
-            # Divide the frames into sequences of the specified length
             original_sequences = [original_frames[i:i+sequenceLength] for i in range(0, len(original_frames), sequenceLength)]
             processed_sequences = [processed_faces[i:i+sequenceLength] for i in range(0, len(processed_faces), sequenceLength)]
 
-            # Ensure all sequences are of the same length and not empty
             if original_sequences and len(original_sequences[-1]) < sequenceLength:
                 original_sequences.pop()
                 processed_sequences.pop()
 
             return np.array(original_sequences), np.array(processed_sequences)
 
+    def transform(self, videos, videoLabels):
+        """
+        Transforma los videos y extrae las caras.
 
-    """
-    def process_video_to_predict(self, video_path, sequenceLength = None): # if sequencesLength != None -> division of the video in the passed length
-        # Initialize face cascade
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        processed_faces = []  # Processed face frames
-        original_frames = []  # Non-cut frames
-        cap = cv2.VideoCapture(video_path)
-        
-        while cap.isOpened():
-            # Read a frame from the segment
-            ret, frame = cap.read()
-            if ret:
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                detected_faces = face_cascade.detectMultiScale(gray, 1.305, 7)
-                if len(detected_faces) > 0:
-                    x, y, w, h = detected_faces[0]
-                    alignedFaceImage = self.align_frame(frame, gray[y:y+h, x:x+w],x,y,w,h, face_cascade)
-                    processed_faces.append(alignedFaceImage)
-                    original_frames.append(frame)
-            else:
-                break
-        cap.release()
-        if(sequenceLength == None):
-            return np.array(original_frames), np.array(processed_faces)
-        else:
-            # Divide the frames into sequences of the specified length
-            original_sequences = [original_frames[i:i+sequenceLength] for i in range(0, len(original_frames), sequenceLength)]
-            processed_sequences = [processed_faces[i:i+sequenceLength] for i in range(0, len(processed_faces), sequenceLength)]
-            
-            # Ensure all sequences are of the same length
-            if len(original_sequences[-1]) < sequenceLength:
-                original_sequences.pop()
-                processed_sequences.pop()
-            
-            return np.array(original_sequences), np.array(processed_sequences)
-    """
+        Args:
+            videos (list): Lista de rutas de los videos.
+            videoLabels (list): Lista de etiquetas de los videos.
 
-    def transform(self, videos, videoLabels): #TODO algo mal, estoy subiendo imagenes con una linea negra y ya
+        Returns:
+            list: Lista de listas de caras extraídas.
+            list: Lista de listas de etiquetas correspondientes a las caras extraídas.
+
+        """
         num_videos = len(videos)
-        videoFaces = [[] for i in range(num_videos)] # For each video passed, the faces extracted from it will be stored here
-        groupedLabels = [[] for i in range(num_videos)] # For each video passed, the labels for images extracted from it will be stored here
+        videoFaces = [[] for i in range(num_videos)]
+        groupedLabels = [[] for i in range(num_videos)]
         current = 1
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            # Start the futures and store them in a dictionary
-            futures = {executor.submit(self.process_video, videos[i],videoLabels[i], i): i for i in range(num_videos)}
+            futures = {executor.submit(self.process_video, videos[i], videoLabels[i], i): i for i in range(num_videos)}
             for future in concurrent.futures.as_completed(futures):
                 print(f'Completed processing of video {current}/{num_videos} ----> {math.floor(current/num_videos*100)}%')
                 result = future.result()
@@ -202,12 +247,28 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
         return videoFaces,groupedLabels
     
 
-    """ 
-    Recibe la imagen completa y el rectangulo en el que se encuentra la cara detectada, devuelve el recorte con la cara
-    alineada de tal forma que los ojos estén en la misma línea horizontal y la boca en la misma línea vertical
-    Si no es capaz de detectar los ojos o de encontrar la cara una vez alineada la imagen devuelve la imagen sin alinear
-    """
     def align_face(self, faceImg, greyImg , x,y,w,h):
+        """
+        Recibe la imagen completa y el rectangulo en el que se encuentra la cara detectada, devuelve el recorte con la cara
+        alineada de tal forma que los ojos estén en la misma línea horizontal y la boca en la misma línea vertical
+        Si no es capaz de detectar los ojos o de encontrar la cara una vez alineada la imagen devuelve la imagen sin alinear
+
+        :param faceImg: Imagen de la cara.
+        :type faceImg: numpy.ndarray
+        :param greyImg: Imagen en escala de grises.
+        :type greyImg: numpy.ndarray
+        :param x: Coordenada x de la esquina superior izquierda del rectángulo de la cara.
+        :type x: int
+        :param y: Coordenada y de la esquina superior izquierda del rectángulo de la cara.
+        :type y: int
+        :param w: Ancho del rectángulo de la cara.
+        :type w: int
+        :param h: Altura del rectángulo de la cara.
+        :type h: int
+        :return: La imagen de la cara alineada y el ángulo de rotación.
+        :rtype: Tuple[numpy.ndarray, float]
+        """
+        
         eye_detector = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.xml")
         eyes = eye_detector.detectMultiScale(greyImg, scaleFactor=1.1203, minNeighbors=3)
 
@@ -239,5 +300,5 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
 
         # Apply the rotation to the image
         rotated = cv2.warpAffine(faceImg, M, (faceImg.shape[1], faceImg.shape[0]))
-        return rotated, angle 
+        return rotated, angle
 

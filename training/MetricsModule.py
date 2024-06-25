@@ -1,4 +1,3 @@
-# Import the necessary libraries
 import os
 import shutil
 import re #Regular expressions
@@ -20,7 +19,25 @@ import time
 import matplotlib as mpl
 
 class TrainingMetrics():
+    """
+    Clase para calcular y almacenar métricas de entrenamiento de un modelo.
+
+    Args:
+        model (tf.keras.Model): Modelo a entrenar.
+        resultDataPath (str): Ruta donde se guardarán los resultados (imágenes, csv, etc).
+        modelDescription (str, optional): Descripción del modelo. Defaults to None.
+        showGraphs (bool, optional): Indica si se desean mostrar las gráficas de pérdida, precisión y matriz de confusión. Defaults to False.
+    """
     def __init__(self,model,resultDataPath,modelDescription=None,showGraphs = False) -> None:   
+        """
+        Inicializa una instancia de la clase TrainingMetrics.
+
+        Args:
+            model (tf.keras.Model): Modelo a entrenar.
+            resultDataPath (str): Ruta donde se guardarán los resultados (imágenes, csv, etc).
+            modelDescription (str, optional): Descripción del modelo. Defaults to None.
+            showGraphs (bool, optional): Indica si se desean mostrar las gráficas de pérdida, precisión y matriz de confusión. Defaults to False.
+        """
         mpl.use('Agg')
         #Modelo a entrenar
         self.model = model
@@ -58,10 +75,10 @@ class TrainingMetrics():
         #Guardamos una copia del archivo de entrenamiento en la carpeta del modelo
         shutil.copy2('/home/pabloarga/Deepfake_Detector/training/TrainModule.py', os.path.join(self.resultDataPath,'training_script.py'))
 
-    """
-    Metodo para ser llamado en un hilo paralelo que monitorea el uso de CPU y memoria RAM
-    """
     def monitor_usage(self):
+        """
+        Método para ser llamado en un hilo paralelo que monitorea el uso de CPU y memoria RAM.
+        """
         self.monitoring = True
         while self.monitoring:
             self.cpu_percentages = np.append(self.cpu_percentages,psutil.cpu_percent())
@@ -69,10 +86,17 @@ class TrainingMetrics():
             time.sleep(40)  # Paramos la thread durante 40seg para tomar las mediciones cada 5seg
 
 
-    """
-    Metodo para aumentar el dataset con imagenes falsas mediante la rotación y el volteo de las imagenes
-    """
+
     def augment(self, row):
+        """
+        Método para aumentar el dataset con imágenes falsas mediante la rotación y el volteo de las imágenes.
+
+        Args:
+            row (pd.Series): Fila del dataframe que contiene la imagen y la etiqueta.
+
+        Returns:
+            pd.DataFrame: Dataframe con las imágenes aumentadas.
+        """
         image = np.array(row['face'])  # Replace height and width with the dimensions of your images
 
         # Perform augmentations only on fake images
@@ -92,12 +116,16 @@ class TrainingMetrics():
         return pd.DataFrame([row])
 
 
-    """
-    Metodo que recibe el path a una carpeta en la que se encuentran los Dataframes y con ellos
-    entrena el modelo. El entrenamiento del modelo se hace cargando N dataframes a la vez, minimizando
-    el uso de memoria RAM
-    """
-    def batches_train(self,folderPath,nPerBatch,epochs, isSequence = False):        
+    def batches_train(self,folderPath,nPerBatch,epochs, isSequence = False):     
+        """
+        Método que recibe el path a una carpeta en la que se encuentran los Dataframes y con ellos entrena el modelo.
+
+        Args:
+            folderPath (str): Ruta de la carpeta que contiene los Dataframes.
+            nPerBatch (int): Número de Dataframes a cargar por batch.
+            epochs (int): Número de épocas de entrenamiento.
+            isSequence (bool, optional): Indica si los datos son secuencias. Defaults to False.
+        """   
         fileNames = [name for name in os.listdir(folderPath) if os.path.isfile(os.path.join(folderPath, name))]
         #Hacemos un shuffle a los archivos para mezclar los dataframes
         fileNames = shuffle(fileNames)
@@ -180,7 +208,16 @@ class TrainingMetrics():
 
 
     def train(self,X_train,y_train,X_test,y_test,epochs):
-       
+        """
+        Método para entrenar el modelo con los datos de entrenamiento y validación.
+
+        Args:
+            X_train (np.ndarray): Datos de entrenamiento.
+            y_train (np.ndarray): Etiquetas de los datos de entrenamiento.
+            X_test (np.ndarray): Datos de validación.
+            y_test (np.ndarray): Etiquetas de los datos de validación.
+            epochs (int): Número de épocas de entrenamiento.
+        """
         batchHistory = self.model.fit(X_train, y_train, epochs=epochs, validation_data=(X_test, y_test))
         #Guardamos el historico de perdida y precision
         self.loss_history = np.append(self.loss_history, batchHistory.history['loss'])
@@ -193,17 +230,20 @@ class TrainingMetrics():
         self.real_y = np.append(self.real_y, y_test)
         self.predicted_y = np.append(self.predicted_y, self.model.predict(X_test))
         
-    """
-    Stores an image containing the layer structure of the model into the model folder
-    """
     def storeModelStructure(self):
+        """
+        Guarda una imagen que muestra la estructura de capas del modelo en la carpeta del modelo.
+        """    
         # Save the model structure as an image
         tf.keras.utils.plot_model(self.model, 
                     to_file=os.path.join(self.resultDataPath, "model_structure.png"),
                     show_shapes=True, show_layer_names=False)
 
     
-    def plot(self):        
+    def plot(self):    
+        """
+        Genera y guarda las graficas de acierto y perdida durante el entrenamiento. Si showGraphs es True, las muestra en pantalla.
+        """    
         # Plot the training and validation accuracy
         epochs = range(1, len(self.loss_history) + 1)
 
@@ -236,7 +276,9 @@ class TrainingMetrics():
         plt.close()
 
     def confusionMatrix(self):
-    
+        """
+        Genera y guarda una matriz de confusión con los datos de test. Si showGraphs es True, la muestra en pantalla.
+        """
         # Create a confusion matrix
         conf_matrix = confusion_matrix(self.real_y, self.predicted_y.round())
 
@@ -255,6 +297,12 @@ class TrainingMetrics():
         return
 
     def saveStats(self, fileName = "metrics.csv"):
+        """
+        Guarda las métricas de entrenamiento en un archivo CSV.
+
+        Args:
+            fileName (str, optional): Nombre del archivo CSV. Defaults to "metrics.csv".
+        """
         filePath = os.path.join(self.baseDir,fileName)
         df = pd.DataFrame()
         #Añadimos fecha y hora de estos datos
