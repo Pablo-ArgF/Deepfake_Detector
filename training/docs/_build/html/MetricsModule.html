@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MetricsModule module &mdash; documentación de Deepfake detector - </title>
+  <title>MetricsModule module &mdash; documentación de Deepfake Detector - 1.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=e2bb6099"></script>
+        <script src="_static/documentation_options.js?v=4936afed"></script>
         <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script src="_static/translations.js?v=efdbd0b9"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="index.html" class="icon icon-home">
-            Deepfake detector
+            Deepfake Detector
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -74,7 +74,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Deepfake detector</a>
+          <a href="index.html">Deepfake Detector</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -99,45 +99,86 @@
 <dt class="sig sig-object py" id="MetricsModule.TrainingMetrics">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">MetricsModule.</span></span><span class="sig-name descname"><span class="pre">TrainingMetrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resultDataPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelDescription</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">showGraphs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MetricsModule.html#TrainingMetrics"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#MetricsModule.TrainingMetrics" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Clase para calcular y almacenar métricas de entrenamiento de un modelo.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>model (tf.keras.Model): Modelo a entrenar.
+resultDataPath (str): Ruta donde se guardarán los resultados (imágenes, csv, etc).
+modelDescription (str, optional): Descripción del modelo. Defaults to None.
+showGraphs (bool, optional): Indica si se desean mostrar las gráficas de pérdida, precisión y matriz de confusión. Defaults to False.</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="MetricsModule.TrainingMetrics.augment">
 <span class="sig-name descname"><span class="pre">augment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MetricsModule.html#TrainingMetrics.augment"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#MetricsModule.TrainingMetrics.augment" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Método para aumentar el dataset con imágenes falsas mediante la rotación y el volteo de las imágenes.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>row (pd.Series): Fila del dataframe que contiene la imagen y la etiqueta.</p>
+</dd>
+<dt>Returns:</dt><dd><p>pd.DataFrame: Dataframe con las imágenes aumentadas.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="MetricsModule.TrainingMetrics.batches_train">
 <span class="sig-name descname"><span class="pre">batches_train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folderPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nPerBatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isSequence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MetricsModule.html#TrainingMetrics.batches_train"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#MetricsModule.TrainingMetrics.batches_train" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Método que recibe el path a una carpeta en la que se encuentran los Dataframes y con ellos entrena el modelo.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>folderPath (str): Ruta de la carpeta que contiene los Dataframes.
+nPerBatch (int): Número de Dataframes a cargar por batch.
+epochs (int): Número de épocas de entrenamiento.
+isSequence (bool, optional): Indica si los datos son secuencias. Defaults to False.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="MetricsModule.TrainingMetrics.confusionMatrix">
 <span class="sig-name descname"><span class="pre">confusionMatrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MetricsModule.html#TrainingMetrics.confusionMatrix"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#MetricsModule.TrainingMetrics.confusionMatrix" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Genera y guarda una matriz de confusión con los datos de test. Si showGraphs es True, la muestra en pantalla.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="MetricsModule.TrainingMetrics.monitor_usage">
 <span class="sig-name descname"><span class="pre">monitor_usage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MetricsModule.html#TrainingMetrics.monitor_usage"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#MetricsModule.TrainingMetrics.monitor_usage" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Método para ser llamado en un hilo paralelo que monitorea el uso de CPU y memoria RAM.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="MetricsModule.TrainingMetrics.plot">
 <span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MetricsModule.html#TrainingMetrics.plot"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#MetricsModule.TrainingMetrics.plot" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Genera y guarda las graficas de acierto y perdida durante el entrenamiento. Si showGraphs es True, las muestra en pantalla.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="MetricsModule.TrainingMetrics.saveStats">
 <span class="sig-name descname"><span class="pre">saveStats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'metrics.csv'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MetricsModule.html#TrainingMetrics.saveStats"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#MetricsModule.TrainingMetrics.saveStats" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Guarda las métricas de entrenamiento en un archivo CSV.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>fileName (str, optional): Nombre del archivo CSV. Defaults to «metrics.csv».</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="MetricsModule.TrainingMetrics.storeModelStructure">
 <span class="sig-name descname"><span class="pre">storeModelStructure</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/MetricsModule.html#TrainingMetrics.storeModelStructure"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#MetricsModule.TrainingMetrics.storeModelStructure" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Guarda una imagen que muestra la estructura de capas del modelo en la carpeta del modelo.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="MetricsModule.TrainingMetrics.train">
 <span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MetricsModule.html#TrainingMetrics.train"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#MetricsModule.TrainingMetrics.train" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Método para entrenar el modelo con los datos de entrenamiento y validación.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>X_train (np.ndarray): Datos de entrenamiento.
+y_train (np.ndarray): Etiquetas de los datos de entrenamiento.
+X_test (np.ndarray): Datos de validación.
+y_test (np.ndarray): Etiquetas de los datos de validación.
+epochs (int): Número de épocas de entrenamiento.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

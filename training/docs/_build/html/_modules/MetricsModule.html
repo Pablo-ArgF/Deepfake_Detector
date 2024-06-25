@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MetricsModule &mdash; documentación de Deepfake detector - </title>
+  <title>MetricsModule &mdash; documentación de Deepfake Detector - 1.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=e2bb6099"></script>
+        <script src="../_static/documentation_options.js?v=4936afed"></script>
         <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script src="../_static/translations.js?v=efdbd0b9"></script>
@@ -32,7 +32,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            Deepfake detector
+            Deepfake Detector
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -53,7 +53,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">Deepfake detector</a>
+          <a href="../index.html">Deepfake Detector</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -72,8 +72,7 @@
            <div itemprop="articleBody">
              
   <h1>Código fuente para MetricsModule</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Import the necessary libraries</span>
-<span class="kn">import</span> <span class="nn">os</span>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">re</span> <span class="c1">#Regular expressions</span>
 <span class="kn">import</span> <span class="nn">gc</span> <span class="c1">#Garbage collector for freeing memory</span>
@@ -96,7 +95,25 @@
 <div class="viewcode-block" id="TrainingMetrics">
 <a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics">[documentos]</a>
 <span class="k">class</span> <span class="nc">TrainingMetrics</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Clase para calcular y almacenar métricas de entrenamiento de un modelo.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (tf.keras.Model): Modelo a entrenar.</span>
+<span class="sd">        resultDataPath (str): Ruta donde se guardarán los resultados (imágenes, csv, etc).</span>
+<span class="sd">        modelDescription (str, optional): Descripción del modelo. Defaults to None.</span>
+<span class="sd">        showGraphs (bool, optional): Indica si se desean mostrar las gráficas de pérdida, precisión y matriz de confusión. Defaults to False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">model</span><span class="p">,</span><span class="n">resultDataPath</span><span class="p">,</span><span class="n">modelDescription</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">showGraphs</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>   
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inicializa una instancia de la clase TrainingMetrics.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model (tf.keras.Model): Modelo a entrenar.</span>
+<span class="sd">            resultDataPath (str): Ruta donde se guardarán los resultados (imágenes, csv, etc).</span>
+<span class="sd">            modelDescription (str, optional): Descripción del modelo. Defaults to None.</span>
+<span class="sd">            showGraphs (bool, optional): Indica si se desean mostrar las gráficas de pérdida, precisión y matriz de confusión. Defaults to False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mpl</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span>
         <span class="c1">#Modelo a entrenar</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
@@ -134,12 +151,12 @@
         <span class="c1">#Guardamos una copia del archivo de entrenamiento en la carpeta del modelo</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="s1">&#39;/home/pabloarga/Deepfake_Detector/training/TrainModule.py&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resultDataPath</span><span class="p">,</span><span class="s1">&#39;training_script.py&#39;</span><span class="p">))</span>
 
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Metodo para ser llamado en un hilo paralelo que monitorea el uso de CPU y memoria RAM</span>
-<span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="TrainingMetrics.monitor_usage">
 <a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.monitor_usage">[documentos]</a>
     <span class="k">def</span> <span class="nf">monitor_usage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Método para ser llamado en un hilo paralelo que monitorea el uso de CPU y memoria RAM.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">monitoring</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">monitoring</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cpu_percentages</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cpu_percentages</span><span class="p">,</span><span class="n">psutil</span><span class="o">.</span><span class="n">cpu_percent</span><span class="p">())</span>
@@ -148,12 +165,19 @@
 
 
 
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Metodo para aumentar el dataset con imagenes falsas mediante la rotación y el volteo de las imagenes</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+
 <div class="viewcode-block" id="TrainingMetrics.augment">
 <a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.augment">[documentos]</a>
     <span class="k">def</span> <span class="nf">augment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Método para aumentar el dataset con imágenes falsas mediante la rotación y el volteo de las imágenes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            row (pd.Series): Fila del dataframe que contiene la imagen y la etiqueta.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame: Dataframe con las imágenes aumentadas.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;face&#39;</span><span class="p">])</span>  <span class="c1"># Replace height and width with the dimensions of your images</span>
 
         <span class="c1"># Perform augmentations only on fake images</span>
@@ -174,14 +198,18 @@
 
 
 
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Metodo que recibe el path a una carpeta en la que se encuentran los Dataframes y con ellos</span>
-<span class="sd">    entrena el modelo. El entrenamiento del modelo se hace cargando N dataframes a la vez, minimizando</span>
-<span class="sd">    el uso de memoria RAM</span>
-<span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="TrainingMetrics.batches_train">
 <a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.batches_train">[documentos]</a>
-    <span class="k">def</span> <span class="nf">batches_train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">folderPath</span><span class="p">,</span><span class="n">nPerBatch</span><span class="p">,</span><span class="n">epochs</span><span class="p">,</span> <span class="n">isSequence</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>        
+    <span class="k">def</span> <span class="nf">batches_train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">folderPath</span><span class="p">,</span><span class="n">nPerBatch</span><span class="p">,</span><span class="n">epochs</span><span class="p">,</span> <span class="n">isSequence</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>     
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Método que recibe el path a una carpeta en la que se encuentran los Dataframes y con ellos entrena el modelo.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            folderPath (str): Ruta de la carpeta que contiene los Dataframes.</span>
+<span class="sd">            nPerBatch (int): Número de Dataframes a cargar por batch.</span>
+<span class="sd">            epochs (int): Número de épocas de entrenamiento.</span>
+<span class="sd">            isSequence (bool, optional): Indica si los datos son secuencias. Defaults to False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>   
         <span class="n">fileNames</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">folderPath</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folderPath</span><span class="p">,</span> <span class="n">name</span><span class="p">))]</span>
         <span class="c1">#Hacemos un shuffle a los archivos para mezclar los dataframes</span>
         <span class="n">fileNames</span> <span class="o">=</span> <span class="n">shuffle</span><span class="p">(</span><span class="n">fileNames</span><span class="p">)</span>
@@ -267,7 +295,16 @@
 <div class="viewcode-block" id="TrainingMetrics.train">
 <a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.train">[documentos]</a>
     <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">X_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">,</span><span class="n">X_test</span><span class="p">,</span><span class="n">y_test</span><span class="p">,</span><span class="n">epochs</span><span class="p">):</span>
-       
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Método para entrenar el modelo con los datos de entrenamiento y validación.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X_train (np.ndarray): Datos de entrenamiento.</span>
+<span class="sd">            y_train (np.ndarray): Etiquetas de los datos de entrenamiento.</span>
+<span class="sd">            X_test (np.ndarray): Datos de validación.</span>
+<span class="sd">            y_test (np.ndarray): Etiquetas de los datos de validación.</span>
+<span class="sd">            epochs (int): Número de épocas de entrenamiento.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">batchHistory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">validation_data</span><span class="o">=</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">))</span>
         <span class="c1">#Guardamos el historico de perdida y precision</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loss_history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_history</span><span class="p">,</span> <span class="n">batchHistory</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">])</span>
@@ -280,13 +317,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">real_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">real_y</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">predicted_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predicted_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">))</span></div>
 
-<span class="w">        </span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Stores an image containing the layer structure of the model into the model folder</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+        
 <div class="viewcode-block" id="TrainingMetrics.storeModelStructure">
 <a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.storeModelStructure">[documentos]</a>
     <span class="k">def</span> <span class="nf">storeModelStructure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Guarda una imagen que muestra la estructura de capas del modelo en la carpeta del modelo.</span>
+<span class="sd">        &quot;&quot;&quot;</span>    
         <span class="c1"># Save the model structure as an image</span>
         <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">plot_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> 
                     <span class="n">to_file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resultDataPath</span><span class="p">,</span> <span class="s2">&quot;model_structure.png&quot;</span><span class="p">),</span>
@@ -296,7 +333,10 @@
     
 <div class="viewcode-block" id="TrainingMetrics.plot">
 <a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.plot">[documentos]</a>
-    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>        
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>    
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Genera y guarda las graficas de acierto y perdida durante el entrenamiento. Si showGraphs es True, las muestra en pantalla.</span>
+<span class="sd">        &quot;&quot;&quot;</span>    
         <span class="c1"># Plot the training and validation accuracy</span>
         <span class="n">epochs</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_history</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
@@ -332,7 +372,9 @@
 <div class="viewcode-block" id="TrainingMetrics.confusionMatrix">
 <a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.confusionMatrix">[documentos]</a>
     <span class="k">def</span> <span class="nf">confusionMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Genera y guarda una matriz de confusión con los datos de test. Si showGraphs es True, la muestra en pantalla.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Create a confusion matrix</span>
         <span class="n">conf_matrix</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">real_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted_y</span><span class="o">.</span><span class="n">round</span><span class="p">())</span>
 
@@ -354,6 +396,12 @@
 <div class="viewcode-block" id="TrainingMetrics.saveStats">
 <a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.saveStats">[documentos]</a>
     <span class="k">def</span> <span class="nf">saveStats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileName</span> <span class="o">=</span> <span class="s2">&quot;metrics.csv&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Guarda las métricas de entrenamiento en un archivo CSV.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fileName (str, optional): Nombre del archivo CSV. Defaults to &quot;metrics.csv&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">filePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseDir</span><span class="p">,</span><span class="n">fileName</span><span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
         <span class="c1">#Añadimos fecha y hora de estos datos</span>

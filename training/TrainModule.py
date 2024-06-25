@@ -16,29 +16,21 @@ class TrainModule():
     """
     Clase utilizada para gestionar el proceso de entrenamiento de modelos.
 
-    Atributos
-    ----------
-    routeToData : str
-        La ruta al conjunto de datos.
-    routeToResults : str
-        La ruta donde se guardarán los resultados.
-    models : list
-        Una lista de modelos para ser entrenados.
-    descriptions : list
-        Una lista de descripciones para los modelos.
-    isSequence : list
-        Una lista que indica si el modelo correspondiente espera datos secuenciales.
+    :param routeToData: La ruta al conjunto de datos.
+    :type routeToData: str
+    :param routeToResults: La ruta donde se guardarán los resultados.
+    :type routeToResults: str
+    :ivar models: Una lista de modelos para ser entrenados.
+    :vartype models: list
+    :ivar descriptions: Una lista de descripciones para los modelos.
+    :vartype descriptions: list
+    :ivar isSequence: Una lista que indica si el modelo correspondiente espera datos secuenciales.
+    :vartype isSequence: list
 
-    Métodos
-    -------
-    conv_prelu(filters, kernel_size, name, kernel_regularizer=None)
-        Crea una capa convolucional seguida de una activación PReLU y normalización por lotes.
-    addModel(model, description, isSequence=False)
-        Agrega un modelo al módulo de entrenamiento.
-    removeModel(model)
-        Elimina un modelo del módulo de entrenamiento.
-    startTraining(epochs, batchSize)
-        Inicia el proceso de entrenamiento para todos los modelos agregados.
+    :method conv_prelu(filters, kernel_size, name, kernel_regularizer=None): Crea una capa convolucional seguida de una activación PReLU y normalización por lotes.
+    :method addModel(model, description, isSequence=False): Agrega un modelo al módulo de entrenamiento.
+    :method removeModel(model): Elimina un modelo del módulo de entrenamiento.
+    :method startTraining(epochs, batchSize): Inicia el proceso de entrenamiento para todos los modelos agregados.
     """
 
     def __init__(self, routeToData, routeToResults) -> None:
@@ -60,22 +52,17 @@ class TrainModule():
     def conv_prelu(filters, kernel_size, name, kernel_regularizer=None):
         """
         Crea una capa convolucional seguida de una activación PReLU y normalización por lotes.
-
-        Parámetros
-        ----------
-        filters : int
-            El número de filtros en la capa convolucional.
-        kernel_size : tuple
-            El tamaño del kernel en la capa convolucional.
-        name : str
-            El nombre de la capa convolucional.
-        kernel_regularizer : regularizer, opcional
-            La función de regularización aplicada a la matriz de pesos del kernel (por defecto es None).
-
-        Devuelve
-        -------
-        Sequential
-            Un modelo secuencial de Keras que consiste en las capas Conv2D, BatchNormalization y PReLU.
+    
+        :param filters: El número de filtros en la capa convolucional.
+        :type filters: int
+        :param kernel_size: El tamaño del kernel en la capa convolucional.
+        :type kernel_size: tuple
+        :param name: El nombre de la capa convolucional.
+        :type name: str
+        :param kernel_regularizer: La función de regularización aplicada a la matriz de pesos del kernel, opcional.
+        :type kernel_regularizer: regularizer
+        :return: Un modelo secuencial de Keras que consiste en las capas Conv2D, BatchNormalization y PReLU.
+        :rtype: Sequential
         """
         value_PReLU = 0.25
         conv_layer = layers.Conv2D(filters, kernel_size, padding='same', name=name, kernel_regularizer=kernel_regularizer)
@@ -86,15 +73,13 @@ class TrainModule():
     def addModel(self, model, description, isSequence=False):
         """
         Agrega un modelo al módulo de entrenamiento.
-
-        Parámetros
-        ----------
-        model : keras.Model
-            El modelo a agregar.
-        description : str
-            Una breve descripción del modelo.
-        isSequence : bool, opcional
-            Indica si el modelo espera datos secuenciales (por defecto es False).
+    
+        :param model: El modelo a agregar.
+        :type model: keras.Model
+        :param description: Una breve descripción del modelo.
+        :type description: str
+        :param isSequence: Indica si el modelo espera datos secuenciales, opcional.
+        :type isSequence: bool
         """
         self.models.append(model)
         self.descriptions.append(description)
@@ -103,11 +88,9 @@ class TrainModule():
     def removeModel(self, model):
         """
         Elimina un modelo del módulo de entrenamiento.
-
-        Parámetros
-        ----------
-        model : keras.Model
-            El modelo a eliminar.
+    
+        :param model: El modelo a eliminar.
+        :type model: keras.Model
         """
         index = self.models.index(model)
         self.models.pop(index)
@@ -117,19 +100,17 @@ class TrainModule():
     def startTraining(self, epochs, batchSize):
         """
         Inicia el proceso de entrenamiento para todos los modelos agregados.
-
-        Parámetros
-        ----------
-        epochs : int
-            El número de épocas para el entrenamiento.
-        batchSize : int
-            El tamaño del lote para el entrenamiento.
+    
+        :param epochs: El número de épocas para el entrenamiento.
+        :type epochs: int
+        :param batchSize: El tamaño del lote para el entrenamiento.
+        :type batchSize: int
         """
         for model, description, isSequence in zip(self.models, self.descriptions, self.isSequence):
             metrics = TrainingMetrics(model, self.routeToResults, modelDescription=description)
             metrics.batches_train(folderPath=self.routeToData, nPerBatch=batchSize, epochs=epochs, isSequence=isSequence)
 
-
+"""
 # Directories for data and results
 route = 'P:\\TFG\\Datasets\\dataframes_small'
 resultsPath = 'P:\\TFG\\Datasets\\dataframes_small\\results'
@@ -178,5 +159,6 @@ model.compile(optimizer=Adam(learning_rate=0.0001), loss='binary_crossentropy', 
 # Add the model to the training module
 trainModule = TrainModule(routeServer,resultsPathServer)
 trainModule.addModel(model,'RNN using LSTM, pretrained CNN, dense layers, and overfitting prevention techniques',isSequence=True)
-trainModule.startTraining(4,4)
+trainModule.startTraining(epochs = 3,batchSize = 4)
+"""
 

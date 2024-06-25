@@ -36,6 +36,13 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, percentageExtractionFake=0.5, percentageExtractionReal=0.5, max_workers=None):
+        """
+        Inicia el objeto FaceExtractorMultithread
+        Args:
+            percentageExtractionFake (float): Porcentaje de frames a extraer de los videos fake.
+            percentageExtractionReal (float): Porcentaje de frames a extraer de los videos reales.
+            max_workers (int): Número máximo de hilos de ejecución.
+        """
         self.percentageExtractionFake = percentageExtractionFake
         self.percentageExtractionReal = percentageExtractionReal
         self.max_workers = max_workers

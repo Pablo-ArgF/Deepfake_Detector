@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DataProcessing package &mdash; documentación de Deepfake detector - </title>
+  <title>DataProcessing package &mdash; documentación de Deepfake Detector - 1.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=e2bb6099"></script>
+        <script src="_static/documentation_options.js?v=4936afed"></script>
         <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script src="_static/translations.js?v=efdbd0b9"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="index.html" class="icon icon-home">
-            Deepfake detector
+            Deepfake Detector
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -70,7 +70,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Deepfake detector</a>
+          <a href="index.html">Deepfake Detector</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -103,35 +103,124 @@
 <dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">DataProcessing.FaceReconModule.</span></span><span class="sig-name descname"><span class="pre">FaceExtractorMultithread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentageExtractionFake</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentageExtractionReal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></p>
+<p>Clase que se encarga de extraer caras de imágenes y videos utilizando múltiples hilos de ejecución.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>percentageExtractionFake (float): Porcentaje de frames a extraer de los videos fake.
+percentageExtractionReal (float): Porcentaje de frames a extraer de los videos reales.
+max_workers (int): Número máximo de hilos de ejecución.</p>
+</dd>
+<dt>Attributes:</dt><dd><p>percentageExtractionFake (float): Porcentaje de frames a extraer de los videos fake.
+percentageExtractionReal (float): Porcentaje de frames a extraer de los videos reales.
+max_workers (int): Número máximo de hilos de ejecución.</p>
+</dd>
+<dt>Methods:</dt><dd><p>align_frame(frame, gray, x, y, w, h, face_cascade): Alinea una cara en un rectángulo del frame.
+process_video(video_path, label, index): Procesa un video y extrae las caras.
+process_image(image_path, label): Procesa una imagen y extrae las caras.
+process_frame_chunk(frames_with_indices): Procesa un fragmento de frames y extrae las caras.
+process_video_to_predict(video_path, sequenceLength=None): Procesa un video para predecir y extrae las caras.
+transform(videos, videoLabels): Transforma los videos y extrae las caras.</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.align_face">
 <span class="sig-name descname"><span class="pre">align_face</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">faceImg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">greyImg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.align_face"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.align_face" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Recibe la imagen completa y el rectangulo en el que se encuentra la cara detectada, devuelve el recorte con la cara
+alineada de tal forma que los ojos estén en la misma línea horizontal y la boca en la misma línea vertical
+Si no es capaz de detectar los ojos o de encontrar la cara una vez alineada la imagen devuelve la imagen sin alinear</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>faceImg</strong> (<em>numpy.ndarray</em>) – Imagen de la cara.</p></li>
+<li><p><strong>greyImg</strong> (<em>numpy.ndarray</em>) – Imagen en escala de grises.</p></li>
+<li><p><strong>x</strong> (<em>int</em>) – Coordenada x de la esquina superior izquierda del rectángulo de la cara.</p></li>
+<li><p><strong>y</strong> (<em>int</em>) – Coordenada y de la esquina superior izquierda del rectángulo de la cara.</p></li>
+<li><p><strong>w</strong> (<em>int</em>) – Ancho del rectángulo de la cara.</p></li>
+<li><p><strong>h</strong> (<em>int</em>) – Altura del rectángulo de la cara.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Devuelve<span class="colon">:</span></dt>
+<dd class="field-even"><p>La imagen de la cara alineada y el ángulo de rotación.</p>
+</dd>
+<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[numpy.ndarray, float]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.align_frame">
 <span class="sig-name descname"><span class="pre">align_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">face_cascade</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.align_frame"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.align_frame" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Alinea una cara en un rectángulo del frame con un tamaño de 200x200 píxeles.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>frame (numpy.ndarray): Frame completo.
+gray (numpy.ndarray): Imagen facial en escala de grises del frame.
+x (int): Coordenada x del rectángulo en el que se encuentra la cara detectada.
+y (int): Coordenada y del rectángulo en el que se encuentra la cara detectada.
+w (int): Ancho del rectángulo en el que se encuentra la cara detectada.
+h (int): Alto del rectángulo en el que se encuentra la cara detectada.
+face_cascade (cv2.CascadeClassifier): Clasificador de caras.</p>
+</dd>
+<dt>Returns:</dt><dd><p>numpy.ndarray: Cara alineada en el rectángulo del frame con un tamaño de 200x200 píxeles.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.process_frame_chunk">
 <span class="sig-name descname"><span class="pre">process_frame_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_with_indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.process_frame_chunk"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_frame_chunk" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Procesa un fragmento de frames y extrae las caras.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>frames_with_indices (list): Lista de tuplas que contienen el índice y el frame.</p>
+</dd>
+<dt>Returns:</dt><dd><p>list: Lista de tuplas que contienen el índice y el frame original.
+list: Lista de tuplas que contienen el índice y la cara procesada.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.process_image">
 <span class="sig-name descname"><span class="pre">process_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.process_image"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_image" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Procesa una imagen y extrae las caras.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>image_path (str): Ruta de la imagen.
+label (int): Etiqueta de la imagen (0 para real, 1 para fake).</p>
+</dd>
+<dt>Returns:</dt><dd><p>list: Lista de caras extraídas.
+list: Lista de etiquetas correspondientes a las caras extraídas.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.process_video">
 <span class="sig-name descname"><span class="pre">process_video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.process_video"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_video" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Procesa un video y extrae las caras.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>video_path (str): Ruta del video.
+label (int): Etiqueta del video (0 para real, 1 para fake).
+index (int): Índice del video.</p>
+</dd>
+<dt>Returns:</dt><dd><p>list: Lista de caras extraídas.
+list: Lista de etiquetas correspondientes a las caras extraídas.
+int: Índice del video.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.process_video_to_predict">
 <span class="sig-name descname"><span class="pre">process_video_to_predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequenceLength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.process_video_to_predict"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_video_to_predict" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Procesa un video para predecir y extrae las caras.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>video_path (str): Ruta del video.
+sequenceLength (int, optional): Longitud de las secuencias de frames. Si es None, se devuelve un solo array de frames.</p>
+</dd>
+<dt>Returns:</dt><dd><p>numpy.ndarray: Array de frames originales.
+numpy.ndarray: Array de caras procesadas.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.set_transform_request">
@@ -181,7 +270,16 @@ sub-estimator of a meta-estimator, e.g. used inside a
 <dl class="py method">
 <dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.transform">
 <span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">videos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">videoLabels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.transform"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.transform" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transforma los videos y extrae las caras.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>videos (list): Lista de rutas de los videos.
+videoLabels (list): Lista de etiquetas de los videos.</p>
+</dd>
+<dt>Returns:</dt><dd><p>list: Lista de listas de caras extraídas.
+list: Lista de listas de etiquetas correspondientes a las caras extraídas.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
