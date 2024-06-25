@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DataProcessing package &mdash; documentación de Deepfake detector - </title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=e2bb6099"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/translations.js?v=efdbd0b9"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="genindex.html" />
+    <link rel="search" title="Búsqueda" href="search.html" />
+    <link rel="next" title="MetricsModule module" href="MetricsModule.html" />
+    <link rel="prev" title="training" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Deepfake detector
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">training</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DataProcessing package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dataprocessing-dataprocessor-module">DataProcessing.DataProcessor module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-DataProcessing.FaceReconModule">DataProcessing.FaceReconModule module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread"><code class="docutils literal notranslate"><span class="pre">FaceExtractorMultithread</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-DataProcessing">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MetricsModule.html">MetricsModule module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TrainModule.html">TrainModule module</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Deepfake detector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">training</a></li>
+      <li class="breadcrumb-item active">DataProcessing package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/DataProcessing.rst.txt" rel="nofollow"> Ver código fuente de la página</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="dataprocessing-package">
+<h1>DataProcessing package<a class="headerlink" href="#dataprocessing-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="dataprocessing-dataprocessor-module">
+<h2>DataProcessing.DataProcessor module<a class="headerlink" href="#dataprocessing-dataprocessor-module" title="Link to this heading"></a></h2>
+</section>
+<section id="module-DataProcessing.FaceReconModule">
+<span id="dataprocessing-facereconmodule-module"></span><h2>DataProcessing.FaceReconModule module<a class="headerlink" href="#module-DataProcessing.FaceReconModule" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">DataProcessing.FaceReconModule.</span></span><span class="sig-name descname"><span class="pre">FaceExtractorMultithread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentageExtractionFake</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentageExtractionReal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.align_face">
+<span class="sig-name descname"><span class="pre">align_face</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">faceImg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">greyImg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.align_face"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.align_face" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.align_frame">
+<span class="sig-name descname"><span class="pre">align_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">face_cascade</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.align_frame"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.align_frame" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.process_frame_chunk">
+<span class="sig-name descname"><span class="pre">process_frame_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_with_indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.process_frame_chunk"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_frame_chunk" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.process_image">
+<span class="sig-name descname"><span class="pre">process_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.process_image"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_image" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.process_video">
+<span class="sig-name descname"><span class="pre">process_video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.process_video"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_video" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.process_video_to_predict">
+<span class="sig-name descname"><span class="pre">process_video_to_predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequenceLength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.process_video_to_predict"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_video_to_predict" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.set_transform_request">
+<span class="sig-name descname"><span class="pre">set_transform_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">videoLabels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'$UNCHANGED$'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">videos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'$UNCHANGED$'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread" title="DataProcessing.FaceReconModule.FaceExtractorMultithread"><span class="pre">FaceExtractorMultithread</span></a></span></span><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.set_transform_request" title="Link to this definition"></a></dt>
+<dd><p>Request metadata passed to the <code class="docutils literal notranslate"><span class="pre">transform</span></code> method.</p>
+<p>Note that this method is only relevant if
+<code class="docutils literal notranslate"><span class="pre">enable_metadata_routing=True</span></code> (see <code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.set_config()</span></code>).
+Please see <span class="xref std std-ref">User Guide</span> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>: metadata is requested, and passed to <code class="docutils literal notranslate"><span class="pre">transform</span></code> if provided. The request is ignored if metadata is not provided.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">False</span></code>: metadata is not requested and the meta-estimator will not pass it to <code class="docutils literal notranslate"><span class="pre">transform</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">str</span></code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p></li>
+</ul>
+<p>The default (<code class="docutils literal notranslate"><span class="pre">sklearn.utils.metadata_routing.UNCHANGED</span></code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.3.</span></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Nota</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code>. Otherwise it has no effect.</p>
+</div>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>videoLabels<span class="classifier">str, True, False, or None,                     default=sklearn.utils.metadata_routing.UNCHANGED</span></dt><dd><p>Metadata routing for <code class="docutils literal notranslate"><span class="pre">videoLabels</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">transform</span></code>.</p>
+</dd>
+<dt>videos<span class="classifier">str, True, False, or None,                     default=sklearn.utils.metadata_routing.UNCHANGED</span></dt><dd><p>Metadata routing for <code class="docutils literal notranslate"><span class="pre">videos</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">transform</span></code>.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>self<span class="classifier">object</span></dt><dd><p>The updated object.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">videos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">videoLabels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.transform"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.transform" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-DataProcessing">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-DataProcessing" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Pie de página">
+        <a href="modules.html" class="btn btn-neutral float-left" title="training" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Anterior</a>
+        <a href="MetricsModule.html" class="btn btn-neutral float-right" title="MetricsModule module" accesskey="n" rel="next">Siguiente <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2024, Pablo Argallero Fernández.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

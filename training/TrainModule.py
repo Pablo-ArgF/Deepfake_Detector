@@ -12,6 +12,124 @@ import h5py
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
+class TrainModule():
+    """
+    Clase utilizada para gestionar el proceso de entrenamiento de modelos.
+
+    Atributos
+    ----------
+    routeToData : str
+        La ruta al conjunto de datos.
+    routeToResults : str
+        La ruta donde se guardarán los resultados.
+    models : list
+        Una lista de modelos para ser entrenados.
+    descriptions : list
+        Una lista de descripciones para los modelos.
+    isSequence : list
+        Una lista que indica si el modelo correspondiente espera datos secuenciales.
+
+    Métodos
+    -------
+    conv_prelu(filters, kernel_size, name, kernel_regularizer=None)
+        Crea una capa convolucional seguida de una activación PReLU y normalización por lotes.
+    addModel(model, description, isSequence=False)
+        Agrega un modelo al módulo de entrenamiento.
+    removeModel(model)
+        Elimina un modelo del módulo de entrenamiento.
+    startTraining(epochs, batchSize)
+        Inicia el proceso de entrenamiento para todos los modelos agregados.
+    """
+
+    def __init__(self, routeToData, routeToResults) -> None:
+        """
+        Parámetros
+        ----------
+        routeToData : str
+            La ruta al conjunto de datos.
+        routeToResults : str
+            La ruta donde se guardarán los resultados.
+        """
+        self.routeToData = routeToData
+        self.routeToResults = routeToResults
+        self.models = []
+        self.descriptions = []
+        self.isSequence = []
+
+    @staticmethod
+    def conv_prelu(filters, kernel_size, name, kernel_regularizer=None):
+        """
+        Crea una capa convolucional seguida de una activación PReLU y normalización por lotes.
+
+        Parámetros
+        ----------
+        filters : int
+            El número de filtros en la capa convolucional.
+        kernel_size : tuple
+            El tamaño del kernel en la capa convolucional.
+        name : str
+            El nombre de la capa convolucional.
+        kernel_regularizer : regularizer, opcional
+            La función de regularización aplicada a la matriz de pesos del kernel (por defecto es None).
+
+        Devuelve
+        -------
+        Sequential
+            Un modelo secuencial de Keras que consiste en las capas Conv2D, BatchNormalization y PReLU.
+        """
+        value_PReLU = 0.25
+        conv_layer = layers.Conv2D(filters, kernel_size, padding='same', name=name, kernel_regularizer=kernel_regularizer)
+        prelu_layer = PReLU(alpha_initializer=Constant(value=value_PReLU))
+        bn_layer = layers.BatchNormalization()
+        return Sequential([conv_layer, bn_layer, prelu_layer])
+        
+    def addModel(self, model, description, isSequence=False):
+        """
+        Agrega un modelo al módulo de entrenamiento.
+
+        Parámetros
+        ----------
+        model : keras.Model
+            El modelo a agregar.
+        description : str
+            Una breve descripción del modelo.
+        isSequence : bool, opcional
+            Indica si el modelo espera datos secuenciales (por defecto es False).
+        """
+        self.models.append(model)
+        self.descriptions.append(description)
+        self.isSequence.append(isSequence)
+
+    def removeModel(self, model):
+        """
+        Elimina un modelo del módulo de entrenamiento.
+
+        Parámetros
+        ----------
+        model : keras.Model
+            El modelo a eliminar.
+        """
+        index = self.models.index(model)
+        self.models.pop(index)
+        self.descriptions.pop(index)
+        self.isSequence.pop(index)
+
+    def startTraining(self, epochs, batchSize):
+        """
+        Inicia el proceso de entrenamiento para todos los modelos agregados.
+
+        Parámetros
+        ----------
+        epochs : int
+            El número de épocas para el entrenamiento.
+        batchSize : int
+            El tamaño del lote para el entrenamiento.
+        """
+        for model, description, isSequence in zip(self.models, self.descriptions, self.isSequence):
+            metrics = TrainingMetrics(model, self.routeToResults, modelDescription=description)
+            metrics.batches_train(folderPath=self.routeToData, nPerBatch=batchSize, epochs=epochs, isSequence=isSequence)
+
+
 # Directories for data and results
 route = 'P:\\TFG\\Datasets\\dataframes_small'
 resultsPath = 'P:\\TFG\\Datasets\\dataframes_small\\results'
@@ -19,14 +137,7 @@ routeServer = '/home/pabloarga/Data/dataframes'
 sequencesServer = '/home/pabloarga/Data/sequences_20'
 resultsPathServer = '/home/pabloarga/Results'
 
-# PReLU alpha value
-value_PReLU = 0.25
 
-def conv_prelu(filters, kernel_size, name, kernel_regularizer=None):
-    conv_layer = layers.Conv2D(filters, kernel_size, padding='same', name=name, kernel_regularizer=kernel_regularizer)
-    prelu_layer = PReLU(alpha_initializer=Constant(value=value_PReLU))
-    bn_layer = layers.BatchNormalization()
-    return Sequential([conv_layer, bn_layer, prelu_layer])
 
 selectedCNN = '2024-06-20 08.29.00'
 cnn_model_path = f"/home/pabloarga/Results/{selectedCNN}/model{selectedCNN}.keras"
@@ -64,10 +175,8 @@ output = Dense(1, activation='sigmoid')(dense_output)
 model = Model(inputs=cnn_input, outputs=output)
 model.compile(optimizer=Adam(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
 
-models = {
-    model: "RNN using LSTM, pretrained CNN, dense layers, and overfitting prevention techniques",
-}
+# Add the model to the training module
+trainModule = TrainModule(routeServer,resultsPathServer)
+trainModule.addModel(model,'RNN using LSTM, pretrained CNN, dense layers, and overfitting prevention techniques',isSequence=True)
+trainModule.startTraining(4,4)
 
-for model, description in models.items():
-    metrics = TrainingMetrics(model, resultsPathServer, modelDescription=description)
-    metrics.batches_train(folderPath=sequencesServer, nPerBatch=4, epochs=4, isSequence=True)

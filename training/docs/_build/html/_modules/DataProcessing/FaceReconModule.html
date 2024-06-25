@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DataProcessing.FaceReconModule &mdash; documentación de Deepfake detector - </title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=e2bb6099"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/translations.js?v=efdbd0b9"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Deepfake detector
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">training</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Deepfake detector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">DataProcessing.FaceReconModule</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para DataProcessing.FaceReconModule</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
+<span class="kn">import</span> <span class="nn">concurrent.futures</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
+<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+
+<div class="viewcode-block" id="FaceExtractorMultithread">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.FaceReconModule.FaceExtractorMultithread">[documentos]</a>
+<span class="k">class</span> <span class="nc">FaceExtractorMultithread</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">percentageExtractionFake</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">percentageExtractionReal</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">percentageExtractionFake</span> <span class="o">=</span> <span class="n">percentageExtractionFake</span> <span class="c1"># Porcentaje de frames a extraer de los videos fake</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">percentageExtractionReal</span> <span class="o">=</span> <span class="n">percentageExtractionReal</span> <span class="c1"># Porcentaje de frames a extraer de los videos reales</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_workers</span> <span class="o">=</span> <span class="n">max_workers</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recibe el frame completo, la imagen facial en escala de grises del frame, las coordenadas del rectángulo en el que se encuentra la cara detectada y el clasificador de caras</span>
+<span class="sd">    Devuelve la cara alineada en el rectángulo del frame con un tamaño de 200x200 píxeles</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="FaceExtractorMultithread.align_frame">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.FaceReconModule.FaceExtractorMultithread.align_frame">[documentos]</a>
+    <span class="k">def</span> <span class="nf">align_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">gray</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">face_cascade</span><span class="p">):</span> 
+        <span class="n">alignedImage</span><span class="p">,</span><span class="n">angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">align_face</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">gray</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">w</span><span class="p">,</span><span class="n">h</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">angle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># Si no se han detectado los ojos, se añade la cara sin alinear</span>
+            <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">frame</span><span class="p">[</span><span class="n">y</span><span class="p">:</span><span class="n">y</span><span class="o">+</span><span class="n">h</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span><span class="n">x</span><span class="o">+</span><span class="n">w</span><span class="p">],(</span><span class="mi">200</span><span class="p">,</span><span class="mi">200</span><span class="p">))</span>
+
+        <span class="n">alignedGray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">alignedImage</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+        <span class="n">detected_face</span> <span class="o">=</span> <span class="n">face_cascade</span><span class="o">.</span><span class="n">detectMultiScale</span><span class="p">(</span><span class="n">alignedGray</span><span class="p">,</span> <span class="mf">1.255</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">detected_face</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># Si no se ha detectado la cara en la imagen alineada, se añade la cara sin alinear</span>
+            <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">frame</span><span class="p">[</span><span class="n">y</span><span class="p">:</span><span class="n">y</span><span class="o">+</span><span class="n">h</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span><span class="n">x</span><span class="o">+</span><span class="n">w</span><span class="p">],(</span><span class="mi">200</span><span class="p">,</span><span class="mi">200</span><span class="p">))</span>
+        <span class="n">xalign</span> <span class="o">=</span> <span class="n">detected_face</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">yalign</span> <span class="o">=</span> <span class="n">detected_face</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">walign</span> <span class="o">=</span> <span class="n">detected_face</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">halign</span> <span class="o">=</span> <span class="n">detected_face</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+
+        <span class="n">rotatedFace</span> <span class="o">=</span> <span class="n">alignedImage</span><span class="p">[</span><span class="n">yalign</span><span class="p">:</span><span class="n">yalign</span><span class="o">+</span><span class="n">halign</span><span class="p">,</span> <span class="n">xalign</span><span class="p">:</span><span class="n">xalign</span><span class="o">+</span><span class="n">walign</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">rotatedFace</span><span class="p">,</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">))</span></div>
+
+        
+
+<div class="viewcode-block" id="FaceExtractorMultithread.process_video">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_video">[documentos]</a>
+    <span class="k">def</span> <span class="nf">process_video</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video_path</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">face_cascade</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CascadeClassifier</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">haarcascades</span> <span class="o">+</span> <span class="s1">&#39;haarcascade_frontalface_default.xml&#39;</span><span class="p">)</span>
+        <span class="n">faces</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">video_path</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">cap</span><span class="o">.</span><span class="n">isOpened</span><span class="p">():</span>
+            <span class="c1"># Leemos un frame del video</span>
+            <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+                <span class="c1"># Generación aleatoria de número para decidir si el frame se extrae o no</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">label</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">percentageExtractionFake</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">label</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">percentageExtractionReal</span><span class="p">):</span> 
+                    <span class="n">gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+                    <span class="n">detected_faces</span> <span class="o">=</span> <span class="n">face_cascade</span><span class="o">.</span><span class="n">detectMultiScale</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="mf">1.255</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">minSize</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span> <span class="ow">in</span> <span class="n">detected_faces</span><span class="p">:</span>
+                        <span class="n">alignedFaceImage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">align_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">gray</span><span class="p">[</span><span class="n">y</span><span class="p">:</span><span class="n">y</span><span class="o">+</span><span class="n">h</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span><span class="n">x</span><span class="o">+</span><span class="n">w</span><span class="p">],</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">w</span><span class="p">,</span><span class="n">h</span><span class="p">,</span> <span class="n">face_cascade</span><span class="p">)</span>
+                        <span class="n">faces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alignedFaceImage</span><span class="p">)</span>
+                        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>                 
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">faces</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">index</span></div>
+
+    
+<div class="viewcode-block" id="FaceExtractorMultithread.process_image">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_image">[documentos]</a>
+    <span class="k">def</span> <span class="nf">process_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">image_path</span><span class="p">,</span><span class="n">label</span><span class="p">):</span>
+        <span class="n">face_cascade</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CascadeClassifier</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">haarcascades</span> <span class="o">+</span> <span class="s1">&#39;haarcascade_frontalface_default.xml&#39;</span><span class="p">)</span>
+        <span class="n">faces</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+        <span class="n">gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+        <span class="n">detected_faces</span> <span class="o">=</span> <span class="n">face_cascade</span><span class="o">.</span><span class="n">detectMultiScale</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="mf">1.305</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span> <span class="ow">in</span> <span class="n">detected_faces</span><span class="p">:</span>
+            <span class="n">alignedFaceImage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">align_frame</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">gray</span><span class="p">[</span><span class="n">y</span><span class="p">:</span><span class="n">y</span><span class="o">+</span><span class="n">h</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span><span class="n">x</span><span class="o">+</span><span class="n">w</span><span class="p">],</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">w</span><span class="p">,</span><span class="n">h</span><span class="p">,</span> <span class="n">face_cascade</span><span class="p">)</span>
+            <span class="n">faces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alignedFaceImage</span><span class="p">)</span>
+            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">faces</span><span class="p">,</span><span class="n">labels</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="FaceExtractorMultithread.process_frame_chunk">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_frame_chunk">[documentos]</a>
+    <span class="k">def</span> <span class="nf">process_frame_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames_with_indices</span><span class="p">):</span>
+        <span class="n">face_cascade</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CascadeClassifier</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">haarcascades</span> <span class="o">+</span> <span class="s1">&#39;haarcascade_frontalface_default.xml&#39;</span><span class="p">)</span>
+        <span class="n">processed_faces</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">original_frames</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">frames_with_indices</span><span class="p">:</span>
+            <span class="n">gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+            <span class="n">detected_faces</span> <span class="o">=</span> <span class="n">face_cascade</span><span class="o">.</span><span class="n">detectMultiScale</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="mf">1.305</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">detected_faces</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">detected_faces</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">alignedFaceImage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">align_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">gray</span><span class="p">[</span><span class="n">y</span><span class="p">:</span><span class="n">y</span><span class="o">+</span><span class="n">h</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">face_cascade</span><span class="p">)</span>
+                <span class="n">processed_faces</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">idx</span><span class="p">,</span> <span class="n">alignedFaceImage</span><span class="p">))</span>
+            <span class="n">original_frames</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">idx</span><span class="p">,</span> <span class="n">frame</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">original_frames</span><span class="p">,</span> <span class="n">processed_faces</span></div>
+
+
+<div class="viewcode-block" id="FaceExtractorMultithread.process_video_to_predict">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_video_to_predict">[documentos]</a>
+    <span class="k">def</span> <span class="nf">process_video_to_predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video_path</span><span class="p">,</span> <span class="n">sequenceLength</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">video_path</span><span class="p">)</span>
+        <span class="n">frames</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">while</span> <span class="n">cap</span><span class="o">.</span><span class="n">isOpened</span><span class="p">():</span>
+            <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+                <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+        <span class="c1"># Calculate the number of chunks using natural logarithm and limit to a manageable number</span>
+        <span class="n">num_chunks</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))),</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># +1 to avoid log(0), max 8 chunks</span>
+        <span class="n">frame_chunks</span> <span class="o">=</span> <span class="p">[</span><span class="n">frames</span><span class="p">[</span><span class="n">i</span><span class="p">::</span><span class="n">num_chunks</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_chunks</span><span class="p">)]</span>
+        
+        <span class="c1"># Add indices to each frame</span>
+        <span class="n">frame_chunks_with_indices</span> <span class="o">=</span> <span class="p">[[(</span><span class="n">idx</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="p">),</span> <span class="n">frame</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">frame</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunk</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">frame_chunks</span><span class="p">)]</span>
+
+        <span class="n">processed_faces</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">original_frames</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">num_chunks</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+            <span class="n">futures</span> <span class="o">=</span> <span class="p">[</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">process_frame_chunk</span><span class="p">,</span> <span class="n">chunk</span><span class="p">)</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">frame_chunks_with_indices</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">futures</span><span class="p">:</span>
+                <span class="n">original_chunk</span><span class="p">,</span> <span class="n">processed_chunk</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                <span class="n">original_frames</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">original_chunk</span><span class="p">)</span>
+                <span class="n">processed_faces</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">processed_chunk</span><span class="p">)</span>
+
+        <span class="c1"># Sort the frames based on their original indices</span>
+        <span class="n">original_frames</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">processed_faces</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># Remove the indices</span>
+        <span class="n">original_frames</span> <span class="o">=</span> <span class="p">[</span><span class="n">frame</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">original_frames</span><span class="p">]</span>
+        <span class="n">processed_faces</span> <span class="o">=</span> <span class="p">[</span><span class="n">face</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">face</span> <span class="ow">in</span> <span class="n">processed_faces</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">sequenceLength</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">original_frames</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">processed_faces</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Divide the frames into sequences of the specified length</span>
+            <span class="n">original_sequences</span> <span class="o">=</span> <span class="p">[</span><span class="n">original_frames</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">sequenceLength</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">original_frames</span><span class="p">),</span> <span class="n">sequenceLength</span><span class="p">)]</span>
+            <span class="n">processed_sequences</span> <span class="o">=</span> <span class="p">[</span><span class="n">processed_faces</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">sequenceLength</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">processed_faces</span><span class="p">),</span> <span class="n">sequenceLength</span><span class="p">)]</span>
+
+            <span class="c1"># Ensure all sequences are of the same length and not empty</span>
+            <span class="k">if</span> <span class="n">original_sequences</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">original_sequences</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">sequenceLength</span><span class="p">:</span>
+                <span class="n">original_sequences</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">processed_sequences</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">original_sequences</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">processed_sequences</span><span class="p">)</span></div>
+
+
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    def process_video_to_predict(self, video_path, sequenceLength = None): # if sequencesLength != None -&gt; division of the video in the passed length</span>
+<span class="sd">        # Initialize face cascade</span>
+<span class="sd">        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + &#39;haarcascade_frontalface_default.xml&#39;)</span>
+<span class="sd">        processed_faces = []  # Processed face frames</span>
+<span class="sd">        original_frames = []  # Non-cut frames</span>
+<span class="sd">        cap = cv2.VideoCapture(video_path)</span>
+<span class="sd">        </span>
+<span class="sd">        while cap.isOpened():</span>
+<span class="sd">            # Read a frame from the segment</span>
+<span class="sd">            ret, frame = cap.read()</span>
+<span class="sd">            if ret:</span>
+<span class="sd">                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)</span>
+<span class="sd">                detected_faces = face_cascade.detectMultiScale(gray, 1.305, 7)</span>
+<span class="sd">                if len(detected_faces) &gt; 0:</span>
+<span class="sd">                    x, y, w, h = detected_faces[0]</span>
+<span class="sd">                    alignedFaceImage = self.align_frame(frame, gray[y:y+h, x:x+w],x,y,w,h, face_cascade)</span>
+<span class="sd">                    processed_faces.append(alignedFaceImage)</span>
+<span class="sd">                    original_frames.append(frame)</span>
+<span class="sd">            else:</span>
+<span class="sd">                break</span>
+<span class="sd">        cap.release()</span>
+<span class="sd">        if(sequenceLength == None):</span>
+<span class="sd">            return np.array(original_frames), np.array(processed_faces)</span>
+<span class="sd">        else:</span>
+<span class="sd">            # Divide the frames into sequences of the specified length</span>
+<span class="sd">            original_sequences = [original_frames[i:i+sequenceLength] for i in range(0, len(original_frames), sequenceLength)]</span>
+<span class="sd">            processed_sequences = [processed_faces[i:i+sequenceLength] for i in range(0, len(processed_faces), sequenceLength)]</span>
+<span class="sd">            </span>
+<span class="sd">            # Ensure all sequences are of the same length</span>
+<span class="sd">            if len(original_sequences[-1]) &lt; sequenceLength:</span>
+<span class="sd">                original_sequences.pop()</span>
+<span class="sd">                processed_sequences.pop()</span>
+<span class="sd">            </span>
+<span class="sd">            return np.array(original_sequences), np.array(processed_sequences)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FaceExtractorMultithread.transform">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.FaceReconModule.FaceExtractorMultithread.transform">[documentos]</a>
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">videos</span><span class="p">,</span> <span class="n">videoLabels</span><span class="p">):</span> <span class="c1">#TODO algo mal, estoy subiendo imagenes con una linea negra y ya</span>
+        <span class="n">num_videos</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">videos</span><span class="p">)</span>
+        <span class="n">videoFaces</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_videos</span><span class="p">)]</span> <span class="c1"># For each video passed, the faces extracted from it will be stored here</span>
+        <span class="n">groupedLabels</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_videos</span><span class="p">)]</span> <span class="c1"># For each video passed, the labels for images extracted from it will be stored here</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">with</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+            <span class="c1"># Start the futures and store them in a dictionary</span>
+            <span class="n">futures</span> <span class="o">=</span> <span class="p">{</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">process_video</span><span class="p">,</span> <span class="n">videos</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">videoLabels</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">i</span><span class="p">):</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_videos</span><span class="p">)}</span>
+            <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">as_completed</span><span class="p">(</span><span class="n">futures</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Completed processing of video </span><span class="si">{</span><span class="n">current</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_videos</span><span class="si">}</span><span class="s1"> ----&gt; </span><span class="si">{</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">current</span><span class="o">/</span><span class="n">num_videos</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span><span class="si">}</span><span class="s1">%&#39;</span><span class="p">)</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                <span class="c1">#Guardamos en el index del video procesado</span>
+                <span class="n">videoFaces</span><span class="p">[</span><span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">groupedLabels</span><span class="p">[</span><span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">current</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">videoFaces</span><span class="p">,</span><span class="n">groupedLabels</span></div>
+
+<span class="w">    </span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Recibe la imagen completa y el rectangulo en el que se encuentra la cara detectada, devuelve el recorte con la cara</span>
+<span class="sd">    alineada de tal forma que los ojos estén en la misma línea horizontal y la boca en la misma línea vertical</span>
+<span class="sd">    Si no es capaz de detectar los ojos o de encontrar la cara una vez alineada la imagen devuelve la imagen sin alinear</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="FaceExtractorMultithread.align_face">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.FaceReconModule.FaceExtractorMultithread.align_face">[documentos]</a>
+    <span class="k">def</span> <span class="nf">align_face</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">faceImg</span><span class="p">,</span> <span class="n">greyImg</span> <span class="p">,</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">w</span><span class="p">,</span><span class="n">h</span><span class="p">):</span>
+        <span class="n">eye_detector</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CascadeClassifier</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">haarcascades</span> <span class="o">+</span> <span class="s2">&quot;haarcascade_eye.xml&quot;</span><span class="p">)</span>
+        <span class="n">eyes</span> <span class="o">=</span> <span class="n">eye_detector</span><span class="o">.</span><span class="n">detectMultiScale</span><span class="p">(</span><span class="n">greyImg</span><span class="p">,</span> <span class="n">scaleFactor</span><span class="o">=</span><span class="mf">1.1203</span><span class="p">,</span> <span class="n">minNeighbors</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eyes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">faceImg</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">eye_1</span> <span class="o">=</span> <span class="n">eyes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">eye_2</span> <span class="o">=</span> <span class="n">eyes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">eye_1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">eye_2</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">left_eye</span> <span class="o">=</span> <span class="n">eye_1</span>
+            <span class="n">right_eye</span> <span class="o">=</span> <span class="n">eye_2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">left_eye</span> <span class="o">=</span> <span class="n">eye_2</span>
+            <span class="n">right_eye</span> <span class="o">=</span> <span class="n">eye_1</span>
+
+        <span class="n">left_eye_center</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">left_eye</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">left_eye</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">left_eye</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">left_eye</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)))</span>
+        <span class="n">right_eye_center</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">right_eye</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">right_eye</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">right_eye</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">right_eye</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)))</span>
+
+        <span class="c1"># Calculate the angle to rotate the image so that the eyes are horizontal</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="n">right_eye_center</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">left_eye_center</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">right_eye_center</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">left_eye_center</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="n">dx</span><span class="p">))</span>
+
+        <span class="c1"># Get the center of the face for the rotation</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">w</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">h</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># Calculate the rotation matrix</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getRotationMatrix2D</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">angle</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="c1"># Apply the rotation to the image</span>
+        <span class="n">rotated</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpAffine</span><span class="p">(</span><span class="n">faceImg</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="p">(</span><span class="n">faceImg</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">faceImg</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">rotated</span><span class="p">,</span> <span class="n">angle</span> </div>
+</div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2024, Pablo Argallero Fernández.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

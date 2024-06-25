@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MetricsModule &mdash; documentación de Deepfake detector - </title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=e2bb6099"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/translations.js?v=efdbd0b9"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Deepfake detector
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">training</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Deepfake detector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">MetricsModule</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para MetricsModule</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Import the necessary libraries</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">re</span> <span class="c1">#Regular expressions</span>
+<span class="kn">import</span> <span class="nn">gc</span> <span class="c1">#Garbage collector for freeing memory</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="kn">import</span> <span class="n">shuffle</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">classification_report</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="c1">#Para monitorear el uso de CPU y RAM</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">psutil</span> 
+<span class="kn">import</span> <span class="nn">time</span> 
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+
+<div class="viewcode-block" id="TrainingMetrics">
+<a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics">[documentos]</a>
+<span class="k">class</span> <span class="nc">TrainingMetrics</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">model</span><span class="p">,</span><span class="n">resultDataPath</span><span class="p">,</span><span class="n">modelDescription</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">showGraphs</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>   
+        <span class="n">mpl</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span>
+        <span class="c1">#Modelo a entrenar</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="c1">#Path donde se guardan los resultados (imagenes, csv, etc)</span>
+        <span class="c1"># Concatenamos la fecha y hora actual al valor de resultDataPath para que cada vez que se ejecute el script se cree una nueva carpeta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseDir</span> <span class="o">=</span> <span class="n">resultDataPath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentTime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H.%M.%S&quot;</span><span class="p">)</span>
+        <span class="n">resultDataPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resultDataPath</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">currentTime</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">resultDataPath</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resultDataPath</span> <span class="o">=</span> <span class="n">resultDataPath</span>
+        <span class="c1">#Boolean indicando si se desea enseñar las gráficas de perdida precisioni y la matriz de confusion (aun siendo falsos estos datos se guardaran)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">showGraphs</span> <span class="o">=</span> <span class="n">showGraphs</span>
+        <span class="c1">#Arrays conteniendo los valores de consumo del entrenamiento del modelo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cpu_percentages</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">memory_percentages</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="c1">#Boolean indicando si el monitoreo de CPU y RAM está activo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitoring</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1">#Arrays para guardar el historico de perdida y precision</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">acc_history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val_loss_history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val_acc_history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="c1">#Guardamos datos para poder hacer una matriz de confusión con todos los datos de test de todos los batches</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">real_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predicted_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="c1">#Añadimos unos contadores de número de imagenes fake y reales</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numFakeImages</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numRealImages</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1">#Guardamos una representación del modelo en un archivo txt</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resultDataPath</span><span class="p">,</span><span class="sa">f</span><span class="s1">&#39;model_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currentTime</span><span class="si">}</span><span class="s1">.txt&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">print_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">modelDescription</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">modelDescription</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="c1">#Guardamos una copia del archivo de entrenamiento en la carpeta del modelo</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="s1">&#39;/home/pabloarga/Deepfake_Detector/training/TrainModule.py&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resultDataPath</span><span class="p">,</span><span class="s1">&#39;training_script.py&#39;</span><span class="p">))</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Metodo para ser llamado en un hilo paralelo que monitorea el uso de CPU y memoria RAM</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TrainingMetrics.monitor_usage">
+<a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.monitor_usage">[documentos]</a>
+    <span class="k">def</span> <span class="nf">monitor_usage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitoring</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">monitoring</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cpu_percentages</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cpu_percentages</span><span class="p">,</span><span class="n">psutil</span><span class="o">.</span><span class="n">cpu_percent</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">memory_percentages</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_percentages</span><span class="p">,</span><span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()</span><span class="o">.</span><span class="n">percent</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>  <span class="c1"># Paramos la thread durante 40seg para tomar las mediciones cada 5seg</span></div>
+
+
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Metodo para aumentar el dataset con imagenes falsas mediante la rotación y el volteo de las imagenes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TrainingMetrics.augment">
+<a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.augment">[documentos]</a>
+    <span class="k">def</span> <span class="nf">augment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;face&#39;</span><span class="p">])</span>  <span class="c1"># Replace height and width with the dimensions of your images</span>
+
+        <span class="c1"># Perform augmentations only on fake images</span>
+        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Add the augmented images as new examples</span>
+            <span class="n">new_row_flipped</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">new_row_flipped</span><span class="p">[</span><span class="s1">&#39;face&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fliplr</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+            <span class="n">new_row_flipped</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">new_row_rotated</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="c1">#random angle between -15 and 15</span>
+            <span class="n">rotationAngle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="o">-</span><span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+            <span class="n">new_row_rotated</span><span class="p">[</span><span class="s1">&#39;face&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">rotationAngle</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;reflect&#39;</span><span class="p">)</span> <span class="c1"># reflect = los bordes se aumentan y no se dejan de un solo color, sino que se continua interpolando los bordes</span>
+            <span class="n">new_row_rotated</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">row</span><span class="p">,</span> <span class="n">new_row_flipped</span><span class="p">,</span> <span class="n">new_row_rotated</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">row</span><span class="p">])</span></div>
+
+
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Metodo que recibe el path a una carpeta en la que se encuentran los Dataframes y con ellos</span>
+<span class="sd">    entrena el modelo. El entrenamiento del modelo se hace cargando N dataframes a la vez, minimizando</span>
+<span class="sd">    el uso de memoria RAM</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TrainingMetrics.batches_train">
+<a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.batches_train">[documentos]</a>
+    <span class="k">def</span> <span class="nf">batches_train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">folderPath</span><span class="p">,</span><span class="n">nPerBatch</span><span class="p">,</span><span class="n">epochs</span><span class="p">,</span> <span class="n">isSequence</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>        
+        <span class="n">fileNames</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">folderPath</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folderPath</span><span class="p">,</span> <span class="n">name</span><span class="p">))]</span>
+        <span class="c1">#Hacemos un shuffle a los archivos para mezclar los dataframes</span>
+        <span class="n">fileNames</span> <span class="o">=</span> <span class="n">shuffle</span><span class="p">(</span><span class="n">fileNames</span><span class="p">)</span>
+        <span class="c1">#Obtenemos el numero de dataframes que hay en la carpeta</span>
+        <span class="n">numDataframes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fileNames</span><span class="p">)</span>
+        <span class="c1">#Calculamos el tamaño de cada fragmento</span>
+        <span class="n">nBatches</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">numDataframes</span><span class="o">/</span><span class="n">nPerBatch</span><span class="p">)</span>
+
+        <span class="c1">#Defino un hilo que va a estar en paralelo tomando datos de consumo de CPU y memoria RAM</span>
+        <span class="c1">#además del hilo encargado del entrenamiento del modelo</span>
+        <span class="n">monitor_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">monitor_usage</span><span class="p">)</span>
+        <span class="n">monitor_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1">#Registramos el tiempo que tarda en entrenar</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="c1">#Iteramos por cada batch cargando los dataframes y usandolos para entrenar el modelo</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nBatches</span><span class="p">):</span>
+            <span class="c1">#Si ya hemos acabado algun batch, escribimos una linea indicandolo en el archivo txt del modelo </span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resultDataPath</span><span class="p">,</span><span class="sa">f</span><span class="s1">&#39;model_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currentTime</span><span class="si">}</span><span class="s1">.txt&#39;</span><span class="p">),</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Finished training batch </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="n">nBatches</span><span class="si">}</span><span class="s1"> at </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H.%M.%S&quot;</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Training the model with batch: </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">nBatches</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="c1">#Cargamos los dataframes del batch y los guardamos en un solo dataframe (usamos una regex para obtener el número de dentro del nombre de archivo)</span>
+            <span class="n">fragments</span> <span class="o">=</span> <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">read_hdf</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">folderPath</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">fileNames</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;df&#39;</span> <span class="o">+</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\d+&#39;</span><span class="p">,</span> <span class="n">fileNames</span><span class="p">[</span><span class="n">j</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nPerBatch</span><span class="o">*</span><span class="n">i</span><span class="p">,</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fileNames</span><span class="p">),</span><span class="n">nPerBatch</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)))]</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span> <span class="o">==</span>  <span class="mi">0</span><span class="p">:</span> <span class="c1">#Si ya hemos completado todos los fragmentos dejamos de iterar</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------&gt; Todos los dataframes han sido usados, parando de entrenar&#39;</span><span class="p">)</span>
+                <span class="k">break</span>
+            
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span>
+
+            <span class="c1">#Aumentamos el numero de imagenes fake con rotaciones y volteos -------------------&gt; DESACTIVADO #TODO</span>
+            <span class="c1">#df = pd.concat(df.apply(self.augment, axis=1).tolist(), ignore_index=True)</span>
+            <span class="c1">#aplicamos shuffle al dataframe para que el modelo no aprenda de la secuencia de los datos</span>
+            <span class="c1">#df = shuffle(df) #TODO quitado para las secuencias</span>
+
+            <span class="c1">#Dividimos el dataframe en train y test</span>
+            <span class="k">if</span> <span class="n">isSequence</span><span class="p">:</span>
+                <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;sequences&#39;</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;face&#39;</span><span class="p">])</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            
+            <span class="c1">#Contamos el número de imagenes fake y reales</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">numFakeImages</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">numRealImages</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+            <span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+            <span class="n">X_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">X_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="c1">#Entrenamos el modelo con el dataframe     </span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">epochs</span><span class="p">)</span>
+            
+            <span class="c1">#Liberamos memoria</span>
+            <span class="k">del</span> <span class="n">df</span>
+            <span class="k">del</span> <span class="n">fragments</span>
+            <span class="k">del</span> <span class="n">X_train</span>
+            <span class="k">del</span> <span class="n">X_test</span>
+            <span class="k">del</span> <span class="n">y_train</span>
+            <span class="k">del</span> <span class="n">y_test</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
+        <span class="c1"># Paramos la thread de monitoreo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitoring</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trainTime</span> <span class="o">=</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
+        <span class="n">monitor_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>  <span class="c1"># Esperamos a que la thread de monitoreo pare</span>
+
+        <span class="c1">#exportamos el modelo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resultDataPath</span><span class="p">,</span><span class="sa">f</span><span class="s1">&#39;model</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currentTime</span><span class="si">}</span><span class="s1">.keras&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">confusionMatrix</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveStats</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storeModelStructure</span><span class="p">()</span></div>
+
+        
+
+
+
+<div class="viewcode-block" id="TrainingMetrics.train">
+<a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.train">[documentos]</a>
+    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">X_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">,</span><span class="n">X_test</span><span class="p">,</span><span class="n">y_test</span><span class="p">,</span><span class="n">epochs</span><span class="p">):</span>
+       
+        <span class="n">batchHistory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">validation_data</span><span class="o">=</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">))</span>
+        <span class="c1">#Guardamos el historico de perdida y precision</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_history</span><span class="p">,</span> <span class="n">batchHistory</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val_loss_history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val_loss_history</span><span class="p">,</span> <span class="n">batchHistory</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">acc_history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">acc_history</span><span class="p">,</span> <span class="n">batchHistory</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val_acc_history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val_acc_history</span><span class="p">,</span> <span class="n">batchHistory</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;val_accuracy&#39;</span><span class="p">])</span>
+        
+
+        <span class="c1">#Guardamos los datos de test y predicciones para hacer una matriz de confusión con todos los datos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">real_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">real_y</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predicted_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predicted_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">))</span></div>
+
+<span class="w">        </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stores an image containing the layer structure of the model into the model folder</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TrainingMetrics.storeModelStructure">
+<a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.storeModelStructure">[documentos]</a>
+    <span class="k">def</span> <span class="nf">storeModelStructure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Save the model structure as an image</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">plot_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> 
+                    <span class="n">to_file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resultDataPath</span><span class="p">,</span> <span class="s2">&quot;model_structure.png&quot;</span><span class="p">),</span>
+                    <span class="n">show_shapes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_layer_names</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+    
+<div class="viewcode-block" id="TrainingMetrics.plot">
+<a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.plot">[documentos]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>        
+        <span class="c1"># Plot the training and validation accuracy</span>
+        <span class="n">epochs</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_history</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Crear una figura con subgráficos</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        
+        <span class="c1"># Gráfico de Pérdida</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_history</span><span class="p">,</span> <span class="s2">&quot;bo&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Pérdida de entrenamiento&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_loss_history</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Pérdida de validación&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Pérdida de entrenamiento y validación&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Épocas&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Pérdida&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+        <span class="c1"># Gráfico de Precisión</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">acc_history</span><span class="p">,</span> <span class="s2">&quot;ro&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Precisión de entrenamiento&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_acc_history</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Precisión de validación&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Precisión de entrenamiento y validación&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Épocas&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Precisión&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+        <span class="c1"># Ajustar diseño para evitar solapamiento</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+        <span class="c1"># Guardar la figura en un archivo</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resultDataPath</span><span class="p">,</span> <span class="s2">&quot;combined_plots.png&quot;</span><span class="p">))</span> 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">showGraphs</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TrainingMetrics.confusionMatrix">
+<a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.confusionMatrix">[documentos]</a>
+    <span class="k">def</span> <span class="nf">confusionMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    
+        <span class="c1"># Create a confusion matrix</span>
+        <span class="n">conf_matrix</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">real_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted_y</span><span class="o">.</span><span class="n">round</span><span class="p">())</span>
+
+        <span class="c1"># Plot the confusion matrix as a heatmap</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="n">sns</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">conf_matrix</span><span class="p">,</span> <span class="n">annot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Blues&#39;</span><span class="p">,</span> <span class="n">cbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">xticklabels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Real&#39;</span><span class="p">,</span> <span class="s1">&#39;Fake&#39;</span><span class="p">],</span> <span class="n">yticklabels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Real&#39;</span><span class="p">,</span> <span class="s1">&#39;Fake&#39;</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Confusion Matrix&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Predicted Label&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;True Label&#39;</span><span class="p">)</span>
+        <span class="c1">#Guardamos el archivo en un fichero</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resultDataPath</span><span class="p">,</span><span class="sa">f</span><span class="s2">&quot;confusionMatrix_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currentTime</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">))</span> 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">showGraphs</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="TrainingMetrics.saveStats">
+<a class="viewcode-back" href="../MetricsModule.html#MetricsModule.TrainingMetrics.saveStats">[documentos]</a>
+    <span class="k">def</span> <span class="nf">saveStats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileName</span> <span class="o">=</span> <span class="s2">&quot;metrics.csv&quot;</span><span class="p">):</span>
+        <span class="n">filePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseDir</span><span class="p">,</span><span class="n">fileName</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="c1">#Añadimos fecha y hora de estos datos</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">currentTime</span><span class="p">]</span> 
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;totalNumberOfImages&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">numFakeImages</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">numRealImages</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;numberOfRealImages&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">numRealImages</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;numberOfFakeImages&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">numFakeImages</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;epochs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_history</span><span class="o">.</span><span class="n">size</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">acc_history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;trainTime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">trainTime</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;cpuUsage&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cpu_percentages</span><span class="p">)]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;memoryUsage&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_percentages</span><span class="p">)]</span>
+        
+        <span class="c1">#Si no existe el archivo, lo creamos con las cabezeras</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filePath</span><span class="p">):</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">filePath</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1">#Si ya existe, añadimos la fila al final</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">filePath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+</div>
+
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2024, Pablo Argallero Fernández.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
