@@ -34,7 +34,7 @@ app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024 *1024  # 4Gb
 app.config['VIDEO_UPLOAD_FOLDER'] = '/tmp'
 app.config['UPLOAD_FOLDER'] = '/home/pabloarga/Deepfake_Detector/frontend/build/results'
 app.config['UPLOAD_FOLDER_REF'] = './results' #REference for the frontend src
-app.config['SELECTED_CNN_MODEL'] = '2024-06-08 18.09.03' 
+app.config['SELECTED_CNN_MODEL'] = '2024-06-20 08.29.00' 
 app.config['SELECTED_RNN_MODEL'] = '2024-06-13 16.20.00'
 app.config['RNN_MODEL_SEQUENCE_LENGTH'] = 20
 

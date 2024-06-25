@@ -13,7 +13,6 @@ import { ResponsivePie } from '@nivo/pie';
 
 const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSelectedIndex, selectedIndex }) => {
     const [aboveThreshold, setAboveThreshold] = useState(null);
-    const [totalNValues] = useState(data?.nFrames);
     const [pieChartData,setPieChartData] = useState([{
         "id": "Por encima del umbral",
         "label": "Por encima del umbral",

@@ -14,7 +14,6 @@ import { ResponsivePie } from '@nivo/pie';
 
 const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data, setSelectedIndex, selectedIndex }) => {
     const [aboveThreshold, setAboveThreshold] = useState(null);
-    const [totalNValues] = useState(data?.nSequences);
     const [pieChartData,setPieChartData] = useState([{
         "id": "Por encima del umbral",
         "label": "Por encima del umbral",
@@ -23,7 +22,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
     {
         "id": "Por debajo del umbral",  
         "label": "Por debajo del umbral",
-        "value": totalNValues - aboveThreshold
+        "value": data?.nSequences - aboveThreshold
     }]);
 
     const handleThresholdChange = (event) => {
@@ -36,6 +35,8 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
         }
         const aboveThresholdTmp = data?.predictions.data.filter(prediction => prediction.y.toFixed(2)  >= thresholdValue).length;
         setAboveThreshold(aboveThresholdTmp);
+        console.log(aboveThresholdTmp)
+        console.log(data?.nSequences)
         setPieChartData([{
             "id": "Por encima del umbral",
             "label": "Por encima del umbral",
@@ -44,7 +45,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
         {
             "id": "Por debajo del umbral",
             "label": "Por debajo del umbral",
-            "value": totalNValues - aboveThresholdTmp
+            "value": data?.nSequences - aboveThresholdTmp
         }]);
     };
 

@@ -79,20 +79,20 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
 
 
 
-    def process_frame_chunk(self,frames):
+    def process_frame_chunk(self, frames_with_indices):
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         processed_faces = []
         original_frames = []
-    
-        for frame in frames:
+
+        for idx, frame in frames_with_indices:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             detected_faces = face_cascade.detectMultiScale(gray, 1.305, 7)
             if len(detected_faces) > 0:
                 x, y, w, h = detected_faces[0]
                 alignedFaceImage = self.align_frame(frame, gray[y:y+h], x, y, w, h, face_cascade)
-                processed_faces.append(alignedFaceImage)
-            original_frames.append(frame)
-        
+                processed_faces.append((idx, alignedFaceImage))
+            original_frames.append((idx, frame))
+
         return original_frames, processed_faces
 
     def process_video_to_predict(self, video_path, sequenceLength=None):
@@ -107,18 +107,30 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
                 break
         cap.release()
 
-        num_threads = min(8, len(frames))  # Adjust number of threads based on frame count and a max limit
-        frame_chunks = [frames[i::num_threads] for i in range(num_threads)]
+        # Calculate the number of chunks using natural logarithm and limit to a manageable number
+        num_chunks = min(max(1, int(math.log(len(frames) + 1))), 8)  # +1 to avoid log(0), max 8 chunks
+        frame_chunks = [frames[i::num_chunks] for i in range(num_chunks)]
+        
+        # Add indices to each frame
+        frame_chunks_with_indices = [[(idx + i * len(chunk), frame) for idx, frame in enumerate(chunk)] for i, chunk in enumerate(frame_chunks)]
 
         processed_faces = []
         original_frames = []
 
-        with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(self.process_frame_chunk, chunk) for chunk in frame_chunks]
+        with ThreadPoolExecutor(max_workers=num_chunks) as executor:
+            futures = [executor.submit(self.process_frame_chunk, chunk) for chunk in frame_chunks_with_indices]
             for future in futures:
                 original_chunk, processed_chunk = future.result()
                 original_frames.extend(original_chunk)
                 processed_faces.extend(processed_chunk)
+
+        # Sort the frames based on their original indices
+        original_frames.sort(key=lambda x: x[0])
+        processed_faces.sort(key=lambda x: x[0])
+
+        # Remove the indices
+        original_frames = [frame for idx, frame in original_frames]
+        processed_faces = [face for idx, face in processed_faces]
 
         if sequenceLength is None:
             return np.array(original_frames), np.array(processed_faces)
