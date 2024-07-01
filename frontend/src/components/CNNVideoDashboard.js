@@ -5,7 +5,7 @@ import {
     Heading,
     Text,
     Image,
-    Input
+    Input, FormControl, FormLabel
 } from '@chakra-ui/react';
 import { ArrowForwardIcon } from '@chakra-ui/icons';
 import { ResponsiveLine } from '@nivo/line';
@@ -160,19 +160,23 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                         ]}
                                     />
                                     :
-                                    <Flex justifyContent={'center'}><Text textColor={'white'} margin={'0.25em'}><b>Introduzca un umbral <br/>de decisión</b></Text></Flex>
+                                    <Flex justifyContent={'center'}><Text textColor={'black'} margin={'0.25em'}><b>Introduzca un umbral <br/>de decisión</b></Text></Flex>
                                     }
                                 </div>
-                                <Flex direction='column' width={'35%'} h={'100%'} justifyContent={'flex-end'}>
+                                <Flex direction="column" width="35%" h="100%" justifyContent="flex-end">
+                                  <FormControl>
+                                    <FormLabel htmlFor="threshold">Introduce el umbral (%)</FormLabel>
                                     <Input
-                                        type="number"
-                                        width={'90%'}
-                                        height={'1.8em'}
-                                        max={100}
-                                        min={0}
-                                        placeholder="Introduce el umbral (%)"
-                                        onChange={handleThresholdChange}
+                                      id="threshold"
+                                      type="number"
+                                      width="90%"
+                                      height="1.8em"
+                                      max={100}
+                                      min={0}
+                                      placeholder="Introduce el umbral (%)"
+                                      onChange={handleThresholdChange}
                                     />
+                                  </FormControl>
                                 </Flex>
                             </Flex>
                         </Flex>
@@ -216,12 +220,12 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                             marginTop={'2em'}>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                 <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame extraido del video</b></Text>
-                                <Image src={data?.videoFrames[selectedIndex]} maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
+                                <Image src={data?.videoFrames[selectedIndex]} alt='Fotograma real del video' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
                             </Flex>
                             <ArrowForwardIcon boxSize={'3em'} alignSelf={'center'} />
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                 <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame utilizado para la predicción</b></Text>
-                                <Image src={data?.processedFrames[selectedIndex]} maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
+                                <Image src={data?.processedFrames[selectedIndex]} alt='Fotograma recortado utilizado para la detección' maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
                             </Flex>
                         </Flex>
                     </Flex>

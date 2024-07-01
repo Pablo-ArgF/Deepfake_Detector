@@ -9,6 +9,7 @@ from tensorflow.keras.optimizers import Adam
 from MetricsModule import TrainingMetrics
 import numpy as np
 import h5py
+from keras.applications import VGG16
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -110,7 +111,7 @@ class TrainModule():
             metrics = TrainingMetrics(model, self.routeToResults, modelDescription=description)
             metrics.batches_train(folderPath=self.routeToData, nPerBatch=batchSize, epochs=epochs, isSequence=isSequence)
 
-"""
+
 # Directories for data and results
 route = 'P:\\TFG\\Datasets\\dataframes_small'
 resultsPath = 'P:\\TFG\\Datasets\\dataframes_small\\results'
@@ -119,33 +120,40 @@ sequencesServer = '/home/pabloarga/Data/sequences_20'
 resultsPathServer = '/home/pabloarga/Results'
 
 
-
+"""
 selectedCNN = '2024-06-20 08.29.00'
 cnn_model_path = f"/home/pabloarga/Results/{selectedCNN}/model{selectedCNN}.keras"
 cnn_base = tf.keras.models.load_model(cnn_model_path, safe_mode=False, compile=False)
-
 # Ensure the CNN layers are not trainable
 cnn_base.trainable = False
+
+cnn_output = TimeDistributed(cnn_base)(cnn_input)
+cnn_output = TimeDistributed(Flatten())(cnn_output)
+cnn_output = TimeDistributed(Dropout(0.5))(cnn_output)  # Adding dropout after the CNN
+"""
+# Load pre-trained VGG16 model + higher level layers
+base_model = VGG16(weights='imagenet', include_top=False)
+
+# Extract features from an arbitrary intermediate layer
+cnn_model = Model(inputs=base_model.input, outputs=base_model.output)
+cnn_model.trainable = False
 
 # Define the input shape for the RNN
 input_shape = (20, 200, 200, 3)
 cnn_input = Input(shape=input_shape)
 
 # Wrap the CNN in a TimeDistributed layer to process sequences of images
-cnn_output = TimeDistributed(cnn_base)(cnn_input)
-cnn_output = TimeDistributed(Flatten())(cnn_output)
+cnn_output = TimeDistributed(cnn_model)(cnn_input)
+cnn_output = TimeDistributed(Flatten())(cnn_output)  # Flatten the output from CNN
 cnn_output = TimeDistributed(Dropout(0.5))(cnn_output)  # Adding dropout after the CNN
 
 # Add the LSTM layer with dropout, batch normalization, and regularization
-lstm_output = LSTM(256, dropout=0.5, recurrent_dropout=0.5, kernel_regularizer=l2(0.001), return_sequences=True)(cnn_output)
+lstm_output = LSTM(128, dropout=0.5, recurrent_dropout=0.5, kernel_regularizer=l2(0.001), return_sequences=True)(cnn_output)
 lstm_output = BatchNormalization()(lstm_output)
 lstm_output = LSTM(128, dropout=0.5, recurrent_dropout=0.5, kernel_regularizer=l2(0.001))(lstm_output)
 
 # Dense layers with dropout, batch normalization, and regularization
-dense_output = Dense(512, activation='relu', kernel_regularizer=l2(0.001))(lstm_output)
-dense_output = BatchNormalization()(dense_output)
-dense_output = Dropout(0.5)(dense_output)
-dense_output = Dense(1024, activation='relu', kernel_regularizer=l2(0.001))(dense_output)
+dense_output = Dense(32, activation='relu', kernel_regularizer=l2(0.001))(lstm_output)
 dense_output = BatchNormalization()(dense_output)
 dense_output = Dropout(0.5)(dense_output)
 
@@ -157,8 +165,8 @@ model = Model(inputs=cnn_input, outputs=output)
 model.compile(optimizer=Adam(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
 
 # Add the model to the training module
-trainModule = TrainModule(routeServer,resultsPathServer)
-trainModule.addModel(model,'RNN using LSTM, pretrained CNN, dense layers, and overfitting prevention techniques',isSequence=True)
-trainModule.startTraining(epochs = 3,batchSize = 4)
-"""
+trainModule = TrainModule(sequencesServer, resultsPathServer)
+trainModule.addModel(model, 'RNN using LSTM, pretrained CNN (VGG16), dense layers, and overfitting prevention techniques', isSequence=True)
+trainModule.startTraining(epochs=2, batchSize=1)
+
 

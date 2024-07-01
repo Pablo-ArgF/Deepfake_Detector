@@ -96,6 +96,7 @@ const BodyView = () => {
             marginRight={'1.5em'}
             marginTop={'1em'}
             icon={<ArrowBackIcon boxSize={'2.8em'}/>}
+            aria-label='Volver al menú principal'
             onClick={() => {
               setVideoUploaded(false); 
               setData(null);
