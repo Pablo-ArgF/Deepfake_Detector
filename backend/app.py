@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, jsonify
-import tensorflow as tf
+from tensorflow.keras.models import load_model
 from flask_cors import CORS
 import numpy as np
 from PIL import Image
@@ -40,12 +40,12 @@ app.config['RNN_MODEL_SEQUENCE_LENGTH'] = 20
 
 # Load the cnn model
 path = f"/home/pabloarga/Results/{app.config['SELECTED_CNN_MODEL']}/model{app.config['SELECTED_CNN_MODEL']}.keras"  
-model = tf.keras.models.load_model(path, safe_mode=False, compile=False)
+model = load_model(path, safe_mode=False, compile=False)
 
 # Load the rnn model
 pathSequences = f"/home/pabloarga/Results/{app.config['SELECTED_RNN_MODEL']}/model{app.config['SELECTED_RNN_MODEL']}.keras"  
-modelSequences = tf.keras.models.load_model(pathSequences, safe_mode=False, compile=False)
-
+modelSequences = load_model(pathSequences, safe_mode=False, compile=False)
+ 
 
 faceExtractor = FaceExtractorMultithread() 
 

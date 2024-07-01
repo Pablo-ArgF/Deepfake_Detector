@@ -49,7 +49,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
     return (
         <Flex direction='column' width={'100%'} placeContent={'flex-start'} h={'80%'} w='100%'>
             <Flex direction='column' width={'100%'} alignContent={'flex-start'} >
-                <Flex direction='row' width={'100%'} alignContent={'flex-start'} >
+                <Flex direction='row' width={'100%'} alignContent={'flex-start'} flex-wrap='wrap'>
                     <Flex
                         direction={'column'}
                         wrap={'wrap'}

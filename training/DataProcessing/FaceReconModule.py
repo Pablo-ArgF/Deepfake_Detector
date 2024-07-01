@@ -141,12 +141,12 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
 
         return faces, labels
 
-    def process_frame_chunk(self, frames_with_indices):
+    def process_frame_chunk(self, chunk):
         """
         Procesa un fragmento de frames y extrae las caras.
 
         Args:
-            frames_with_indices (list): Lista de tuplas que contienen el índice y el frame.
+            chunk (tuple): tupla con los valores (indice, chunk) 
 
         Returns:
             list: Lista de tuplas que contienen el índice y el frame original.
@@ -157,16 +157,16 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
         processed_faces = []
         original_frames = []
 
-        for idx, frame in frames_with_indices:
+        for frame in chunk[1]:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             detected_faces = face_cascade.detectMultiScale(gray, 1.305, 7)
             if len(detected_faces) > 0:
                 x, y, w, h = detected_faces[0]
                 alignedFaceImage = self.align_frame(frame, gray[y:y+h], x, y, w, h, face_cascade)
-                processed_faces.append((idx, alignedFaceImage))
-            original_frames.append((idx, frame))
+                processed_faces.append(alignedFaceImage)
+                original_frames.append(frame)
 
-        return original_frames, processed_faces
+        return chunk[0], original_frames, processed_faces
 
     def process_video_to_predict(self, video_path, sequenceLength=None):
         """
@@ -191,11 +191,17 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
             else:
                 break
         cap.release()
+        
+        num_chunks = max(max(1, int(math.log(len(frames) + 1))),8)
+        
+        chunk_size = len(frames) // num_chunks  # Compute the chunk size
 
-        num_chunks = min(max(1, int(math.log(len(frames) + 1))), 8)
-        frame_chunks = [frames[i::num_chunks] for i in range(num_chunks)]
-
-        frame_chunks_with_indices = [[(idx + i * len(chunk), frame) for idx, frame in enumerate(chunk)] for i, chunk in enumerate(frame_chunks)]
+        frame_chunks_with_indices = []
+        for i in range(num_chunks):
+            start_index = i * chunk_size
+            end_index = (i + 1) * chunk_size if i < num_chunks - 1 else len(frames)  # Last chunk takes the remaining frames
+            chunk = frames[start_index:end_index]
+            frame_chunks_with_indices.append((i, chunk))
 
         processed_faces = []
         original_frames = []
@@ -203,15 +209,10 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
         with ThreadPoolExecutor(max_workers=num_chunks) as executor:
             futures = [executor.submit(self.process_frame_chunk, chunk) for chunk in frame_chunks_with_indices]
             for future in futures:
-                original_chunk, processed_chunk = future.result()
-                original_frames.extend(original_chunk)
-                processed_faces.extend(processed_chunk)
-
-        original_frames.sort(key=lambda x: x[0])
-        processed_faces.sort(key=lambda x: x[0])
-
-        original_frames = [frame for idx, frame in original_frames]
-        processed_faces = [face for idx, face in processed_faces]
+                index, original_chunk, processed_chunk = future.result()
+                for i in range(len(original_chunk)):
+                    original_frames.append(original_chunk[i])
+                    processed_faces.append(processed_chunk[i])
 
         if sequenceLength is None:
             return np.array(original_frames), np.array(processed_faces)

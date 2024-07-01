@@ -59,7 +59,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
         (
         <Flex direction='column' width={'100%'} placeContent={'flex-start'} h={'80%'} w='100%'>
             <Flex direction='column' width={'100%'} alignContent={'flex-start'} >
-                <Flex direction='row' width={'100%'} alignContent={'flex-start'} >
+                <Flex direction='row' width={'100%'} alignContent={'flex-start'} flex-wrap='wrap' >
                     <Flex
                         direction={'column'}
                         wrap={'wrap'}
@@ -218,7 +218,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                                 </Flex>
                                 <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                     <Text textColor={'#170C8A'} margin={'0.25em'}><b>Predicción para la secuencia del frame</b></Text>
-                                    <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.predictions.data[selectedIndex].y * 100).toFixed(2)}% Fake</Text>
+                                    <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.predictions?.data[selectedIndex]?.y * 100).toFixed(2)}% Fake</Text>
                                 </Flex>
                         </Flex>
                         <Flex
