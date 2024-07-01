@@ -33,10 +33,8 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
         if (event.target.value === '') {
           thresholdValue = 0;
         }
-        const aboveThresholdTmp = data?.predictions.data.filter(prediction => prediction.y.toFixed(2)  >= thresholdValue).length;
+        const aboveThresholdTmp = (data?.predictions.data.filter(prediction => prediction.y.toFixed(2)  >= thresholdValue).length) / data?.sequenceSize;
         setAboveThreshold(aboveThresholdTmp);
-        console.log(aboveThresholdTmp)
-        console.log(data?.nSequences)
         setPieChartData([{
             "id": "Por encima del umbral",
             "label": "Por encima del umbral",

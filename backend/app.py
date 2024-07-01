@@ -202,6 +202,7 @@ def predictSequences():
         'min':float(minVal),
         'range':float(range_),
         'nSequences': len(processedSequences),
+        'sequenceSize': app.config['RNN_MODEL_SEQUENCE_LENGTH'],
         'videoFrames': video_frame_files,
         'processedFrames': processed_frame_files
     }), 200

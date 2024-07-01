@@ -165,7 +165,7 @@ const BodyView = () => {
                 style={{ display: 'none' }} // Hide the default file input
                 cornerRadius='0.5em'
               />
-              <Button as="label" leftIcon={<IoMdVideocam color='white'/>} htmlFor="videoInput" backgroundColor={'black'} textColor={'white'} padding={'1.1em'} fontSize={'1.1em'}>
+              <Button as="label" cursor={'pointer'} leftIcon={<IoMdVideocam color='white'/>} htmlFor="videoInput" backgroundColor={'black'} textColor={'white'} padding={'1.1em'} fontSize={'1.1em'}>
                 Sube un video
               </Button>
             </InputGroup>
