@@ -69,11 +69,11 @@ def save_sequences(sequences, video_name):
     Guarda las imagenes de las secuencias en el directorio de carga.
     """
     image_files = []
-    for sequence in sequences:
+    for seqId, sequence in enumerate(sequences):
         for i, frame in enumerate(sequence):
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{video_name}_frame_{i}.png')
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{video_name}_sequence_{seqId}_frame_{i}.png')
             cv2.imwrite(file_path, frame)
-            image_files.append(os.path.join(app.config['UPLOAD_FOLDER_REF'], f'{video_name}_frame_{i}.png'))
+            image_files.append(os.path.join(app.config['UPLOAD_FOLDER_REF'], f'{video_name}_sequence_{seqId}_frame_{i}.png'))
     return image_files
     
 def remove_all_files(folder_path):

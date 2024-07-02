@@ -50,7 +50,14 @@ const BodyView = () => {
         },
         signal: controller.signal // Attach the signal to the fetch request
       }).then(async response => {
-          var CNNdata = await response.json();
+          try{
+              var CNNdata = await response.json();
+          }catch(error){
+              setError('Error prediciendo DeepFakes: ' + error);
+              setLoading(false);
+              setVideoUploaded(false);
+              setData(null);
+          }
           setData(CNNdata);
           setLoading(false);
           setVideoUploaded(true);
@@ -68,9 +75,15 @@ const BodyView = () => {
             },
             signal: controller.signal // Attach the signal to the fetch request
           }).then(async RNNresponse =>{
-              const RNNdata = await RNNresponse.json();
-              setRNNData(RNNdata);
-              setRNNLoading(false);
+              try{
+                  const RNNTmpdata = await RNNresponse.json();
+                  setRNNData(RNNTmpdata);
+                  setRNNLoading(false);
+              }catch(error){
+                  setError('Error prediciendo DeepFakes: ' + error);
+                  setLoading(false);
+                  setVideoUploaded(false);
+              }
               // Clear the timeout if the request completes before the timeout fires
               clearTimeout(timeoutIdRNN);
           });
@@ -118,6 +131,7 @@ const BodyView = () => {
           w={'15em'}
           h={'3em'}
           onClick={() => setUseRNN(!useRNN)}  // Toggle the state when button is clicked
+          cursor='pointer'
         >
           {useRNN ? 'Analizar frame por frame' : 'Analizar secuencias'}
         </Button>

@@ -33,7 +33,9 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
         if (event.target.value === '') {
           thresholdValue = 0;
         }
-        const aboveThresholdTmp = (data?.predictions.data.filter(prediction => prediction.y.toFixed(2)  >= thresholdValue).length) / data?.sequenceSize;
+        
+        const predictionsData = data?.predictions?.data || [];
+        const aboveThresholdTmp = (predictionsData.filter(prediction => prediction.y.toFixed(2) >= thresholdValue).length) / data?.sequenceSize;
         setAboveThreshold(aboveThresholdTmp);
         setPieChartData([{
             "id": "Por encima del umbral",
@@ -74,7 +76,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
 
                         <Flex direction={'column'} w='98%' padding='0.5em' alignItems='flex-start' backgroundColor='#3572EF' borderRadius={'0.25em'}>
                             <Text textColor={'black'} margin={'0.25em'}><b>Nombre del video</b></Text>
-                            <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data?.predictions.id}</Text>
+                            <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data?.predictions?.id}</Text>
                         </Flex>
                         <Grid
                             w='98%'
@@ -96,7 +98,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
                                 <Text textColor={'black'} margin={'0.25em'}><b>Número de valores distintos</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{new Set(data?.predictions.data.map(prediction => prediction.y.toFixed(2))).size}</Text>
+                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{new Set(data?.predictions?.data?.map(prediction => prediction.y.toFixed(2))).size}</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
                                 <Text textColor={'black'} margin={'0.25em'}><b>Varianza de los valores</b></Text>
@@ -258,8 +260,9 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                         Análisis por secuencias
                     </Heading>
                     <div style={{ height: '18em', width: '100%' }} marginLeft='1em' marginRight='1em'>
+                        {data?.predictions != null?
                         <ResponsiveLine
-                            data={[data?.predictions]}
+                            data={[data?.predictions] || []}
                             margin={{ top: 20, right: 50, bottom: 70, left: 50 }}
                             xScale={{ type: 'linear', min: 'auto', max: 'auto' }}
                             yScale={{ type: 'linear', min: 0, max: 1, stacked: true }}
@@ -289,8 +292,12 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                             colors={{ scheme: 'set1' }}
                             curve="monotoneX"
                             onClick={(data) => {
-                                setSelectedIndex(data.index);
-                            }}
+                                if(data){
+                                    setSelectedIndex(data.index);
+                                }
+                            }}/>
+                            :
+                            <div></div>}
                         />
                     </div>
                 </Flex>
