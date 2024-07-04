@@ -193,7 +193,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                         marginRight={'0.5em'}
                         borderRadius={'0.5em'}>
                         <Heading as="h2" size="4xl" mb={15} textColor={'black'}>
-                            Fotograma seleccionado
+                            Frame seleccionado
                         </Heading>
                         <Flex
                             direction='row'

@@ -304,7 +304,6 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                             }}/>
                             :
                             <div></div>}
-                        />
                     </div>
                 </Flex>
             </Flex>
