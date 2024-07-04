@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Flex,
     Grid,
@@ -48,6 +48,12 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
             "value": data?.nSequences - aboveThresholdTmp
         }]);
     };
+
+    useEffect(() => {
+        if (selectedIndex < 0 || selectedIndex >= data?.predictions?.data?.length) {
+            setSelectedIndex(1);
+        }
+    }, [selectedIndex, data, setSelectedIndex]);
 
     return (
       <div>

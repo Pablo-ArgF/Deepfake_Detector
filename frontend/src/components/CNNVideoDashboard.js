@@ -193,7 +193,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                         marginRight={'0.5em'}
                         borderRadius={'0.5em'}>
                         <Heading as="h2" size="4xl" mb={15} textColor={'black'}>
-                            Frame seleccionado
+                            Fotograma seleccionado
                         </Heading>
                         <Flex
                             direction='row'
@@ -208,7 +208,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 </Flex>
                                 <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                     <Text textColor={'#170C8A'} margin={'0.25em'}><b>Predicción para el frame</b></Text>
-                                    <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.predictions.data[selectedIndex].y * 100).toFixed(2)}% Fake</Text>
+                                    <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.predictions.data[selectedIndex]?.y * 100).toFixed(2)}% Fake</Text>
                                 </Flex>
                         </Flex>
                         <Flex

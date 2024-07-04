@@ -113,11 +113,14 @@ const BodyView = () => {
             onClick={() => {
               setVideoUploaded(false); 
               setData(null);
+              setUseRNN(false);
+              setRNNData(null);
+              setRNNLoading(true);
               setLoading(false);
             }}
           />
         <Heading w='100%' as="h1" size="5xl" padding={'0.1em'} flexGrow={4}>
-          {useRNN ? 'Análisis de secuencias (RNN)' :'Análisis frame por frame (CNN)' }
+          {useRNN ? 'Análisis por secuencias (RNN)' :'Análisis por fotogramas (CNN)' }
         </Heading>
         <Button 
           marginRight={'1em'}

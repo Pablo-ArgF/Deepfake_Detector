@@ -120,13 +120,22 @@ def getRNNConfussionMatrix():
 def predict():
     app.logger.info('Request received for predict')
     if 'video' not in request.files:
-        return jsonify({'error': 'No video uploaded'}), 400
+        return jsonify({'error': 'No se ha subido ningún video'}), 400
+    
+    if request.files['video'].filename == '':
+        return jsonify({'error': 'El archivo de video está vacío'}), 400
 
-    #Remove previous frame files
-    remove_all_files(app.config['UPLOAD_FOLDER'])
+    if not request.files['video'].filename.lower().endswith('.mp4'):
+        return jsonify({'error': 'El archivo debe ser un video en formato MP4'}), 400
+
+    
     
     video_file = request.files['video']
     video_name = secure_filename(video_file.filename)
+
+    #Remove previous frame files
+    #remove_all_files(app.config['UPLOAD_FOLDER'])
+    
     video_path = os.path.join(app.config['VIDEO_UPLOAD_FOLDER'], video_name)
     video_file.save(video_path)
 
@@ -165,7 +174,13 @@ def predict():
 def predictSequences():
     app.logger.info('Request received for predict sequences')
     if 'video' not in request.files:
-        return jsonify({'error': 'No video uploaded'}), 400
+        return jsonify({'error': 'No se ha subido ningún video'}), 400
+
+    if request.files['video'].filename == '':
+        return jsonify({'error': 'El archivo de video está vacío'}), 400
+
+    if not request.files['video'].filename.lower().endswith('.mp4'):
+        return jsonify({'error': 'El archivo debe ser un video en formato MP4'}), 400
     
     video_file = request.files['video']
     video_name = secure_filename(video_file.filename)
@@ -189,7 +204,6 @@ def predictSequences():
     # Save the images and get their paths
     video_frame_files = save_sequences(videoFrames, video_name)
     processed_frame_files = save_sequences(processedSequences, f'{video_name}_processed')
-
 
     return jsonify({
         'predictions': {
