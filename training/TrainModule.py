@@ -112,6 +112,82 @@ class TrainModule():
             metrics.batches_train(folderPath=self.routeToData, nPerBatch=batchSize, epochs=epochs, isSequence=isSequence)
 
 
+
+"""
+#Ejemplo de entrenamiento de una CNN como la resultante
+inputs = layers.Input(shape=(200, 200, 3))
+
+x = Lambda(lambda x: x/255.0)(inputs)
+
+# Conv1_1 and Conv1_2 Layers
+x = conv_prelu(32, (3, 3), 'conv1_1', kernel_regularizer=l2(0.01))(x)
+x = conv_prelu(32, (3, 3), 'conv1_2', kernel_regularizer=l2(0.01))(x)
+x = layers.Dropout(0.25)(x)  # Adding dropout after Conv1_2
+
+# Pool1 Layer
+x = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool1')(x)
+
+# Conv2_1 and Conv2_2 Layers
+x = conv_prelu(64, (3, 3), 'conv2_1', kernel_regularizer=l2(0.01))(x)
+x = conv_prelu(64, (3, 3), 'conv2_2', kernel_regularizer=l2(0.01))(x)
+x = layers.Dropout(0.25)(x)  # Adding dropout after Conv2_2
+
+# Pool2 Layer
+pool2_output = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool2')(x)
+
+# Additional Convolutional Layers with L2 regularization and Dropout
+conv3_1 = conv_prelu(128, (3, 3), 'conv3_1', kernel_regularizer=l2(0.01))(pool2_output)
+conv3_2 = conv_prelu(64, (3, 3), 'conv3_2', kernel_regularizer=l2(0.01))(conv3_1)
+conv3_2 = layers.Dropout(0.25)(conv3_2)  # Adding dropout after Conv3_2
+pool3 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool3')(conv3_2)
+
+conv4_1 = conv_prelu(128, (3, 3), 'conv4_1', kernel_regularizer=l2(0.01))(pool3)
+conv4_2 = conv_prelu(64, (3, 3), 'conv4_2', kernel_regularizer=l2(0.01))(conv4_1)
+conv4_2 = layers.Dropout(0.25)(conv4_2)  # Adding dropout after Conv4_2
+
+conv5_2 = conv_prelu(128, (3, 3), 'conv5_2', kernel_regularizer=l2(0.01))(pool2_output)
+conv5_3 = conv_prelu(64, (3, 3), 'conv5_3', kernel_regularizer=l2(0.01))(conv5_2)
+conv5_3 = layers.Dropout(0.25)(conv5_3)  # Adding dropout after Conv5_3
+
+conv5_1 = conv_prelu(128, (3, 3), 'conv5_1', kernel_regularizer=l2(0.01))(pool2_output)
+concat_1 = layers.Concatenate(name="concat_1")([conv3_2, conv5_1, conv5_3])
+pool5 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool5')(concat_1)
+
+conv6_2 = conv_prelu(128, (3, 3), 'conv6_2', kernel_regularizer=l2(0.01))(pool5)
+conv6_3 = conv_prelu(64, (3, 3), 'conv6_3', kernel_regularizer=l2(0.01))(conv6_2)
+conv6_3 = layers.Dropout(0.25)(conv6_3)  # Adding dropout after Conv6_3
+
+conv6_1 = conv_prelu(128, (3, 3), 'conv6_1', kernel_regularizer=l2(0.01))(pool5)
+concat_2 = layers.Concatenate(name="concat_2")([conv4_2, conv6_1, conv6_3])
+
+pool4 = layers.MaxPooling2D((2, 2), strides=(2, 2), name='pool4')(concat_2)
+
+flatten = Flatten()(pool4)
+
+fc = layers.Dense(512, name='fc', kernel_regularizer=l2(0.01))(flatten)
+fc = layers.Dropout(0.5)(fc)  # Adding dropout before the fully connected layer
+
+fc_class = layers.Dense(1024, name='fc_class', kernel_regularizer=l2(0.01))(fc)
+fc_class = layers.Dropout(0.3)(fc_class)
+fc_class = layers.Dense(1024, name='fc2', kernel_regularizer=l2(0.01))(fc_class)
+
+# Softmax Output Layer
+outputs = layers.Dense(1, activation='sigmoid', name='out')(fc_class)
+
+# Compile the model (add optimizer, loss function, etc.)
+model = tf.keras.Model(inputs=inputs, outputs=outputs)
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+# Add the model to the training module
+trainingModule = TrainModule(route, resultsPath)
+trainingModule.addModel(model, 'CNN Model')
+trainingModule.startTraining(epochs=2, batchSize=5)
+"""
+
+
+"""
+#Ejemplo de entrenamiento de una RNN como la resultante
+
 # Directories for data and results
 route = 'P:\\TFG\\Datasets\\dataframes_small'
 resultsPath = 'P:\\TFG\\Datasets\\dataframes_small\\results'
@@ -119,54 +195,50 @@ routeServer = '/home/pabloarga/Data/dataframes'
 sequencesServer = '/home/pabloarga/Data/sequences_20'
 resultsPathServer = '/home/pabloarga/Results'
 
+# PReLU alpha value
+value_PReLU = 0.25
 
-"""
-selectedCNN = '2024-06-20 08.29.00'
-cnn_model_path = f"/home/pabloarga/Results/{selectedCNN}/model{selectedCNN}.keras"
+def conv_prelu(filters, kernel_size, name):
+    conv_layer = layers.Conv2D(filters, kernel_size, padding='same', name=name)
+    prelu_layer = PReLU(alpha_initializer=Constant(value=value_PReLU))
+    bn_layer = layers.BatchNormalization()
+    return Sequential([conv_layer, bn_layer, prelu_layer])
+
+# Load the pre-trained CNN model
+selected_cnn_model = '2024-05-08 03.07.29'
+cnn_model_path = f"/home/pabloarga/Results/{selected_cnn_model}/model{selected_cnn_model}.keras"
 cnn_base = tf.keras.models.load_model(cnn_model_path, safe_mode=False, compile=False)
+
 # Ensure the CNN layers are not trainable
 cnn_base.trainable = False
-
-cnn_output = TimeDistributed(cnn_base)(cnn_input)
-cnn_output = TimeDistributed(Flatten())(cnn_output)
-cnn_output = TimeDistributed(Dropout(0.5))(cnn_output)  # Adding dropout after the CNN
-"""
-# Load pre-trained VGG16 model + higher level layers
-base_model = VGG16(weights='imagenet', include_top=False)
-
-# Extract features from an arbitrary intermediate layer
-cnn_model = Model(inputs=base_model.input, outputs=base_model.output)
-cnn_model.trainable = False
 
 # Define the input shape for the RNN
 input_shape = (20, 200, 200, 3)
 cnn_input = Input(shape=input_shape)
 
 # Wrap the CNN in a TimeDistributed layer to process sequences of images
-cnn_output = TimeDistributed(cnn_model)(cnn_input)
-cnn_output = TimeDistributed(Flatten())(cnn_output)  # Flatten the output from CNN
+cnn_output = TimeDistributed(cnn_base)(cnn_input)
+cnn_output = TimeDistributed(Flatten())(cnn_output)
 cnn_output = TimeDistributed(Dropout(0.5))(cnn_output)  # Adding dropout after the CNN
 
-# Add the LSTM layer with dropout, batch normalization, and regularization
-lstm_output = LSTM(128, dropout=0.5, recurrent_dropout=0.5, kernel_regularizer=l2(0.001), return_sequences=True)(cnn_output)
-lstm_output = BatchNormalization()(lstm_output)
-lstm_output = LSTM(128, dropout=0.5, recurrent_dropout=0.5, kernel_regularizer=l2(0.001))(lstm_output)
+# Add the LSTM layer with dropout and regularization
+lstm_output = LSTM(256, dropout=0.5, recurrent_dropout=0.5, kernel_regularizer=l2(0.001))(cnn_output)
 
-# Dense layers with dropout, batch normalization, and regularization
-dense_output = Dense(32, activation='relu', kernel_regularizer=l2(0.001))(lstm_output)
-dense_output = BatchNormalization()(dense_output)
+# Dense layers with dropout and regularization
+dense_output = Dense(64, activation='relu', kernel_regularizer=l2(0.001))(lstm_output)
+dense_output = Dropout(0.3)(dense_output)
+dense_output = Dense(32, activation='relu', kernel_regularizer=l2(0.001))(dense_output)
 dense_output = Dropout(0.5)(dense_output)
 
 # Final output layer for binary classification
 output = Dense(1, activation='sigmoid')(dense_output)
 
 # Create the model
-model = Model(inputs=cnn_input, outputs=output)
-model.compile(optimizer=Adam(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
+model2 = Model(inputs=cnn_input, outputs=output)
+model2.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
 # Add the model to the training module
-trainModule = TrainModule(sequencesServer, resultsPathServer)
-trainModule.addModel(model, 'RNN using LSTM, pretrained CNN (VGG16), dense layers, and overfitting prevention techniques', isSequence=True)
-trainModule.startTraining(epochs=2, batchSize=1)
-
-
+trainingModule = TrainModule(route, resultsPath)
+trainingModule.addModel(model2, 'RNN Model', isSequence=True)
+trainingModule.startTraining(epochs=3, batchSize=3)
+"""

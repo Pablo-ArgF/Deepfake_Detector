@@ -22,12 +22,26 @@ class TrainingMetrics():
     """
     Clase para calcular y almacenar métricas de entrenamiento de un modelo.
 
-    Args:
-        model (tf.keras.Model): Modelo a entrenar.
-        resultDataPath (str): Ruta donde se guardarán los resultados (imágenes, csv, etc).
-        modelDescription (str, optional): Descripción del modelo. Defaults to None.
-        showGraphs (bool, optional): Indica si se desean mostrar las gráficas de pérdida, precisión y matriz de confusión. Defaults to False.
+    :param model: Modelo a entrenar.
+    :type model: tf.keras.Model
+    :param resultDataPath: Ruta donde se guardarán los resultados (imágenes, csv, etc).
+    :type resultDataPath: str
+    :param modelDescription: Descripción del modelo. Defaults to None.
+    :type modelDescription: str, opcional
+    :param showGraphs: Indica si se desean mostrar las gráficas de pérdida, precisión y matriz de confusión. Defaults to False.
+    :type showGraphs: bool, opcional
+
+    :method __init__(model, resultDataPath, modelDescription=None, showGraphs=False): Inicializa una instancia de la clase TrainingMetrics.
+    :method monitor_usage(): Método para ser llamado en un hilo paralelo que monitorea el uso de CPU y memoria RAM.
+    :method augment(row): Método para aumentar el dataset con imágenes falsas mediante la rotación y el volteo de las imágenes.
+    :method batches_train(folderPath, nPerBatch, epochs, isSequence=False): Método que recibe el path a una carpeta en la que se encuentran los Dataframes y con ellos entrena el modelo.
+    :method train(X_train, y_train, X_test, y_test, epochs): Método para entrenar el modelo con los datos de entrenamiento y validación.
+    :method storeModelStructure(): Guarda una imagen que muestra la estructura de capas del modelo en la carpeta del modelo.
+    :method plot(): Genera y guarda las gráficas de acierto y pérdida durante el entrenamiento. Si showGraphs es True, las muestra en pantalla.
+    :method confusionMatrix(): Genera y guarda una matriz de confusión con los datos de test. Si showGraphs es True, la muestra en pantalla.
+    :method saveStats(fileName="metrics.csv"): Guarda las métricas de entrenamiento en un archivo CSV.
     """
+
     def __init__(self,model,resultDataPath,modelDescription=None,showGraphs = False) -> None:   
         """
         Inicializa una instancia de la clase TrainingMetrics.

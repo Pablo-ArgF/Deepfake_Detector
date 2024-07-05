@@ -50,7 +50,10 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">training</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">DataProcessing package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#dataprocessing-dataprocessor-module">DataProcessing.DataProcessor module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-DataProcessing.DataProcessor">DataProcessing.DataProcessor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#DataProcessing.DataProcessor.DataProcessor"><code class="docutils literal notranslate"><span class="pre">DataProcessor</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#module-DataProcessing.FaceReconModule">DataProcessing.FaceReconModule module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread"><code class="docutils literal notranslate"><span class="pre">FaceExtractorMultithread</span></code></a></li>
 </ul>
@@ -94,8 +97,169 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
-<section id="dataprocessing-dataprocessor-module">
-<h2>DataProcessing.DataProcessor module<a class="headerlink" href="#dataprocessing-dataprocessor-module" title="Link to this heading"></a></h2>
+<section id="module-DataProcessing.DataProcessor">
+<span id="dataprocessing-dataprocessor-module"></span><h2>DataProcessing.DataProcessor module<a class="headerlink" href="#module-DataProcessing.DataProcessor" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="DataProcessing.DataProcessor.DataProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">DataProcessing.DataProcessor.</span></span><span class="sig-name descname"><span class="pre">DataProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseDirectory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destinationDirectory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequenceLengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampleDirectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampleProbability</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/DataProcessor.html#DataProcessor"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.DataProcessor.DataProcessor" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Clase para procesar datos extrayendo caras de imágenes y videos.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>baseDirectory</strong> (<em>str</em>) – El directorio base que contiene los datos.</p></li>
+<li><p><strong>destinationDirectory</strong> (<em>str</em>) – El directorio de destino para guardar los datos procesados.</p></li>
+<li><p><strong>sequenceLengths</strong> (<em>list</em><em>, </em><em>opcional</em>) – Lista de longitudes de secuencia para crear secuencias de fotogramas a partir de videos. Por defecto, None.</p></li>
+<li><p><strong>sampleDirectory</strong> (<em>str</em><em>, </em><em>opcional</em>) – El directorio para guardar una muestra de imágenes procesadas. Por defecto, None.</p></li>
+<li><p><strong>sampleProbability</strong> (<em>float</em><em>, </em><em>opcional</em>) – La probabilidad de guardar una imagen en el directorio de muestra. Por defecto, 0.001.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>baseDirectory</strong> (<em>str</em>) – El directorio base que contiene los datos.</p></li>
+<li><p><strong>destinationDirectory</strong> (<em>str</em>) – El directorio de destino para guardar los datos procesados.</p></li>
+<li><p><strong>currentDirectoryFake</strong> (<em>bool</em>) – Indica si el directorio actual es para datos falsos.</p></li>
+<li><p><strong>currentDatasetCounter</strong> (<em>int</em>) – Contador para el conjunto de datos actual que se está procesando.</p></li>
+<li><p><strong>currentSequenceDatasetCounter</strong> (<em>int</em>) – Contador para el conjunto de datos de secuencia actual que se está procesando.</p></li>
+<li><p><strong>sampleDirectory</strong> (<em>str</em>) – El directorio para guardar una muestra de imágenes procesadas.</p></li>
+<li><p><strong>sampleProbability</strong> (<em>float</em>) – La probabilidad de guardar una imagen en el directorio de muestra.</p></li>
+<li><p><strong>sequenceLengths</strong> (<em>list</em>) – Lista de longitudes de secuencia para crear secuencias de fotogramas a partir de videos.</p></li>
+<li><p><strong>imagesPaths</strong> (<em>list</em>) – Lista de rutas de archivos de imágenes.</p></li>
+<li><p><strong>imagesLabels</strong> (<em>list</em>) – Lista de etiquetas para los archivos de imágenes.</p></li>
+<li><p><strong>videosPaths</strong> (<em>list</em>) – Lista de rutas de archivos de videos.</p></li>
+<li><p><strong>videosLabels</strong> (<em>list</em>) – Lista de etiquetas para los archivos de videos.</p></li>
+<li><p><strong>face_extractor</strong> (<a class="reference internal" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread" title="DataProcessing.FaceReconModule.FaceExtractorMultithread"><em>FaceExtractorMultithread</em></a>) – Instancia de la clase FaceExtractorMultithread para extraer caras de imágenes y videos.</p></li>
+<li><p><strong>faces</strong> (<em>list</em>) – Lista de caras extraídas.</p></li>
+<li><p><strong>labels</strong> (<em>list</em>) – Lista de etiquetas para las caras extraídas.</p></li>
+<li><p><strong>sequencesData</strong> (<em>list</em>) – Lista de matrices que contienen las secuencias actuales que aún no se han guardado para cada tamaño en sequenceLengths.</p></li>
+<li><p><strong>totalFaces</strong> (<em>int</em>) – Número total de caras procesadas.</p></li>
+<li><p><strong>totalFake</strong> (<em>int</em>) – Número total de caras falsas procesadas.</p></li>
+<li><p><strong>totalReal</strong> (<em>int</em>) – Número total de caras reales procesadas.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Method processFolder<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Procesa de forma recursiva una carpeta y sus subcarpetas.</p>
+</dd>
+<dt class="field-even">Method processFile<span class="colon">:</span></dt>
+<dd class="field-even"><p>Procesa un archivo y lo registra en la lista correspondiente.</p>
+</dd>
+<dt class="field-odd">Method storeImage<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Almacena una imagen en las matrices y opcionalmente la guarda en el directorio de muestra.</p>
+</dd>
+<dt class="field-even">Method saveDataset<span class="colon">:</span></dt>
+<dd class="field-even"><p>Guarda las caras y etiquetas almacenadas como un conjunto de datos en un archivo HDF5.</p>
+</dd>
+<dt class="field-odd">Method processImages<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Procesa los archivos de imágenes y extrae caras.</p>
+</dd>
+<dt class="field-even">Method processVideos<span class="colon">:</span></dt>
+<dd class="field-even"><p>Procesa los archivos de videos y extrae caras.</p>
+</dd>
+<dt class="field-odd">Method registerSequences<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Registra secuencias de fotogramas de videos y las guarda como conjuntos de datos en archivos HDF5.</p>
+</dd>
+<dt class="field-even">Method saveSequences<span class="colon">:</span></dt>
+<dd class="field-even"><p>Guarda las secuencias registradas como conjuntos de datos en archivos HDF5.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.DataProcessor.DataProcessor.processFile">
+<span class="sig-name descname"><span class="pre">processFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/DataProcessor.html#DataProcessor.processFile"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.DataProcessor.DataProcessor.processFile" title="Link to this definition"></a></dt>
+<dd><p>Procesa un archivo y registra la imagen o video en la lista correspondiente.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – Ruta del archivo a procesar.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.DataProcessor.DataProcessor.processFolder">
+<span class="sig-name descname"><span class="pre">processFolder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/DataProcessor.html#DataProcessor.processFolder"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.DataProcessor.DataProcessor.processFolder" title="Link to this definition"></a></dt>
+<dd><p>Procesa una carpeta y todos sus archivos y subcarpetas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> – Ruta de la carpeta a procesar.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.DataProcessor.DataProcessor.processImages">
+<span class="sig-name descname"><span class="pre">processImages</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/DataProcessor.html#DataProcessor.processImages"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.DataProcessor.DataProcessor.processImages" title="Link to this definition"></a></dt>
+<dd><p>Procesa las imágenes almacenadas en la lista de rutas de imágenes.
+Extrae las caras de las imágenes y las almacena junto con sus etiquetas en el almacenamiento.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.DataProcessor.DataProcessor.processVideos">
+<span class="sig-name descname"><span class="pre">processVideos</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/DataProcessor.html#DataProcessor.processVideos"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.DataProcessor.DataProcessor.processVideos" title="Link to this definition"></a></dt>
+<dd><p>Procesa los videos divididos en chunks y realiza las siguientes tareas:
+- Divide la cantidad de videos en chunks de 100 videos cada uno.
+- Transforma los videos en secuencias de caras y etiquetas utilizando el extractor de caras.
+- Almacena las imágenes individualmente en dataframes para su uso en una red neuronal convolucional (CNN).
+- Registra las secuencias en dataframes para su uso en una red neuronal recurrente (RNN).</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>self: La instancia del objeto DataProcessor.</p>
+</dd>
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.DataProcessor.DataProcessor.registerSequences">
+<span class="sig-name descname"><span class="pre">registerSequences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">faces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/DataProcessor.html#DataProcessor.registerSequences"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.DataProcessor.DataProcessor.registerSequences" title="Link to this definition"></a></dt>
+<dd><p>Recibe todas las imagenes y label de un video y guarda las secuencias con los tamaños especificados por constructor.
+Por cada tamaño especificado en el constructor se creará una carpeta en la destination directory con el nombre: “sequences_{sequenceLength}”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>faces</strong> (<em>list</em>) – Lista de caras.</p></li>
+<li><p><strong>label</strong> (<em>str</em>) – Etiqueta asociada a las secuencias de caras.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.DataProcessor.DataProcessor.saveDataset">
+<span class="sig-name descname"><span class="pre">saveDataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/DataProcessor.html#DataProcessor.saveDataset"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.DataProcessor.DataProcessor.saveDataset" title="Link to this definition"></a></dt>
+<dd><p>Guarda el dataset actual en disco y actualiza los datos de progreso.</p>
+<p>Este método guarda el dataset actual en disco en formato HDF5 y actualiza los datos de progreso en un archivo CSV.
+Los datos de progreso incluyen el número de imágenes totales, el número de imágenes falsas y el número de imágenes reales.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.DataProcessor.DataProcessor.saveSequences">
+<span class="sig-name descname"><span class="pre">saveSequences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/DataProcessor.html#DataProcessor.saveSequences"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.DataProcessor.DataProcessor.saveSequences" title="Link to this definition"></a></dt>
+<dd><p>Guarda las secuencias de datos en un archivo HDF5 y las imágenes en carpetas correspondientes.</p>
+<p>Parámetros:
+- index (int): El índice de la lista de secuencias de datos a guardar.</p>
+<p>Retorna:
+- None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataProcessing.DataProcessor.DataProcessor.storeImage">
+<span class="sig-name descname"><span class="pre">storeImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/DataProcessor.html#DataProcessor.storeImage"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.DataProcessor.DataProcessor.storeImage" title="Link to this definition"></a></dt>
+<dd><p>Almacena una imagen y su etiqueta en los arrays correspondientes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>numpy.ndarray</em>) – La imagen a almacenar.</p></li>
+<li><p><strong>label</strong> (<em>str</em>) – La etiqueta de la imagen.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-DataProcessing.FaceReconModule">
 <span id="dataprocessing-facereconmodule-module"></span><h2>DataProcessing.FaceReconModule module<a class="headerlink" href="#module-DataProcessing.FaceReconModule" title="Link to this heading"></a></h2>
@@ -104,21 +268,38 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">DataProcessing.FaceReconModule.</span></span><span class="sig-name descname"><span class="pre">FaceExtractorMultithread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentageExtractionFake</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentageExtractionReal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></p>
 <p>Clase que se encarga de extraer caras de imágenes y videos utilizando múltiples hilos de ejecución.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>percentageExtractionFake (float): Porcentaje de frames a extraer de los videos fake.
-percentageExtractionReal (float): Porcentaje de frames a extraer de los videos reales.
-max_workers (int): Número máximo de hilos de ejecución.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>percentageExtractionFake</strong> (<em>float</em>) – Porcentaje de frames a extraer de los videos fake.</p></li>
+<li><p><strong>percentageExtractionReal</strong> (<em>float</em>) – Porcentaje de frames a extraer de los videos reales.</p></li>
+<li><p><strong>max_workers</strong> (<em>int</em>) – Número máximo de hilos de ejecución.</p></li>
+</ul>
 </dd>
-<dt>Attributes:</dt><dd><p>percentageExtractionFake (float): Porcentaje de frames a extraer de los videos fake.
-percentageExtractionReal (float): Porcentaje de frames a extraer de los videos reales.
-max_workers (int): Número máximo de hilos de ejecución.</p>
+<dt class="field-even">Variables<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>percentageExtractionFake</strong> (<em>float</em>) – Porcentaje de frames a extraer de los videos fake.</p></li>
+<li><p><strong>percentageExtractionReal</strong> (<em>float</em>) – Porcentaje de frames a extraer de los videos reales.</p></li>
+<li><p><strong>max_workers</strong> (<em>int</em>) – Número máximo de hilos de ejecución.</p></li>
+</ul>
 </dd>
-<dt>Methods:</dt><dd><p>align_frame(frame, gray, x, y, w, h, face_cascade): Alinea una cara en un rectángulo del frame.
-process_video(video_path, label, index): Procesa un video y extrae las caras.
-process_image(image_path, label): Procesa una imagen y extrae las caras.
-process_frame_chunk(frames_with_indices): Procesa un fragmento de frames y extrae las caras.
-process_video_to_predict(video_path, sequenceLength=None): Procesa un video para predecir y extrae las caras.
-transform(videos, videoLabels): Transforma los videos y extrae las caras.</p>
+<dt class="field-odd">Method align_frame<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Alinea una cara en un rectángulo del frame.</p>
+</dd>
+<dt class="field-even">Method process_video<span class="colon">:</span></dt>
+<dd class="field-even"><p>Procesa un video y extrae las caras.</p>
+</dd>
+<dt class="field-odd">Method process_image<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Procesa una imagen y extrae las caras.</p>
+</dd>
+<dt class="field-even">Method process_frame_chunk<span class="colon">:</span></dt>
+<dd class="field-even"><p>Procesa un fragmento de frames y extrae las caras.</p>
+</dd>
+<dt class="field-odd">Method process_video_to_predict<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Procesa un video para predecir y extrae las caras.</p>
+</dd>
+<dt class="field-even">Method transform<span class="colon">:</span></dt>
+<dd class="field-even"><p>Transforma los videos y extrae las caras.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -167,10 +348,10 @@ face_cascade (cv2.CascadeClassifier): Clasificador de caras.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="DataProcessing.FaceReconModule.FaceExtractorMultithread.process_frame_chunk">
-<span class="sig-name descname"><span class="pre">process_frame_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_with_indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.process_frame_chunk"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_frame_chunk" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">process_frame_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DataProcessing/FaceReconModule.html#FaceExtractorMultithread.process_frame_chunk"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_frame_chunk" title="Link to this definition"></a></dt>
 <dd><p>Procesa un fragmento de frames y extrae las caras.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>frames_with_indices (list): Lista de tuplas que contienen el índice y el frame.</p>
+<dt>Args:</dt><dd><p>chunk (tuple): tupla con los valores (indice, chunk)</p>
 </dd>
 <dt>Returns:</dt><dd><p>list: Lista de tuplas que contienen el índice y el frame original.
 list: Lista de tuplas que contienen el índice y la cara procesada.</p>

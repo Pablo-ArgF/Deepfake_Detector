@@ -11,45 +11,66 @@ class DataProcessor:
     """
     Clase para procesar datos extrayendo caras de imágenes y videos.
 
-    Args:
-        baseDirectory (str): El directorio base que contiene los datos.
-        destinationDirectory (str): El directorio de destino para guardar los datos procesados.
-        sequenceLengths (list, opcional): Lista de longitudes de secuencia para crear secuencias de fotogramas a partir de videos. Por defecto, None.
-        sampleDirectory (str, opcional): El directorio para guardar una muestra de imágenes procesadas. Por defecto, None.
-        sampleProbability (float, opcional): La probabilidad de guardar una imagen en el directorio de muestra. Por defecto, 0.001.
+    :param baseDirectory: El directorio base que contiene los datos.
+    :type baseDirectory: str
+    :param destinationDirectory: El directorio de destino para guardar los datos procesados.
+    :type destinationDirectory: str
+    :param sequenceLengths: Lista de longitudes de secuencia para crear secuencias de fotogramas a partir de videos. Por defecto, None.
+    :type sequenceLengths: list, opcional
+    :param sampleDirectory: El directorio para guardar una muestra de imágenes procesadas. Por defecto, None.
+    :type sampleDirectory: str, opcional
+    :param sampleProbability: La probabilidad de guardar una imagen en el directorio de muestra. Por defecto, 0.001.
+    :type sampleProbability: float, opcional
 
-    Atributos:
-        baseDirectory (str): El directorio base que contiene los datos.
-        destinationDirectory (str): El directorio de destino para guardar los datos procesados.
-        currentDirectoryFake (bool): Indica si el directorio actual es para datos falsos.
-        currentDatasetCounter (int): Contador para el conjunto de datos actual que se está procesando.
-        currentSequenceDatasetCounter (int): Contador para el conjunto de datos de secuencia actual que se está procesando.
-        sampleDirectory (str): El directorio para guardar una muestra de imágenes procesadas.
-        sampleProbability (float): La probabilidad de guardar una imagen en el directorio de muestra.
-        sequenceLengths (list): Lista de longitudes de secuencia para crear secuencias de fotogramas a partir de videos.
-        imagesPaths (list): Lista de rutas de archivos de imágenes.
-        imagesLabels (list): Lista de etiquetas para los archivos de imágenes.
-        videosPaths (list): Lista de rutas de archivos de videos.
-        videosLabels (list): Lista de etiquetas para los archivos de videos.
-        face_extractor (FaceExtractorMultithread): Instancia de la clase FaceExtractorMultithread para extraer caras de imágenes y videos.
-        faces (list): Lista de caras extraídas.
-        labels (list): Lista de etiquetas para las caras extraídas.
-        sequencesData (list): Lista de matrices que contienen las secuencias actuales que aún no se han guardado para cada tamaño en sequenceLengths.
-        totalFaces (int): Número total de caras procesadas.
-        totalFake (int): Número total de caras falsas procesadas.
-        totalReal (int): Número total de caras reales procesadas.
+    :ivar baseDirectory: El directorio base que contiene los datos.
+    :vartype baseDirectory: str
+    :ivar destinationDirectory: El directorio de destino para guardar los datos procesados.
+    :vartype destinationDirectory: str
+    :ivar currentDirectoryFake: Indica si el directorio actual es para datos falsos.
+    :vartype currentDirectoryFake: bool
+    :ivar currentDatasetCounter: Contador para el conjunto de datos actual que se está procesando.
+    :vartype currentDatasetCounter: int
+    :ivar currentSequenceDatasetCounter: Contador para el conjunto de datos de secuencia actual que se está procesando.
+    :vartype currentSequenceDatasetCounter: int
+    :ivar sampleDirectory: El directorio para guardar una muestra de imágenes procesadas.
+    :vartype sampleDirectory: str
+    :ivar sampleProbability: La probabilidad de guardar una imagen en el directorio de muestra.
+    :vartype sampleProbability: float
+    :ivar sequenceLengths: Lista de longitudes de secuencia para crear secuencias de fotogramas a partir de videos.
+    :vartype sequenceLengths: list
+    :ivar imagesPaths: Lista de rutas de archivos de imágenes.
+    :vartype imagesPaths: list
+    :ivar imagesLabels: Lista de etiquetas para los archivos de imágenes.
+    :vartype imagesLabels: list
+    :ivar videosPaths: Lista de rutas de archivos de videos.
+    :vartype videosPaths: list
+    :ivar videosLabels: Lista de etiquetas para los archivos de videos.
+    :vartype videosLabels: list
+    :ivar face_extractor: Instancia de la clase FaceExtractorMultithread para extraer caras de imágenes y videos.
+    :vartype face_extractor: FaceExtractorMultithread
+    :ivar faces: Lista de caras extraídas.
+    :vartype faces: list
+    :ivar labels: Lista de etiquetas para las caras extraídas.
+    :vartype labels: list
+    :ivar sequencesData: Lista de matrices que contienen las secuencias actuales que aún no se han guardado para cada tamaño en sequenceLengths.
+    :vartype sequencesData: list
+    :ivar totalFaces: Número total de caras procesadas.
+    :vartype totalFaces: int
+    :ivar totalFake: Número total de caras falsas procesadas.
+    :vartype totalFake: int
+    :ivar totalReal: Número total de caras reales procesadas.
+    :vartype totalReal: int
 
-    Métodos:
-        processFolder(path): Procesa de forma recursiva una carpeta y sus subcarpetas.
-        processFile(path): Procesa un archivo y lo registra en la lista correspondiente.
-        storeImage(img, label): Almacena una imagen en las matrices y opcionalmente la guarda en el directorio de muestra.
-        saveDataset(): Guarda las caras y etiquetas almacenadas como un conjunto de datos en un archivo HDF5.
-        processImages(): Procesa los archivos de imágenes y extrae caras.
-        processVideos(): Procesa los archivos de videos y extrae caras.
-        registerSequences(faces, label): Registra secuencias de fotogramas de videos y las guarda como conjuntos de datos en archivos HDF5.
-        saveSequences(index): Guarda las secuencias registradas como conjuntos de datos en archivos HDF5.
-
+    :method processFolder: Procesa de forma recursiva una carpeta y sus subcarpetas.
+    :method processFile: Procesa un archivo y lo registra en la lista correspondiente.
+    :method storeImage: Almacena una imagen en las matrices y opcionalmente la guarda en el directorio de muestra.
+    :method saveDataset: Guarda las caras y etiquetas almacenadas como un conjunto de datos en un archivo HDF5.
+    :method processImages: Procesa los archivos de imágenes y extrae caras.
+    :method processVideos: Procesa los archivos de videos y extrae caras.
+    :method registerSequences: Registra secuencias de fotogramas de videos y las guarda como conjuntos de datos en archivos HDF5.
+    :method saveSequences: Guarda las secuencias registradas como conjuntos de datos en archivos HDF5.
     """
+
     def __init__(self, baseDirectory, destinationDirectory,sequenceLengths = None, sampleDirectory = None, sampleProbability = 0.001):
         """
         Inicializa una instancia de la clase DataProcessor.
@@ -322,17 +343,19 @@ class DataProcessor:
         self.sequencesData[index] = []
         self.currentSequenceDatasetCounter += 1
             
-            
+"""          
+#ejemplo de procesado de datos sin generacion de secuencias
+processor = DataProcessor(baseDirectory='E:\TFG\Datasets',
+                            destinationDirectory='E:\TFG\Datasets\dataframes\\valid\dataframes_correct',
+                            sampleDirectory='E:\TFG\Datasets\dataframes\\valid\samples')
+                            
+#ejemplo de procesado de datos con generacion de secuencias
+processor = DataProcessor(baseDirectory='C:\\Users\\pablo\\Desktop\\TFG (1)\\videoFolder',
+                            destinationDirectory='C:\\Users\\pablo\\Desktop\\TFG (1)\\test_datasets',
+                            sampleDirectory='C:\\Users\\pablo\\Desktop\\TFG (1)\\samples',
+                            sequenceLengths=[20,50,100,300])        
+"""         
             
 
-"""          
-processor = DataProcessor(baseDirectory='E:\TFG\Datasets',
-                          destinationDirectory='E:\TFG\Datasets\dataframes\\valid\dataframes_correct',
-                          sampleDirectory='E:\TFG\Datasets\dataframes\\valid\samples')
-"""
-processor = DataProcessor(baseDirectory='C:\\Users\\pablo\\Desktop\\TFG (1)\\videoFolder',
-                          destinationDirectory='C:\\Users\\pablo\\Desktop\\TFG (1)\\test_datasets',
-                          sampleDirectory='C:\\Users\\pablo\\Desktop\\TFG (1)\\samples',
-                          sequenceLengths=[20,50,100,300])        
 
       
