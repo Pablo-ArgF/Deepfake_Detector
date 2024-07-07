@@ -43,30 +43,39 @@ const BodyView = () => {
       var timeoutId = setTimeout(() => controller.abort(), 600000);
 
       fetch('http://156.35.163.188/api/predict', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'enctype': 'multipart/form-data'
-        },
-        signal: controller.signal // Attach the signal to the fetch request
-      }).then(async response => {
-          try{
-              var CNNdata = await response.json();
-          }catch(error){
-              setError('Error prediciendo DeepFakes: ' + error);
+          method: 'POST',
+          body: formData,
+          headers: {
+            'enctype': 'multipart/form-data'
+          },
+          signal: controller.signal // Attach the signal to the fetch request
+        }).then(async response => {
+          if (!response.ok) { // Check if the response is not ok
+              const errorText = await response.text();  
+              setError('Ha ocurrido un error: ' + errorText);
               setLoading(false);
               setVideoUploaded(false);
               setData(null);
+              return;
+          }
+          var CNNdata;
+          try {
+            CNNdata = await response.json();
+          } catch (error) {
+            setError('Ha ocurrido un error: ' + error);
+            setLoading(false);
+            setVideoUploaded(false);
+            setData(null);
+            return;
           }
           setData(CNNdata);
           setLoading(false);
           setVideoUploaded(true);
-          // Clear the timeout if the request completes before the timeout fires
           clearTimeout(timeoutId);
-
-           //Start the prediction by sequences
+        
+          // Start the prediction by sequences
           var timeoutIdRNN = setTimeout(() => controller.abort(), 600000);
-    
+
           fetch('http://156.35.163.188/api/predict/sequences', {
             method: 'POST',
             body: formData,
@@ -74,19 +83,25 @@ const BodyView = () => {
               'enctype': 'multipart/form-data'
             },
             signal: controller.signal // Attach the signal to the fetch request
-          }).then(async RNNresponse =>{
-              try{
+          }).then(async RNNresponse => {
+                try {
                   const RNNTmpdata = await RNNresponse.json();
                   setRNNData(RNNTmpdata);
                   setRNNLoading(false);
-              }catch(error){
-                  setError('Error prediciendo DeepFakes: ' + error);
+                } catch (error) {
+                  setError('Error parsing JSON: ' + error);
                   setLoading(false);
                   setVideoUploaded(false);
-              }
-              // Clear the timeout if the request completes before the timeout fires
-              clearTimeout(timeoutIdRNN);
-          });
+                }
+                clearTimeout(timeoutIdRNN);
+              }).catch(error => {
+                setError('Error prediciendo DeepFakes: ' + error);
+                setLoading(false);
+                setVideoUploaded(false);
+              })
+              .catch(error =>{
+                  
+              });
       });
     } catch (error) {
       setError('Error prediciendo DeepFakes: ' + error);
