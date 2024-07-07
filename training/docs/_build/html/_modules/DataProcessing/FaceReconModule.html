@@ -91,25 +91,28 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Clase que se encarga de extraer caras de imágenes y videos utilizando múltiples hilos de ejecución.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        percentageExtractionFake (float): Porcentaje de frames a extraer de los videos fake.</span>
-<span class="sd">        percentageExtractionReal (float): Porcentaje de frames a extraer de los videos reales.</span>
-<span class="sd">        max_workers (int): Número máximo de hilos de ejecución.</span>
+<span class="sd">    :param percentageExtractionFake: Porcentaje de frames a extraer de los videos fake.</span>
+<span class="sd">    :type percentageExtractionFake: float</span>
+<span class="sd">    :param percentageExtractionReal: Porcentaje de frames a extraer de los videos reales.</span>
+<span class="sd">    :type percentageExtractionReal: float</span>
+<span class="sd">    :param max_workers: Número máximo de hilos de ejecución.</span>
+<span class="sd">    :type max_workers: int</span>
 
-<span class="sd">    Attributes:</span>
-<span class="sd">        percentageExtractionFake (float): Porcentaje de frames a extraer de los videos fake.</span>
-<span class="sd">        percentageExtractionReal (float): Porcentaje de frames a extraer de los videos reales.</span>
-<span class="sd">        max_workers (int): Número máximo de hilos de ejecución.</span>
+<span class="sd">    :ivar percentageExtractionFake: Porcentaje de frames a extraer de los videos fake.</span>
+<span class="sd">    :vartype percentageExtractionFake: float</span>
+<span class="sd">    :ivar percentageExtractionReal: Porcentaje de frames a extraer de los videos reales.</span>
+<span class="sd">    :vartype percentageExtractionReal: float</span>
+<span class="sd">    :ivar max_workers: Número máximo de hilos de ejecución.</span>
+<span class="sd">    :vartype max_workers: int</span>
 
-<span class="sd">    Methods:</span>
-<span class="sd">        align_frame(frame, gray, x, y, w, h, face_cascade): Alinea una cara en un rectángulo del frame.</span>
-<span class="sd">        process_video(video_path, label, index): Procesa un video y extrae las caras.</span>
-<span class="sd">        process_image(image_path, label): Procesa una imagen y extrae las caras.</span>
-<span class="sd">        process_frame_chunk(frames_with_indices): Procesa un fragmento de frames y extrae las caras.</span>
-<span class="sd">        process_video_to_predict(video_path, sequenceLength=None): Procesa un video para predecir y extrae las caras.</span>
-<span class="sd">        transform(videos, videoLabels): Transforma los videos y extrae las caras.</span>
-
+<span class="sd">    :method align_frame: Alinea una cara en un rectángulo del frame.</span>
+<span class="sd">    :method process_video: Procesa un video y extrae las caras.</span>
+<span class="sd">    :method process_image: Procesa una imagen y extrae las caras.</span>
+<span class="sd">    :method process_frame_chunk: Procesa un fragmento de frames y extrae las caras.</span>
+<span class="sd">    :method process_video_to_predict: Procesa un video para predecir y extrae las caras.</span>
+<span class="sd">    :method transform: Transforma los videos y extrae las caras.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">percentageExtractionFake</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">percentageExtractionReal</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -228,12 +231,12 @@
 
 <div class="viewcode-block" id="FaceExtractorMultithread.process_frame_chunk">
 <a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.FaceReconModule.FaceExtractorMultithread.process_frame_chunk">[documentos]</a>
-    <span class="k">def</span> <span class="nf">process_frame_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames_with_indices</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">process_frame_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Procesa un fragmento de frames y extrae las caras.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            frames_with_indices (list): Lista de tuplas que contienen el índice y el frame.</span>
+<span class="sd">            chunk (tuple): tupla con los valores (indice, chunk) </span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            list: Lista de tuplas que contienen el índice y el frame original.</span>
@@ -244,16 +247,16 @@
         <span class="n">processed_faces</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">original_frames</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">frames_with_indices</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">chunk</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
             <span class="n">gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
             <span class="n">detected_faces</span> <span class="o">=</span> <span class="n">face_cascade</span><span class="o">.</span><span class="n">detectMultiScale</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="mf">1.305</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">detected_faces</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">detected_faces</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">alignedFaceImage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">align_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">gray</span><span class="p">[</span><span class="n">y</span><span class="p">:</span><span class="n">y</span><span class="o">+</span><span class="n">h</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">face_cascade</span><span class="p">)</span>
-                <span class="n">processed_faces</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">idx</span><span class="p">,</span> <span class="n">alignedFaceImage</span><span class="p">))</span>
-            <span class="n">original_frames</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">idx</span><span class="p">,</span> <span class="n">frame</span><span class="p">))</span>
+                <span class="n">processed_faces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alignedFaceImage</span><span class="p">)</span>
+                <span class="n">original_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">original_frames</span><span class="p">,</span> <span class="n">processed_faces</span></div>
+        <span class="k">return</span> <span class="n">chunk</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">original_frames</span><span class="p">,</span> <span class="n">processed_faces</span></div>
 
 
 <div class="viewcode-block" id="FaceExtractorMultithread.process_video_to_predict">
@@ -281,11 +284,17 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">break</span>
         <span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        
+        <span class="n">num_chunks</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))),</span><span class="mi">8</span><span class="p">)</span>
+        
+        <span class="n">chunk_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span> <span class="o">//</span> <span class="n">num_chunks</span>  <span class="c1"># Compute the chunk size</span>
 
-        <span class="n">num_chunks</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))),</span> <span class="mi">8</span><span class="p">)</span>
-        <span class="n">frame_chunks</span> <span class="o">=</span> <span class="p">[</span><span class="n">frames</span><span class="p">[</span><span class="n">i</span><span class="p">::</span><span class="n">num_chunks</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_chunks</span><span class="p">)]</span>
-
-        <span class="n">frame_chunks_with_indices</span> <span class="o">=</span> <span class="p">[[(</span><span class="n">idx</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="p">),</span> <span class="n">frame</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">frame</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunk</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">frame_chunks</span><span class="p">)]</span>
+        <span class="n">frame_chunks_with_indices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_chunks</span><span class="p">):</span>
+            <span class="n">start_index</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="n">chunk_size</span>
+            <span class="n">end_index</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">chunk_size</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">num_chunks</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>  <span class="c1"># Last chunk takes the remaining frames</span>
+            <span class="n">chunk</span> <span class="o">=</span> <span class="n">frames</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span><span class="p">]</span>
+            <span class="n">frame_chunks_with_indices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">chunk</span><span class="p">))</span>
 
         <span class="n">processed_faces</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">original_frames</span> <span class="o">=</span> <span class="p">[]</span>
@@ -293,15 +302,10 @@
         <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">num_chunks</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
             <span class="n">futures</span> <span class="o">=</span> <span class="p">[</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">process_frame_chunk</span><span class="p">,</span> <span class="n">chunk</span><span class="p">)</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">frame_chunks_with_indices</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">futures</span><span class="p">:</span>
-                <span class="n">original_chunk</span><span class="p">,</span> <span class="n">processed_chunk</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
-                <span class="n">original_frames</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">original_chunk</span><span class="p">)</span>
-                <span class="n">processed_faces</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">processed_chunk</span><span class="p">)</span>
-
-        <span class="n">original_frames</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="n">processed_faces</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-
-        <span class="n">original_frames</span> <span class="o">=</span> <span class="p">[</span><span class="n">frame</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">original_frames</span><span class="p">]</span>
-        <span class="n">processed_faces</span> <span class="o">=</span> <span class="p">[</span><span class="n">face</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">face</span> <span class="ow">in</span> <span class="n">processed_faces</span><span class="p">]</span>
+                <span class="n">index</span><span class="p">,</span> <span class="n">original_chunk</span><span class="p">,</span> <span class="n">processed_chunk</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">original_chunk</span><span class="p">)):</span>
+                    <span class="n">original_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">original_chunk</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="n">processed_faces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">processed_chunk</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
         <span class="k">if</span> <span class="n">sequenceLength</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">original_frames</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">processed_faces</span><span class="p">)</span>

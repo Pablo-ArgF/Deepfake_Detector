@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="es" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DataProcessing.DataProcessor &mdash; documentación de Deepfake Detector - 1.0</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=4936afed"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/translations.js?v=efdbd0b9"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Deepfake Detector
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Buscar documentos" aria-label="Buscar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">training</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Deepfake Detector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Código de módulo</a></li>
+      <li class="breadcrumb-item active">DataProcessing.DataProcessor</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código fuente para DataProcessing.DataProcessor</h1><div class="highlight"><pre>
+<span></span>
+
+<div class="viewcode-block" id="DataProcessor">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.DataProcessor.DataProcessor">[documentos]</a>
+<span class="k">class</span> <span class="nc">DataProcessor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Clase para procesar datos extrayendo caras de imágenes y videos.</span>
+
+<span class="sd">    :param baseDirectory: El directorio base que contiene los datos.</span>
+<span class="sd">    :type baseDirectory: str</span>
+<span class="sd">    :param destinationDirectory: El directorio de destino para guardar los datos procesados.</span>
+<span class="sd">    :type destinationDirectory: str</span>
+<span class="sd">    :param sequenceLengths: Lista de longitudes de secuencia para crear secuencias de fotogramas a partir de videos. Por defecto, None.</span>
+<span class="sd">    :type sequenceLengths: list, opcional</span>
+<span class="sd">    :param sampleDirectory: El directorio para guardar una muestra de imágenes procesadas. Por defecto, None.</span>
+<span class="sd">    :type sampleDirectory: str, opcional</span>
+<span class="sd">    :param sampleProbability: La probabilidad de guardar una imagen en el directorio de muestra. Por defecto, 0.001.</span>
+<span class="sd">    :type sampleProbability: float, opcional</span>
+
+<span class="sd">    :ivar baseDirectory: El directorio base que contiene los datos.</span>
+<span class="sd">    :vartype baseDirectory: str</span>
+<span class="sd">    :ivar destinationDirectory: El directorio de destino para guardar los datos procesados.</span>
+<span class="sd">    :vartype destinationDirectory: str</span>
+<span class="sd">    :ivar currentDirectoryFake: Indica si el directorio actual es para datos falsos.</span>
+<span class="sd">    :vartype currentDirectoryFake: bool</span>
+<span class="sd">    :ivar currentDatasetCounter: Contador para el conjunto de datos actual que se está procesando.</span>
+<span class="sd">    :vartype currentDatasetCounter: int</span>
+<span class="sd">    :ivar currentSequenceDatasetCounter: Contador para el conjunto de datos de secuencia actual que se está procesando.</span>
+<span class="sd">    :vartype currentSequenceDatasetCounter: int</span>
+<span class="sd">    :ivar sampleDirectory: El directorio para guardar una muestra de imágenes procesadas.</span>
+<span class="sd">    :vartype sampleDirectory: str</span>
+<span class="sd">    :ivar sampleProbability: La probabilidad de guardar una imagen en el directorio de muestra.</span>
+<span class="sd">    :vartype sampleProbability: float</span>
+<span class="sd">    :ivar sequenceLengths: Lista de longitudes de secuencia para crear secuencias de fotogramas a partir de videos.</span>
+<span class="sd">    :vartype sequenceLengths: list</span>
+<span class="sd">    :ivar imagesPaths: Lista de rutas de archivos de imágenes.</span>
+<span class="sd">    :vartype imagesPaths: list</span>
+<span class="sd">    :ivar imagesLabels: Lista de etiquetas para los archivos de imágenes.</span>
+<span class="sd">    :vartype imagesLabels: list</span>
+<span class="sd">    :ivar videosPaths: Lista de rutas de archivos de videos.</span>
+<span class="sd">    :vartype videosPaths: list</span>
+<span class="sd">    :ivar videosLabels: Lista de etiquetas para los archivos de videos.</span>
+<span class="sd">    :vartype videosLabels: list</span>
+<span class="sd">    :ivar face_extractor: Instancia de la clase FaceExtractorMultithread para extraer caras de imágenes y videos.</span>
+<span class="sd">    :vartype face_extractor: FaceExtractorMultithread</span>
+<span class="sd">    :ivar faces: Lista de caras extraídas.</span>
+<span class="sd">    :vartype faces: list</span>
+<span class="sd">    :ivar labels: Lista de etiquetas para las caras extraídas.</span>
+<span class="sd">    :vartype labels: list</span>
+<span class="sd">    :ivar sequencesData: Lista de matrices que contienen las secuencias actuales que aún no se han guardado para cada tamaño en sequenceLengths.</span>
+<span class="sd">    :vartype sequencesData: list</span>
+<span class="sd">    :ivar totalFaces: Número total de caras procesadas.</span>
+<span class="sd">    :vartype totalFaces: int</span>
+<span class="sd">    :ivar totalFake: Número total de caras falsas procesadas.</span>
+<span class="sd">    :vartype totalFake: int</span>
+<span class="sd">    :ivar totalReal: Número total de caras reales procesadas.</span>
+<span class="sd">    :vartype totalReal: int</span>
+
+<span class="sd">    :method processFolder: Procesa de forma recursiva una carpeta y sus subcarpetas.</span>
+<span class="sd">    :method processFile: Procesa un archivo y lo registra en la lista correspondiente.</span>
+<span class="sd">    :method storeImage: Almacena una imagen en las matrices y opcionalmente la guarda en el directorio de muestra.</span>
+<span class="sd">    :method saveDataset: Guarda las caras y etiquetas almacenadas como un conjunto de datos en un archivo HDF5.</span>
+<span class="sd">    :method processImages: Procesa los archivos de imágenes y extrae caras.</span>
+<span class="sd">    :method processVideos: Procesa los archivos de videos y extrae caras.</span>
+<span class="sd">    :method registerSequences: Registra secuencias de fotogramas de videos y las guarda como conjuntos de datos en archivos HDF5.</span>
+<span class="sd">    :method saveSequences: Guarda las secuencias registradas como conjuntos de datos en archivos HDF5.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseDirectory</span><span class="p">,</span> <span class="n">destinationDirectory</span><span class="p">,</span><span class="n">sequenceLengths</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sampleDirectory</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sampleProbability</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inicializa una instancia de la clase DataProcessor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            baseDirectory (str): El directorio base que contiene los datos.</span>
+<span class="sd">            destinationDirectory (str): El directorio de destino para guardar los datos procesados.</span>
+<span class="sd">            sequenceLengths (list, opcional): Lista de longitudes de secuencia para crear secuencias de fotogramas a partir de videos. Por defecto, None.</span>
+<span class="sd">            sampleDirectory (str, opcional): El directorio para guardar una muestra de imágenes procesadas. Por defecto, None.</span>
+<span class="sd">            sampleProbability (float, opcional): La probabilidad de guardar una imagen en el directorio de muestra. Por defecto, 0.001.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseDirectory</span> <span class="o">=</span> <span class="n">baseDirectory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destinationDirectory</span> <span class="o">=</span> <span class="n">destinationDirectory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentDirectoryFake</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentDatasetCounter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentSequenceDatasetCounter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampleDirectory</span> <span class="o">=</span> <span class="n">sampleDirectory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampleProbability</span> <span class="o">=</span> <span class="n">sampleProbability</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sequenceLengths</span> <span class="o">=</span> <span class="n">sequenceLengths</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagesPaths</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagesLabels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">videosPaths</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">videosLabels</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1">#self.face_extractor = FaceExtractorMultithread(percentageExtractionFake=0.09, percentageExtractionReal=0.02) #TODO</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">face_extractor</span> <span class="o">=</span> <span class="n">FaceExtractorMultithread</span><span class="p">(</span><span class="n">percentageExtractionFake</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">percentageExtractionReal</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+        <span class="c1">#resulting data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">faces</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1">#For each size passed as parameter in sequenceLengths, we will store an array containing the current sequences not saved yet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sequencesData</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sequenceLengths</span><span class="p">))]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">totalFaces</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totalFake</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totalReal</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">processFolder</span><span class="p">(</span><span class="n">baseDirectory</span><span class="p">)</span>
+        <span class="c1">#guardamos en un archivo &#39;filesFound.csv&#39; los paths y labels de las imagenes y videos encontrados</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;paths&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">imagesPaths</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">videosPaths</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">imagesLabels</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">videosLabels</span><span class="p">})</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">destinationDirectory</span><span class="si">}</span><span class="s1">/filesFound.csv&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        
+
+        <span class="c1">#añadimos las headers al Progress.csv </span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destinationDirectory</span><span class="p">,</span><span class="s1">&#39;Progress.csv&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;datasetNumber, datasetImages, datasetFake, datasetReal , totalFaces, totalFake, totalReal</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1">#comenzamos a procesar las imagenes y videos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processVideos</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processImages</span><span class="p">()</span>
+        <span class="c1">#guardamos aquellos que no hayan sido guardados en bloques </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveDataset</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sequenceLengths</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saveSequences</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DataProcessor.processFolder">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.DataProcessor.DataProcessor.processFolder">[documentos]</a>
+    <span class="k">def</span> <span class="nf">processFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Procesa una carpeta y todos sus archivos y subcarpetas.</span>
+
+<span class="sd">        :param path: Ruta de la carpeta a procesar.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1">#check if current folder indicates real/fake</span>
+        <span class="n">sections</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">sections</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;real&#39;</span> <span class="ow">or</span> <span class="n">sections</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fake&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">sections</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;real&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">currentDirectoryFake</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">currentDirectoryFake</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">current_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">current_path</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">processFile</span><span class="p">(</span><span class="n">current_path</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">processFolder</span><span class="p">(</span><span class="n">current_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.processFile">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.DataProcessor.DataProcessor.processFile">[documentos]</a>
+    <span class="k">def</span> <span class="nf">processFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Procesa un archivo y registra la imagen o video en la lista correspondiente.</span>
+
+<span class="sd">        :param path: Ruta del archivo a procesar.</span>
+<span class="sd">        :type path: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fragments</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fragments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;jpg&#39;</span> <span class="ow">or</span> <span class="n">fragments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;png&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imagesPaths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentDirectoryFake</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">imagesLabels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">imagesLabels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">fragments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;mp4&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">videosPaths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentDirectoryFake</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">videosLabels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">videosLabels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.storeImage">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.DataProcessor.DataProcessor.storeImage">[documentos]</a>
+    <span class="k">def</span> <span class="nf">storeImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">img</span><span class="p">,</span><span class="n">label</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Almacena una imagen y su etiqueta en los arrays correspondientes.</span>
+
+<span class="sd">            :param img: La imagen a almacenar.</span>
+<span class="sd">            :type img: numpy.ndarray</span>
+<span class="sd">            :param label: La etiqueta de la imagen.</span>
+<span class="sd">            :type label: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Guardamos la imagen en los arrays</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+
+        <span class="c1"># Si hay sample directory y prob, guardamos la imagen en la carpeta sample con probabilidad sampleProbability</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampleDirectory</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampleProbability</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sampleDirectory</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sampleDirectory</span><span class="p">)</span>
+                <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sampleDirectory</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s1">_image_</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">totalFaces</span><span class="si">}</span><span class="s1">.jpg&#39;</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span>
+
+        <span class="c1"># Si tenemos x imagenes guardadas, creamos un dataset con ellas y las guardamos en un fichero h5, borrando las imagenes de la memoria</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">9000</span><span class="p">:</span> 
+           <span class="bp">self</span><span class="o">.</span><span class="n">saveDataset</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.saveDataset">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.DataProcessor.DataProcessor.saveDataset">[documentos]</a>
+    <span class="k">def</span> <span class="nf">saveDataset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Guarda el dataset actual en disco y actualiza los datos de progreso.</span>
+
+<span class="sd">            Este método guarda el dataset actual en disco en formato HDF5 y actualiza los datos de progreso en un archivo CSV.</span>
+<span class="sd">            Los datos de progreso incluyen el número de imágenes totales, el número de imágenes falsas y el número de imágenes reales.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                None</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--&gt; saved dataset </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currentDatasetCounter</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="c1">#guardamos el número de imagenes, reales y falsas</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totalFaces</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totalFake</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totalReal</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">)</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+
+        <span class="c1">#escribimos en el archivo Progress.csv los datos de progreso actuales</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destinationDirectory</span><span class="p">,</span><span class="s1">&#39;Progress.csv&#39;</span><span class="p">),</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currentDatasetCounter</span><span class="si">}</span><span class="s1">,&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">)</span><span class="si">}</span><span class="s1">,&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span><span class="si">}</span><span class="s1">,&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span><span class="si">}</span><span class="s1">,&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">totalFaces</span><span class="si">}</span><span class="s1">,&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">totalFake</span><span class="si">}</span><span class="s1">,&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">totalReal</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1">#guardamos los datos y hacemos reset de arrays</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;face&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">})</span>
+        <span class="n">dataframeFolder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destinationDirectory</span><span class="p">,</span> <span class="s1">&#39;dataframes&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dataframeFolder</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dataframeFolder</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_hdf</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">dataframeFolder</span><span class="si">}</span><span class="s1">/dataframe_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currentDatasetCounter</span><span class="si">}</span><span class="s1">.h5&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;df</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currentDatasetCounter</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">faces</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentDatasetCounter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+        
+
+
+<div class="viewcode-block" id="DataProcessor.processImages">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.DataProcessor.DataProcessor.processImages">[documentos]</a>
+    <span class="k">def</span> <span class="nf">processImages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Procesa las imágenes almacenadas en la lista de rutas de imágenes.</span>
+<span class="sd">            Extrae las caras de las imágenes y las almacena junto con sus etiquetas en el almacenamiento.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span><span class="n">path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">imagesPaths</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;image </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">imagesPaths</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">tmpFaces</span><span class="p">,</span> <span class="n">tmpLabels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">face_extractor</span><span class="o">.</span><span class="n">process_image</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imagesLabels</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tmpFaces</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">storeImage</span><span class="p">(</span><span class="n">tmpFaces</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tmpLabels</span><span class="p">[</span><span class="n">i</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="DataProcessor.processVideos">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.DataProcessor.DataProcessor.processVideos">[documentos]</a>
+    <span class="k">def</span> <span class="nf">processVideos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>    
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Procesa los videos divididos en chunks y realiza las siguientes tareas:</span>
+<span class="sd">            - Divide la cantidad de videos en chunks de 100 videos cada uno.</span>
+<span class="sd">            - Transforma los videos en secuencias de caras y etiquetas utilizando el extractor de caras.</span>
+<span class="sd">            - Almacena las imágenes individualmente en dataframes para su uso en una red neuronal convolucional (CNN).</span>
+<span class="sd">            - Registra las secuencias en dataframes para su uso en una red neuronal recurrente (RNN).</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                self: La instancia del objeto DataProcessor.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                None</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="c1">#dividimos la cantidad de videos de forma que se procesen de 100 en 100</span>
+        <span class="n">numberOfChunks</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videosPaths</span><span class="p">)</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)</span> 
+        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numberOfChunks</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;###################################### chunck </span><span class="si">{</span><span class="n">chunk</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">numberOfChunks</span><span class="si">}</span><span class="s1"> ################################&#39;</span><span class="p">)</span>
+            <span class="n">pathsChunk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">videosPaths</span><span class="p">[</span><span class="n">chunk</span><span class="o">*</span><span class="mi">100</span> <span class="p">:</span> <span class="nb">min</span><span class="p">(</span><span class="n">chunk</span><span class="o">*</span><span class="mi">100</span> <span class="o">+</span> <span class="mi">100</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videosPaths</span><span class="p">))]</span> 
+            <span class="n">labelsChunk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">videosLabels</span><span class="p">[</span><span class="n">chunk</span><span class="o">*</span><span class="mi">100</span> <span class="p">:</span> <span class="nb">min</span><span class="p">(</span><span class="n">chunk</span><span class="o">*</span><span class="mi">100</span> <span class="o">+</span> <span class="mi">100</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">videosPaths</span><span class="p">))]</span> 
+            <span class="c1">#Transform devuelve un array de arrays, cada array interno contiene las secuencias para un video, tambien devuelve un vector de labels para cada video</span>
+            <span class="n">videosFaces</span><span class="p">,</span><span class="n">videoLabels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">face_extractor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">pathsChunk</span><span class="p">,</span> <span class="n">labelsChunk</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span><span class="n">video</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">videosFaces</span><span class="p">):</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">videoLabels</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                <span class="c1">#Guardado de imagenes individualmente en dataframes para CNN</span>
+                <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">face</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">video</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">storeImage</span><span class="p">(</span><span class="n">face</span><span class="p">,</span><span class="n">labels</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> 
+                <span class="c1">#Guardado de secuencias en dataframes para RNN</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequenceLengths</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">registerSequences</span><span class="p">(</span><span class="n">video</span><span class="p">,</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c1">#Labels[0] porque todos los frames de un video tienen la misma label</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.registerSequences">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.DataProcessor.DataProcessor.registerSequences">[documentos]</a>
+    <span class="k">def</span> <span class="nf">registerSequences</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">faces</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Recibe todas las imagenes y label de un video y guarda las secuencias con los tamaños especificados por constructor.</span>
+<span class="sd">        Por cada tamaño especificado en el constructor se creará una carpeta en la destination directory con el nombre: &#39;sequences_{sequenceLength}&#39;</span>
+
+<span class="sd">        :param faces: Lista de caras.</span>
+<span class="sd">        :type faces: list</span>
+<span class="sd">        :param label: Etiqueta asociada a las secuencias de caras.</span>
+<span class="sd">        :type label: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">sequenceLength</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sequenceLengths</span><span class="p">):</span>
+            <span class="n">sequences</span> <span class="o">=</span> <span class="p">[</span><span class="n">faces</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">sequenceLength</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">faces</span><span class="p">),</span> <span class="n">sequenceLength</span><span class="p">)]</span> 
+            <span class="c1"># Almacena en el arreglo sequencesData las secuencias que aún no han sido guardadas</span>
+            <span class="k">for</span> <span class="n">sequence</span> <span class="ow">in</span> <span class="n">sequences</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sequencesData</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">sequence</span><span class="p">,</span> <span class="n">label</span><span class="p">])</span> 
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sequencesData</span><span class="p">[</span><span class="n">index</span><span class="p">])</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequenceLengths</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">300</span><span class="p">:</span> <span class="c1"># TODO modificar esto para que sea más, ahora lo puse así para los tests</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">saveSequences</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.saveSequences">
+<a class="viewcode-back" href="../../DataProcessing.html#DataProcessing.DataProcessor.DataProcessor.saveSequences">[documentos]</a>
+    <span class="k">def</span> <span class="nf">saveSequences</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Guarda las secuencias de datos en un archivo HDF5 y las imágenes en carpetas correspondientes.</span>
+
+<span class="sd">            Parámetros:</span>
+<span class="sd">            - index (int): El índice de la lista de secuencias de datos a guardar.</span>
+
+<span class="sd">            Retorna:</span>
+<span class="sd">            - None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Si no hay nada que guardar, salimos</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sequencesData</span><span class="p">[</span><span class="n">index</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="c1">#guardamos los datos y hacemos reset de arrays</span>
+        <span class="n">sequences</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#Filtrado de secuencias que no tengan el tamaño correcto</span>
+        <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequencesData</span><span class="p">[</span><span class="n">index</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequenceLengths</span><span class="p">[</span><span class="n">index</span><span class="p">]:</span>
+                <span class="n">sequences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="c1">#Si no hay nada que guardar, salimos</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sequences</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;sequences&#39;</span><span class="p">:</span> <span class="n">sequences</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">labels</span><span class="p">})</span>
+        
+        <span class="n">dataframeFolder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">destinationDirectory</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;sequences_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sequenceLengths</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dataframeFolder</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dataframeFolder</span><span class="p">)</span>
+
+        <span class="c1">#In order to test correctness we save all images in a sequence inside a folder in the dataframe folder</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">sequence</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sequences</span><span class="p">):</span>
+            <span class="n">sequenceFolder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dataframeFolder</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;sequence_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">sequenceFolder</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">sequenceFolder</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">image</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sequence</span><span class="p">):</span>
+                <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">sequenceFolder</span><span class="si">}</span><span class="s1">/image_</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1">.jpg&#39;</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+        
+
+        <span class="n">df</span><span class="o">.</span><span class="n">to_hdf</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">dataframeFolder</span><span class="si">}</span><span class="s1">/sequences_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currentSequenceDatasetCounter</span><span class="si">}</span><span class="s1">.h5&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;df</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currentSequenceDatasetCounter</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sequencesData</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentSequenceDatasetCounter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+</div>
+
+            
+            
+            
+
+
+      
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Derechos de autor 2024, Pablo Argallero Fernández.</p>
+  </div>
+
+  Compilado con <a href="https://www.sphinx-doc.org/">Sphinx</a> usando un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    proporcionado por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

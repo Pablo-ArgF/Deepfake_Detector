@@ -15,25 +15,28 @@ class FaceExtractorMultithread(BaseEstimator, TransformerMixin):
     """
     Clase que se encarga de extraer caras de imágenes y videos utilizando múltiples hilos de ejecución.
 
-    Args:
-        percentageExtractionFake (float): Porcentaje de frames a extraer de los videos fake.
-        percentageExtractionReal (float): Porcentaje de frames a extraer de los videos reales.
-        max_workers (int): Número máximo de hilos de ejecución.
+    :param percentageExtractionFake: Porcentaje de frames a extraer de los videos fake.
+    :type percentageExtractionFake: float
+    :param percentageExtractionReal: Porcentaje de frames a extraer de los videos reales.
+    :type percentageExtractionReal: float
+    :param max_workers: Número máximo de hilos de ejecución.
+    :type max_workers: int
 
-    Attributes:
-        percentageExtractionFake (float): Porcentaje de frames a extraer de los videos fake.
-        percentageExtractionReal (float): Porcentaje de frames a extraer de los videos reales.
-        max_workers (int): Número máximo de hilos de ejecución.
+    :ivar percentageExtractionFake: Porcentaje de frames a extraer de los videos fake.
+    :vartype percentageExtractionFake: float
+    :ivar percentageExtractionReal: Porcentaje de frames a extraer de los videos reales.
+    :vartype percentageExtractionReal: float
+    :ivar max_workers: Número máximo de hilos de ejecución.
+    :vartype max_workers: int
 
-    Methods:
-        align_frame(frame, gray, x, y, w, h, face_cascade): Alinea una cara en un rectángulo del frame.
-        process_video(video_path, label, index): Procesa un video y extrae las caras.
-        process_image(image_path, label): Procesa una imagen y extrae las caras.
-        process_frame_chunk(frames_with_indices): Procesa un fragmento de frames y extrae las caras.
-        process_video_to_predict(video_path, sequenceLength=None): Procesa un video para predecir y extrae las caras.
-        transform(videos, videoLabels): Transforma los videos y extrae las caras.
-
+    :method align_frame: Alinea una cara en un rectángulo del frame.
+    :method process_video: Procesa un video y extrae las caras.
+    :method process_image: Procesa una imagen y extrae las caras.
+    :method process_frame_chunk: Procesa un fragmento de frames y extrae las caras.
+    :method process_video_to_predict: Procesa un video para predecir y extrae las caras.
+    :method transform: Transforma los videos y extrae las caras.
     """
+
 
     def __init__(self, percentageExtractionFake=0.5, percentageExtractionReal=0.5, max_workers=None):
         """

@@ -100,11 +100,41 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">MetricsModule.</span></span><span class="sig-name descname"><span class="pre">TrainingMetrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resultDataPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelDescription</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">showGraphs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/MetricsModule.html#TrainingMetrics"><span class="viewcode-link"><span class="pre">[fuente]</span></span></a><a class="headerlink" href="#MetricsModule.TrainingMetrics" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Clase para calcular y almacenar métricas de entrenamiento de un modelo.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>model (tf.keras.Model): Modelo a entrenar.
-resultDataPath (str): Ruta donde se guardarán los resultados (imágenes, csv, etc).
-modelDescription (str, optional): Descripción del modelo. Defaults to None.
-showGraphs (bool, optional): Indica si se desean mostrar las gráficas de pérdida, precisión y matriz de confusión. Defaults to False.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>tf.keras.Model</em>) – Modelo a entrenar.</p></li>
+<li><p><strong>resultDataPath</strong> (<em>str</em>) – Ruta donde se guardarán los resultados (imágenes, csv, etc).</p></li>
+<li><p><strong>modelDescription</strong> (<em>str</em><em>, </em><em>opcional</em>) – Descripción del modelo. Defaults to None.</p></li>
+<li><p><strong>showGraphs</strong> (<em>bool</em><em>, </em><em>opcional</em>) – Indica si se desean mostrar las gráficas de pérdida, precisión y matriz de confusión. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Method __init__(model, resultDataPath, modelDescription=None, showGraphs=False)<span class="colon">:</span></dt>
+<dd class="field-even"><p>Inicializa una instancia de la clase TrainingMetrics.</p>
+</dd>
+<dt class="field-odd">Method monitor_usage()<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Método para ser llamado en un hilo paralelo que monitorea el uso de CPU y memoria RAM.</p>
+</dd>
+<dt class="field-even">Method augment(row)<span class="colon">:</span></dt>
+<dd class="field-even"><p>Método para aumentar el dataset con imágenes falsas mediante la rotación y el volteo de las imágenes.</p>
+</dd>
+<dt class="field-odd">Method batches_train(folderPath, nPerBatch, epochs, isSequence=False)<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Método que recibe el path a una carpeta en la que se encuentran los Dataframes y con ellos entrena el modelo.</p>
+</dd>
+<dt class="field-even">Method train(X_train, y_train, X_test, y_test, epochs)<span class="colon">:</span></dt>
+<dd class="field-even"><p>Método para entrenar el modelo con los datos de entrenamiento y validación.</p>
+</dd>
+<dt class="field-odd">Method storeModelStructure()<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Guarda una imagen que muestra la estructura de capas del modelo en la carpeta del modelo.</p>
+</dd>
+<dt class="field-even">Method plot()<span class="colon">:</span></dt>
+<dd class="field-even"><p>Genera y guarda las gráficas de acierto y pérdida durante el entrenamiento. Si showGraphs es True, las muestra en pantalla.</p>
+</dd>
+<dt class="field-odd">Method confusionMatrix()<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Genera y guarda una matriz de confusión con los datos de test. Si showGraphs es True, la muestra en pantalla.</p>
+</dd>
+<dt class="field-even">Method saveStats(fileName=»metrics.csv»)<span class="colon">:</span></dt>
+<dd class="field-even"><p>Guarda las métricas de entrenamiento en un archivo CSV.</p>
 </dd>
 </dl>
 <dl class="py method">
