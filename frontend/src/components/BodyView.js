@@ -181,8 +181,8 @@ const BodyView = () => {
           </Heading>
           <Text textAlign="justify" width="45%">
             El incipiente uso de las inteligencias artificiales ha hecho que la suplantación de identidad a través de <b>DeepFakes</b>, contenido sintético generado por algoritmos de inteligencia artificial que combinan y superponen imágenes y vídeos existentes para crear uno nuevo.<br/><br/>
-            El nivel de realismo que se obtiene utilizando algoritmos de DeepFake actuales supone un <b>riesgo a la sociedad</b>. Desde fake news hasta suplantaciones de identidad, la aparición de estas inteligencias artificiales han hecho que el contenido que consumimos cada vez sea menos identificable<br/><br/>
-            Esta herramienta intenta ayudar en la identificación de este tipo de material sintético mediante un análisis aplicando modelos de predicción de DeepFakes.
+            El nivel de realismo que se obtiene utilizando algoritmos de DeepFake actuales supone un <b>riesgo a la sociedad</b>. Desde 'fake news' hasta suplantaciones de identidad, la aparición de estas inteligencias artificiales ha hecho que el contenido que consumimos cada vez sea menos identificable.<br/><br/>
+            Esta herramienta de <b>detección de DeepFakes</b> intenta ayudar en la identificación de este tipo de material sintético mediante un análisis aplicando modelos de predicción de DeepFakes.
           </Text>
           <Text color="red" marginTop="1em">
             {error}
