@@ -9,9 +9,10 @@ from logging.handlers import RotatingFileHandler
 from werkzeug.utils import secure_filename
 import sys
 import cv2
-# My modules
-sys.path.append("..")
-from training.DataProcessing.FaceReconModule import FaceExtractorMultithread
+# Add the backend directory to the Python path
+sys.path.append('.')
+#from training.DataProcessing.DataProcessor import FaceExtractorMultithread
+
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -39,15 +40,15 @@ app.config['SELECTED_RNN_MODEL'] = '2024-06-26 16.22.50'
 app.config['RNN_MODEL_SEQUENCE_LENGTH'] = 20
 
 # Load the cnn model
-path = f"/home/pabloarga/Results/{app.config['SELECTED_CNN_MODEL']}/model{app.config['SELECTED_CNN_MODEL']}.keras"  
+path = f"/app/models/model{app.config['SELECTED_CNN_MODEL']}.keras"  
 model = load_model(path, safe_mode=False, compile=False)
 
 # Load the rnn model
-pathSequences = f"/home/pabloarga/Results/{app.config['SELECTED_RNN_MODEL']}/model{app.config['SELECTED_RNN_MODEL']}.keras"  
+pathSequences = f"/app/models/model{app.config['SELECTED_RNN_MODEL']}.keras"  
 modelSequences = load_model(pathSequences, safe_mode=False, compile=False)
  
 
-faceExtractor = FaceExtractorMultithread() 
+#faceExtractor = FaceExtractorMultithread() 
 
 def image_to_base64(image_path):
     with open(image_path, 'rb') as img_file:
@@ -140,7 +141,7 @@ def predict():
     video_file.save(video_path)
 
     # Process the video
-    videoFrames, processedFrames = faceExtractor.process_video_to_predict(video_path)    
+    videoFrames, processedFrames = 1,1 #faceExtractor.process_video_to_predict(video_path)    
 
     # Make predictions
     predictions = model.predict(np.stack(processedFrames, axis=0))
@@ -188,7 +189,7 @@ def predictSequences():
     video_file.save(video_path)
 
     # Process the video
-    videoFrames, processedSequences = faceExtractor.process_video_to_predict(video_path, sequenceLength = app.config['RNN_MODEL_SEQUENCE_LENGTH'])    
+    videoFrames, processedSequences = 1,1#faceExtractor.process_video_to_predict(video_path, sequenceLength = app.config['RNN_MODEL_SEQUENCE_LENGTH'])    
     predictions = modelSequences.predict(np.stack(processedSequences, axis=0))
     mean = np.mean(predictions)
     var = np.var(predictions)
