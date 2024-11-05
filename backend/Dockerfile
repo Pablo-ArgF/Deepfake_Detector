@@ -20,12 +20,6 @@ RUN pip install -r requirements.txt
 
 # Copia el código de la aplicación Flask, modelos y código de entrenamiento
 COPY . .
-COPY training/DataProcessing /app/training/DataProcessing
-COPY training/MetricsModule.py /app/training/MetricsModule.py
-COPY training/TrainModule.py /app/training/TrainModule.py
-COPY training/__init__.py /app/training/__init__.py
-COPY training/docs /app/training/docs
-
 
 # Expone el puerto que usa Flask
 EXPOSE 5000

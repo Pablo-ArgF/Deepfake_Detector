@@ -10,8 +10,7 @@ from werkzeug.utils import secure_filename
 import sys
 import cv2
 # Add the backend directory to the Python path
-sys.path.append('.')
-#from training.DataProcessing.DataProcessor import FaceExtractorMultithread
+from training.DataProcessing.DataProcessor import FaceExtractorMultithread
 
 
 import logging
@@ -48,7 +47,7 @@ pathSequences = f"/app/models/model{app.config['SELECTED_RNN_MODEL']}.keras"
 modelSequences = load_model(pathSequences, safe_mode=False, compile=False)
  
 
-#faceExtractor = FaceExtractorMultithread() 
+faceExtractor = FaceExtractorMultithread() 
 
 def image_to_base64(image_path):
     with open(image_path, 'rb') as img_file:
@@ -141,7 +140,7 @@ def predict():
     video_file.save(video_path)
 
     # Process the video
-    videoFrames, processedFrames = 1,1 #faceExtractor.process_video_to_predict(video_path)    
+    videoFrames, processedFrames = faceExtractor.process_video_to_predict(video_path)    
 
     # Make predictions
     predictions = model.predict(np.stack(processedFrames, axis=0))
@@ -189,7 +188,7 @@ def predictSequences():
     video_file.save(video_path)
 
     # Process the video
-    videoFrames, processedSequences = 1,1#faceExtractor.process_video_to_predict(video_path, sequenceLength = app.config['RNN_MODEL_SEQUENCE_LENGTH'])    
+    videoFrames, processedSequences = faceExtractor.process_video_to_predict(video_path, sequenceLength = app.config['RNN_MODEL_SEQUENCE_LENGTH'])    
     predictions = modelSequences.predict(np.stack(processedSequences, axis=0))
     mean = np.mean(predictions)
     var = np.var(predictions)
