@@ -39,11 +39,11 @@ app.config['SELECTED_RNN_MODEL'] = '2024-06-26 16.22.50'
 app.config['RNN_MODEL_SEQUENCE_LENGTH'] = 20
 
 # Load the cnn model
-path = f"/app/models/model{app.config['SELECTED_CNN_MODEL']}.keras"  
+path = f"/app/models/{app.config['SELECTED_CNN_MODEL']}/model{app.config['SELECTED_CNN_MODEL']}.keras"  
 model = load_model(path, safe_mode=False, compile=False)
 
 # Load the rnn model
-pathSequences = f"/app/models/model{app.config['SELECTED_RNN_MODEL']}.keras"  
+pathSequences = f"/app/models/{app.config['SELECTED_RNN_MODEL']}/model{app.config['SELECTED_RNN_MODEL']}.keras"  
 modelSequences = load_model(pathSequences, safe_mode=False, compile=False)
  
 
@@ -89,32 +89,32 @@ def remove_all_files(folder_path):
 @app.route('/api/model/structure/cnn', methods=['GET'])
 def getCNNStructure():
     app.logger.info('Request received for getCNNStructure')
-    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_CNN_MODEL"]}/model_structure.png')
+    return image_to_base64(f"/app/models/{app.config['SELECTED_CNN_MODEL']}/model_structure.png")
 
 @app.route('/api/model/structure/rnn', methods=['GET'])
 def getRNNStructure():
     app.logger.info('Request received for getRNNStructure')
-    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_RNN_MODEL"]}/model_structure.png')
+    return image_to_base64(f"/app/models/{app.config['SELECTED_RNN_MODEL']}/model_structure.png")
 
 @app.route('/api/model/graphs/cnn', methods=['GET'])
 def getCNNGraphs():
     app.logger.info('Request received for getCNNGraphs')
-    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_CNN_MODEL"]}/combined_plots.png')
+    return image_to_base64(f"/app/models/{app.config['SELECTED_CNN_MODEL']}/combined_plots.png")
 
 @app.route('/api/model/graphs/rnn', methods=['GET'])
 def getRNNGraphs():
     app.logger.info('Request received for getRNNGraphs')
-    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_RNN_MODEL"]}/combined_plots.png')
+    return image_to_base64(f"/app/models/{app.config['SELECTED_RNN_MODEL']}/combined_plots.png")
 
 @app.route('/api/model/confussion/matrix/cnn', methods=['GET'])
 def getCNNConfussionMatrix():
     app.logger.info('Request received for getCNNConfussionMatrix')
-    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_CNN_MODEL"]}/confusionMatrix_{app.config["SELECTED_CNN_MODEL"]}.png')
+    return image_to_base64(f"/app/models/{app.config['SELECTED_CNN_MODEL']}/confusionMatrix_{app.config['SELECTED_CNN_MODEL']}.png")
 
 @app.route('/api/model/confussion/matrix/rnn', methods=['GET'])
 def getRNNConfussionMatrix():
     app.logger.info('Request received for getRNNConfussionMatrix')
-    return image_to_base64(f'/home/pabloarga/Results/{app.config["SELECTED_RNN_MODEL"]}/confusionMatrix_{app.config["SELECTED_RNN_MODEL"]}.png')
+    return image_to_base64(f"/app/models/{app.config['SELECTED_RNN_MODEL']}/confusionMatrix_{app.config['SELECTED_RNN_MODEL']}.png")
 
 @app.route('/api/predict', methods=['POST'])
 def predict():
@@ -223,4 +223,5 @@ def predictSequences():
 
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(host="0.0.0.0", port=5000)
+

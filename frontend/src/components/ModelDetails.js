@@ -14,22 +14,22 @@ const ModelDetails = ({setView}) => {
     loadImages();
   }, []);    
   const loadImages = async () => {
-    const cnnModelStructure = await fetch('http://156.35.163.188/api/model/structure/cnn');
+    const cnnModelStructure = await fetch('/api/model/structure/cnn');
     setCnnModelStructureImage('data:image/png;base64,'+ await cnnModelStructure.text());
     
-    const rnnModelStructure = await fetch('http://156.35.163.188/api/model/structure/rnn');
+    const rnnModelStructure = await fetch('/api/model/structure/rnn');
     setRnnModelStructureImage('data:image/png;base64,'+ await rnnModelStructure.text());
     
-    const cnnModelGraphs = await fetch('http://156.35.163.188/api/model/graphs/cnn');
+    const cnnModelGraphs = await fetch('/api/model/graphs/cnn');
     setCnnModelGraphsImage('data:image/png;base64,'+ await cnnModelGraphs.text());
     
-    const rnnModelGraphs = await fetch('http://156.35.163.188/api/model/graphs/rnn');
+    const rnnModelGraphs = await fetch('/api/model/graphs/rnn');
     setRnnModelGraphsImage('data:image/png;base64,'+ await rnnModelGraphs.text());
     
-    const cnnConfusionMatrix = await fetch('http://156.35.163.188/api/model/confussion/matrix/cnn');
+    const cnnConfusionMatrix = await fetch('/api/model/confussion/matrix/cnn');
     setCnnConfussionMatrix('data:image/png;base64,'+ await cnnConfusionMatrix.text());
     
-    const rnnConfusionMatrix = await fetch('http://156.35.163.188/api/model/confussion/matrix/rnn');
+    const rnnConfusionMatrix = await fetch('/api/model/confussion/matrix/rnn');
     setRnnConfussionMatrix('data:image/png;base64,'+ await rnnConfusionMatrix.text());
   }
 

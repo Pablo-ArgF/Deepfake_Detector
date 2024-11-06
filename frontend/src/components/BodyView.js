@@ -42,7 +42,7 @@ const BodyView = () => {
       const controller = new AbortController();
       var timeoutId = setTimeout(() => controller.abort(), 600000);
 
-      fetch('http://156.35.163.188/api/predict', {
+      fetch('/api/predict', {
           method: 'POST',
           body: formData,
           headers: {
@@ -76,7 +76,7 @@ const BodyView = () => {
           // Start the prediction by sequences
           var timeoutIdRNN = setTimeout(() => controller.abort(), 600000);
 
-          fetch('http://156.35.163.188/api/predict/sequences', {
+          fetch('/api/predict/sequences', {
             method: 'POST',
             body: formData,
             headers: {

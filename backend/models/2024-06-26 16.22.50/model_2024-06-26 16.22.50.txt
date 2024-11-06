@@ -1,0 +1,71 @@
+Model: "model"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ input_1 (InputLayer)        [(None, 20, 200, 200, 3   0         
+                             )]                                  
+                                                                 
+ time_distributed (TimeDist  (None, 20, 1)             27141921  
+ ributed)                                                        
+                                                                 
+ time_distributed_1 (TimeDi  (None, 20, 1)             0         
+ stributed)                                                      
+                                                                 
+ time_distributed_2 (TimeDi  (None, 20, 1)             0         
+ stributed)                                                      
+                                                                 
+ lstm (LSTM)                 (None, 20, 256)           264192    
+                                                                 
+ batch_normalization (Batch  (None, 20, 256)           1024      
+ Normalization)                                                  
+                                                                 
+ lstm_1 (LSTM)               (None, 128)               197120    
+                                                                 
+ dense (Dense)               (None, 512)               66048     
+                                                                 
+ batch_normalization_1 (Bat  (None, 512)               2048      
+ chNormalization)                                                
+                                                                 
+ dropout_1 (Dropout)         (None, 512)               0         
+                                                                 
+ dense_1 (Dense)             (None, 1024)              525312    
+                                                                 
+ batch_normalization_2 (Bat  (None, 1024)              4096      
+ chNormalization)                                                
+                                                                 
+ dropout_2 (Dropout)         (None, 1024)              0         
+                                                                 
+ dense_2 (Dense)             (None, 1)                 1025      
+                                                                 
+=================================================================
+Total params: 28202786 (107.59 MB)
+Trainable params: 1057281 (4.03 MB)
+Non-trainable params: 27145505 (103.55 MB)
+_________________________________________________________________
+RNN using LSTM, pretrained CNN, dense layers, and overfitting prevention techniques
+Finished training batch 2 of 27 at 2024-06-26 17.20.06
+Finished training batch 3 of 27 at 2024-06-26 18.17.38
+Finished training batch 4 of 27 at 2024-06-26 19.04.42
+Finished training batch 5 of 27 at 2024-06-26 20.02.47
+Finished training batch 6 of 27 at 2024-06-26 20.59.47
+Finished training batch 7 of 27 at 2024-06-26 21.57.45
+Finished training batch 8 of 27 at 2024-06-26 22.56.03
+Finished training batch 9 of 27 at 2024-06-26 23.55.46
+Finished training batch 10 of 27 at 2024-06-27 00.53.14
+Finished training batch 11 of 27 at 2024-06-27 01.51.20
+Finished training batch 12 of 27 at 2024-06-27 02.49.21
+Finished training batch 13 of 27 at 2024-06-27 03.47.02
+Finished training batch 14 of 27 at 2024-06-27 04.44.57
+Finished training batch 15 of 27 at 2024-06-27 05.42.30
+Finished training batch 16 of 27 at 2024-06-27 06.50.24
+Finished training batch 17 of 27 at 2024-06-27 07.48.00
+Finished training batch 18 of 27 at 2024-06-27 08.45.46
+Finished training batch 19 of 27 at 2024-06-27 09.44.21
+Finished training batch 20 of 27 at 2024-06-27 10.44.20
+Finished training batch 21 of 27 at 2024-06-27 11.42.10
+Finished training batch 22 of 27 at 2024-06-27 12.40.14
+Finished training batch 23 of 27 at 2024-06-27 13.37.59
+Finished training batch 24 of 27 at 2024-06-27 14.36.08
+Finished training batch 25 of 27 at 2024-06-27 15.33.41
+Finished training batch 26 of 27 at 2024-06-27 16.30.58
+Finished training batch 27 of 27 at 2024-06-27 17.29.36
