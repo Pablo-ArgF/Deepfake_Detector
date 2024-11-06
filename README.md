@@ -4,8 +4,8 @@
   <tr>
     <td><img src="https://github.com/user-attachments/assets/fcd8b946-2d97-46ff-8c02-81da5be11414" alt="Icon" width="80" height="80"></td>
     <td>
-      <p>Trabajo Fin de Grado de Pablo Argallero Fernández<br>
-      Curso 2023-2024<br>
+      <p>Continuación de trabajo Fin de Grado<br>
+      Cursado en 2023-2024, obteniendo la calificación de 10 con Matrícula de honor<br>
       Ingeniería Informática del Software<br>
       Universidad de Oviedo</p>
     </td>
@@ -61,10 +61,10 @@ Para poder ejecutar este proyecto, es necesario tener **Docker** instalado en tu
    cd <directorio_del_repositorio>
    ```
 2. En el directorio raíz del repositorio, ejecuta el siguiente comando para construir y levantar los contenedores de Docker:
-  ```bash
-  docker-compose up --build
-  ```
-3.Una vez que el contenedor esté corriendo, la aplicación estará disponible y podrás interactuar con ella accediendo a http://localhost
+   ```bash
+   docker-compose up --build
+   ```
+3. Una vez que el contenedor esté corriendo, la aplicación estará disponible y podrás interactuar con ella accediendo a http://localhost
 
 
 
