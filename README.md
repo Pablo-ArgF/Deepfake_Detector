@@ -44,3 +44,29 @@ Los deepfakes se generan mediante el uso de algoritmos de aprendizaje profundo, 
 - **Daño a la reputación**: Crear vídeos falsos para dañar la imagen pública de individuos.
 
 La detección de deepfakes es, por tanto, una tarea crítica para mantener la confianza en los medios digitales y proteger a las personas y organizaciones de los posibles abusos de esta tecnología.
+
+## Instalación
+
+Para poder ejecutar este proyecto, es necesario tener **Docker** instalado en tu máquina.
+
+### Requisitos previos
+
+1. **Docker**: Si no tienes Docker instalado, puedes descargarlo desde [aquí](https://www.docker.com/get-started) y seguir las instrucciones de instalación para tu sistema operativo.
+
+### Pasos para ejecutar el proyecto
+
+1. Clona este repositorio en tu máquina:
+   ```bash
+   git clone <url_del_repositorio>
+   cd <directorio_del_repositorio>
+   ```
+2. En el directorio raíz del repositorio, ejecuta el siguiente comando para construir y levantar los contenedores de Docker:
+  ```bash
+  docker-compose up --build
+  ```
+3.Una vez que el contenedor esté corriendo, la aplicación estará disponible y podrás interactuar con ella accediendo a http://localhost
+
+
+
+
+
