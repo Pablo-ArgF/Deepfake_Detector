@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Flex,
     Grid,
@@ -13,26 +13,28 @@ import { ResponsivePie } from '@nivo/pie';
 
 const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSelectedIndex, selectedIndex }) => {
     const [aboveThreshold, setAboveThreshold] = useState(null);
-    const [pieChartData,setPieChartData] = useState([{
+    const [pieChartData, setPieChartData] = useState([{
         "id": "Por encima del umbral",
         "label": "Por encima del umbral",
         "value": aboveThreshold
     },
     {
-        "id": "Por debajo del umbral",  
+        "id": "Por debajo del umbral",
         "label": "Por debajo del umbral",
-        "value": data?.nFrames - aboveThreshold
+        "value": data?.nFrames - aboveThreshold 
     }]);
 
+    // Currently displayed image 
+    const [videoFrameSrc, setVideoFrameSrc] = useState(data?.videoFrames[selectedIndex]);
+    const [processedFrameSrc, setProcessedFrameSrc] = useState(data?.processedFrames[selectedIndex]);
+    const [heatmapFrameSrc, setHeatmapFrameSrc] = useState(data?.heatmaps[selectedIndex]);
+
     const handleThresholdChange = (event) => {
-        // threshold value is the value rounded to 2 decimal positions and divided by 100
         var thresholdValue = parseFloat(event.target.value).toFixed(2) / 100;
-        if (thresholdValue > 1)
-            thresholdValue = 1;
-        if (event.target.value === '') {
-            thresholdValue = 0;
-        }
-        const aboveThresholdTmp = data?.predictions.data.filter(prediction => prediction.y.toFixed(2)  >= thresholdValue).length;
+        if (thresholdValue > 1) thresholdValue = 1;
+        if (event.target.value === '') thresholdValue = 0;
+
+        const aboveThresholdTmp = data?.predictions.data.filter(prediction => prediction.y.toFixed(2) >= thresholdValue).length;
         setAboveThreshold(aboveThresholdTmp);
         setPieChartData([{
             "id": "Por encima del umbral",
@@ -61,7 +63,6 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                         padding={'1em'}
                         marginLeft={'0.5em'}
                         width={'35%'}>
-
                         <Flex direction={'column'} w='98%' padding='0.5em' alignItems='flex-start' backgroundColor='#3572EF' borderRadius={'0.25em'}>
                             <Text textColor={'black'} margin={'0.25em'}><b>Nombre del video</b></Text>
                             <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data?.predictions.id}</Text>
@@ -97,13 +98,13 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.mean * 100).toFixed(2)}%</Text>
                             </Flex>
                         </Grid>
-
+                        {/* Threshold Control and Pie Chart */}
                         <Flex direction={'column'} padding={'0.5em'} width={'98%'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
                             <Text textColor={'black'} margin={'0.25em'}><b>Proporción por encima del umbral</b>:</Text>
-                            <Flex direction='row' height='12em' width={'100%'}>                                
-                                <div style={{ height: '17em', width:'75%', overflow:'hidden' }} marginLeft='1em' marginRight='1em'>
-                                    { aboveThreshold != null?
-                                    <ResponsivePie
+                            <Flex direction='row' height='12em' width={'100%'}>
+                                <div style={{ height: '17em', width: '75%', overflow: 'hidden' }} marginLeft='1em' marginRight='1em'>
+                                    {aboveThreshold != null ?
+                                       <ResponsivePie
                                         data={pieChartData}
                                         margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
                                         innerRadius={0.5}
@@ -158,9 +159,8 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                                 ]
                                             }
                                         ]}
-                                    />
-                                    :
-                                    <Flex justifyContent={'center'}><Text textColor={'black'} margin={'0.25em'}><b>Introduzca un umbral <br/>de decisión</b></Text></Flex>
+                                   /> :
+                                        <Flex justifyContent={'center'}><Text textColor={'black'} margin={'0.25em'}><b>Introduzca un umbral <br/>de decisión</b></Text></Flex>
                                     }
                                 </div>
                                 <Flex direction="column" width="35%" h="100%" justifyContent="flex-end">
@@ -202,14 +202,14 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                             alignContent={'center'}
                             marginLeft={'1em'}
                             gap={'0.5em'}>
-                                <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                    <Text textColor={'#170C8A'} margin={'0.25em'}><b>Número del frame</b></Text>
-                                    <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{selectedIndex}</Text>
-                                </Flex>
-                                <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                    <Text textColor={'#170C8A'} margin={'0.25em'}><b>Predicción para el frame</b></Text>
-                                    <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.predictions.data[selectedIndex]?.y * 100).toFixed(2)}% Fake</Text>
-                                </Flex>
+                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
+                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Número del frame</b></Text>
+                                <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{selectedIndex}</Text>
+                            </Flex>
+                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
+                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Predicción para el frame</b></Text>
+                                <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.predictions.data[selectedIndex]?.y * 100).toFixed(2)}% Fake</Text>
+                            </Flex>
                         </Flex>
                         <Flex
                             direction='row'
@@ -217,20 +217,65 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                             alignItems={'flex-start'}
                             alignContent={'center'}
                             marginLeft={'1em'}
-                            marginTop={'2em'}>
+                            marginTop={'2em'}
+                        >
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame extraido del video</b></Text>
-                                <Image src={data?.videoFrames[selectedIndex]} alt='Fotograma real del video' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
+                                <Text textColor={'#170C8A'} margin={'0.25em'}>
+                                    <b>Mapa de calor del frame</b>
+                                </Text>
+                                <img 
+                                    src={heatmapFrameSrc} 
+                                    alt='Mapa de calor para el fotograma seleccionado' 
+                                    style={{
+                                        maxHeight: '20em',
+                                        maxWidth: '25em',
+                                        padding: '0.2em',
+                                        marginRight: '0.5em'
+                                    }} 
+                                />
                             </Flex>
+                            {/* Video Frame */}
+                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
+                                <Text textColor={'#170C8A'} margin={'0.25em'}>
+                                    <b>Frame extraído del video</b>
+                                </Text>
+                                {/* Display video frame from URL */}
+                                <img 
+                                    src={videoFrameSrc} 
+                                    alt='Fotograma real del video' 
+                                    style={{
+                                        maxHeight: '20em',
+                                        maxWidth: '25em',
+                                        padding: '0.2em'
+                                    }} 
+                                />
+                            </Flex>
+
                             <ArrowForwardIcon boxSize={'3em'} alignSelf={'center'} />
+
+                            {/* Processed Frame */}
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame utilizado para la predicción</b></Text>
-                                <Image src={data?.processedFrames[selectedIndex]} alt='Fotograma recortado utilizado para la detección' maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
+                                <Text textColor={'#170C8A'} margin={'0.25em'}>
+                                    <b>Frame utilizado para la predicción</b>
+                                </Text>
+                                {/* Display processed frame from URL */}
+                                <img 
+                                    src={processedFrameSrc} 
+                                    alt='Fotograma recortado utilizado para la detección' 
+                                    style={{
+                                        maxHeight: '9.5em',
+                                        maxWidth: '9.5em',
+                                        padding: '0.2em',
+                                        alignSelf: 'center'
+                                    }} 
+                                />
                             </Flex>
+
                         </Flex>
+
                     </Flex>
                 </Flex>
-                                            
+                {/* Frame Analysis Chart */}
                 <Flex
                     height={'100%'}
                     padding='0.5em'
@@ -278,8 +323,12 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                             pointBorderColor={{ from: 'serieColor' }}
                             colors={{ scheme: 'set1' }}
                             curve="monotoneX"
-                            onClick={(data) => {
-                                setSelectedIndex(data.index);
+                            onClick={(point) => {
+                                const index = point.index;
+                                setSelectedIndex(index); // Set the selected index
+                                setVideoFrameSrc(data.videoFrames[index]); 
+                                setProcessedFrameSrc(data.processedFrames[index]); 
+                                setHeatmapFrameSrc(data.heatmaps[index]); 
                             }}
                         />
                     </div>

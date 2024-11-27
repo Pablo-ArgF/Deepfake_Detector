@@ -25,6 +25,11 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
         "value": data?.nSequences - aboveThreshold
     }]);
 
+    // Currently displayed image 
+    const [videoFrameSrc, setVideoFrameSrc] = useState(data?.videoFrames[selectedIndex]);
+    const [processedFrameSrc, setProcessedFrameSrc] = useState(data?.processedFrames[selectedIndex]);
+    const [heatmapFrameSrc, setHeatmapFrameSrc] = useState(data?.heatmaps[selectedIndex]);
+
     const handleThresholdChange = (event) => {
         // threshold value is the value rounded to 2 decimal positions and divided by 100
         var thresholdValue = parseFloat(event.target.value).toFixed(2) / 100;
@@ -119,9 +124,9 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                         <Flex direction={'column'} padding={'0.5em'} width={'98%'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
                             <Text textColor={'black'} margin={'0.25em'}><b>Proporción por encima del umbral</b>:</Text>
                             <Flex direction='row' height='12em' width={'100%'}>                                
-                                <div style={{ height: '17em', width:'75%', overflow:'hidden' }} marginLeft='1em' marginRight='1em'>
-                                    { aboveThreshold != null?
-                                    <ResponsivePie
+                            <div style={{ height: '17em', width: '75%', overflow: 'hidden' }} marginLeft='1em' marginRight='1em'>
+                                    {aboveThreshold != null ?
+                                       <ResponsivePie
                                         data={pieChartData}
                                         margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
                                         innerRadius={0.5}
@@ -176,9 +181,8 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                                                 ]
                                             }
                                         ]}
-                                    />
-                                    :
-                                    <Flex justifyContent={'center'}><Text textColor={'black'} margin={'0.25em'}><b>Introduzca un umbral <br/>de decisión</b></Text></Flex>
+                                   /> :
+                                        <Flex justifyContent={'center'}><Text textColor={'black'} margin={'0.25em'}><b>Introduzca un umbral <br/>de decisión</b></Text></Flex>
                                     }
                                 </div>
                                 <Flex direction="column" width="35%" h="100%" justifyContent="flex-end">
@@ -236,14 +240,18 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                             alignContent={'center'}
                             marginLeft={'1em'}
                             marginTop={'2em'}>
+                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'} marginRight={'0.5em'}>
+                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Mapa de calor del frame</b></Text>
+                                <Image src={heatmapFrameSrc} alt='Mapa de calor del fotograma seleccionado' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
+                            </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                 <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame extraido del video</b></Text>
-                                <Image src={data?.videoFrames[selectedIndex]} alt='Fotograma real del video' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
+                                <Image src={videoFrameSrc} alt='Fotograma real del video' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
                             </Flex>
                             <ArrowForwardIcon boxSize={'3em'} alignSelf={'center'} />
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                 <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame utilizado para la predicción</b></Text>
-                                <Image src={data?.processedFrames[selectedIndex]} alt='Fotograma recortado utilizado para la detección' maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
+                                <Image src={processedFrameSrc} alt='Fotograma recortado utilizado para la detección' maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
                             </Flex>
                         </Flex>
                     </Flex>
@@ -297,10 +305,12 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                             pointBorderColor={{ from: 'serieColor' }}
                             colors={{ scheme: 'set1' }}
                             curve="monotoneX"
-                            onClick={(data) => {
-                                if(data){
-                                    setSelectedIndex(data.index);
-                                }
+                            onClick={(point) => {
+                                const index = point.index;
+                                setSelectedIndex(index); // Set the selected index
+                                setVideoFrameSrc(data.videoFrames[index]); 
+                                setProcessedFrameSrc(data.processedFrames[index]); 
+                                setHeatmapFrameSrc(data.heatmaps[index]); 
                             }}/>
                             :
                             <div></div>}

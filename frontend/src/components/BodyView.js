@@ -42,7 +42,7 @@ const BodyView = () => {
       const controller = new AbortController();
       var timeoutId = setTimeout(() => controller.abort(), 600000);
 
-      fetch('http://156.35.163.188/api/predict', {
+      fetch('http://localhost/api/predict', {//'/api/predict', {
           method: 'POST',
           body: formData,
           headers: {
@@ -50,9 +50,8 @@ const BodyView = () => {
           },
           signal: controller.signal // Attach the signal to the fetch request
         }).then(async response => {
-          if (!response.ok) { // Check if the response is not ok
-              const errorText = await response.text();  
-              setError('Ha ocurrido un error: ' + errorText);
+          if (!response.ok) { // Check if the response is not ok  
+              setError('Ha ocurrido un error procesando el video, por favor, intentelo de nuevo.');
               setLoading(false);
               setVideoUploaded(false);
               setData(null);
@@ -62,7 +61,7 @@ const BodyView = () => {
           try {
             CNNdata = await response.json();
           } catch (error) {
-            setError('Ha ocurrido un error: ' + error);
+            setError('Ha ocurrido un error procesando el video, por favor, intentelo de nuevo.');
             setLoading(false);
             setVideoUploaded(false);
             setData(null);
@@ -76,7 +75,7 @@ const BodyView = () => {
           // Start the prediction by sequences
           var timeoutIdRNN = setTimeout(() => controller.abort(), 600000);
 
-          fetch('http://156.35.163.188/api/predict/sequences', {
+          fetch('/api/predict/sequences', {
             method: 'POST',
             body: formData,
             headers: {
@@ -89,13 +88,13 @@ const BodyView = () => {
                   setRNNData(RNNTmpdata);
                   setRNNLoading(false);
                 } catch (error) {
-                  setError('Error parsing JSON: ' + error);
+                  setError('Ha ocurrido un error procesando el video por secuencias');
                   setLoading(false);
                   setVideoUploaded(false);
                 }
                 clearTimeout(timeoutIdRNN);
               }).catch(error => {
-                setError('Error prediciendo DeepFakes: ' + error);
+                setError('Ha ocurrido un error procesando el video por secuencias');
                 setLoading(false);
                 setVideoUploaded(false);
               })
@@ -193,7 +192,7 @@ const BodyView = () => {
                 type="file"
                 id="videoInput"
                 accept="video/mp4"
-                onChange={handleVideoUpload}
+                onInput={handleVideoUpload}
                 style={{ display: 'none' }} // Hide the default file input
                 cornerRadius='0.5em'
               />

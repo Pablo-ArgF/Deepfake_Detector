@@ -5,7 +5,7 @@ from datetime import datetime
 import pandas as pd
 import cv2
 import sys
-from FaceReconModule import FaceExtractorMultithread
+from training.DataProcessing.FaceReconModule import FaceExtractorMultithread
 
 class DataProcessor:
     """
