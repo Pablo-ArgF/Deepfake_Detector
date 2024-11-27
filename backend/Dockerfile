@@ -21,6 +21,9 @@ RUN pip install -r requirements.txt
 # Copia el código de la aplicación Flask, modelos y código de entrenamiento
 COPY . .
 
+# Create a directory for storing static image data
+RUN mkdir -p /app/static/images/generated
+
 # Expone el puerto que usa Flask
 EXPOSE 5000
 
