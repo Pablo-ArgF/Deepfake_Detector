@@ -29,6 +29,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
     const [videoFrameSrc, setVideoFrameSrc] = useState(data?.videoFrames[selectedIndex]);
     const [processedFrameSrc, setProcessedFrameSrc] = useState(data?.processedFrames[selectedIndex]);
     const [heatmapFrameSrc, setHeatmapFrameSrc] = useState(data?.heatmaps[selectedIndex]);
+    const [heatmapFaceFrameSrc, setHeatmapFaceFrameSrc] = useState(data?.heatmaps_face[selectedIndex]);
 
     const handleThresholdChange = (event) => {
         // threshold value is the value rounded to 2 decimal positions and divided by 100
@@ -244,6 +245,10 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                                 <Text textColor={'#170C8A'} margin={'0.25em'}><b>Mapa de calor del frame</b></Text>
                                 <Image src={heatmapFrameSrc} alt='Mapa de calor del fotograma seleccionado' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
                             </Flex>
+                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'} marginRight={'0.5em'}>
+                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Mapa de calor del frame procesado</b></Text>
+                                <Image src={heatmapFaceFrameSrc} alt='Mapa de calor del fotograma seleccionado' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
+                            </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
                                 <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame extraido del video</b></Text>
                                 <Image src={videoFrameSrc} alt='Fotograma real del video' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
@@ -311,6 +316,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                                 setVideoFrameSrc(data.videoFrames[index]); 
                                 setProcessedFrameSrc(data.processedFrames[index]); 
                                 setHeatmapFrameSrc(data.heatmaps[index]); 
+                                setHeatmapFaceFrameSrc(data.heatmaps_face[index]);  
                             }}/>
                             :
                             <div></div>}

@@ -28,6 +28,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
     const [videoFrameSrc, setVideoFrameSrc] = useState(data?.videoFrames[selectedIndex]);
     const [processedFrameSrc, setProcessedFrameSrc] = useState(data?.processedFrames[selectedIndex]);
     const [heatmapFrameSrc, setHeatmapFrameSrc] = useState(data?.heatmaps[selectedIndex]);
+    const [heatmapFaceFrameSrc, setHeatmapFaceFrameSrc] = useState(data?.heatmaps_face[selectedIndex]);
 
     const handleThresholdChange = (event) => {
         var thresholdValue = parseFloat(event.target.value).toFixed(2) / 100;
@@ -223,6 +224,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 <Text textColor={'#170C8A'} margin={'0.25em'}>
                                     <b>Mapa de calor del frame</b>
                                 </Text>
+                                <Flex direction={'row'}>
                                 <img 
                                     src={heatmapFrameSrc} 
                                     alt='Mapa de calor para el fotograma seleccionado' 
@@ -233,6 +235,24 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                         marginRight: '0.5em'
                                     }} 
                                 />
+                                </Flex>
+                            </Flex>
+                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
+                                <Text textColor={'#170C8A'} margin={'0.25em'}>
+                                    <b>Mapa de calor del frame procesado</b>
+                                </Text>
+                                <Flex direction={'row'}>
+                                <img 
+                                    src={heatmapFaceFrameSrc} 
+                                    alt='Mapa de calor para el fotograma seleccionado tras el procesamiento' 
+                                    style={{
+                                        maxHeight: '20em',
+                                        maxWidth: '25em',
+                                        padding: '0.2em',
+                                        marginRight: '0.5em'
+                                    }} 
+                                />
+                                </Flex>
                             </Flex>
                             {/* Video Frame */}
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
@@ -328,7 +348,8 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 setSelectedIndex(index); // Set the selected index
                                 setVideoFrameSrc(data.videoFrames[index]); 
                                 setProcessedFrameSrc(data.processedFrames[index]); 
-                                setHeatmapFrameSrc(data.heatmaps[index]); 
+                                setHeatmapFrameSrc(data.heatmaps[index]);
+                                setHeatmapFaceFrameSrc(data.heatmaps_face[index]);  
                             }}
                         />
                     </div>

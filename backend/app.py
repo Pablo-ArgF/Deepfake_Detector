@@ -103,7 +103,7 @@ def generate_heatmap(frames, alpha=0.3, beta=0.7, intensity_multiplier=2.5):
     Returns:
         list of np.ndarray: Lista de mapas de calor superpuestos.
     """
-    heatmaps = []
+    heatmaps = [frames[0]] # El primer fotograma no tiene mapa de calor 
     for i in range(1, len(frames)):
         # Calcular la diferencia absoluta entre fotogramas consecutivos
         diff = cv2.absdiff(frames[i], frames[i - 1])
@@ -277,9 +277,11 @@ def predict():
 
     # Generar mapas de calor
     heatmaps = generate_heatmap(videoFrames)
+    heatmaps_face = generate_heatmap(processedFrames)
 
     # Guardar los mapas de calor y obtener las URLs
     heatmap_urls = save_images(heatmaps, f'{video_name}_heatmap')
+    heatmap_face_urls = save_images(heatmaps_face, f'{video_name}_heatmap_face')
 
     return jsonify({
         'predictions': {
@@ -294,7 +296,9 @@ def predict():
         'nFrames': len(predictions),
         'videoFrames': video_frame_urls,
         'processedFrames': processed_frame_urls,
-        'heatmaps': heatmap_urls  
+        'heatmaps': heatmap_urls ,
+        'heatmaps_face':heatmap_face_urls
+
     }), 200
 
 @app.route('/api/predict/sequences', methods=['POST'])
@@ -350,9 +354,11 @@ def predictSequences():
 
     # Generar mapas de calor para secuencias
     heatmaps = generate_heatmap([frame for seq in videoFrames for frame in seq])
+    heatmaps_face = generate_heatmap([frame for seq in processedSequences for frame in seq])
 
     # Guardar los mapas de calor y obtener las URLs
     heatmap_urls = save_images(heatmaps, f'{video_name}_heatmap')
+    heatmap_face_urls = save_images(heatmaps_face, f'{video_name}_heatmap_face')
 
     # Construct response
     response = {
@@ -370,7 +376,8 @@ def predictSequences():
         'sequenceSize': app.config['RNN_MODEL_SEQUENCE_LENGTH'],
         'videoFrames': video_frame_urls,
         'processedFrames': processed_frame_urls,
-        'heatmaps': heatmap_urls  
+        'heatmaps': heatmap_urls  ,
+        'heatmaps_face': heatmap_face_urls
     }
 
     app.logger.info(f"Successfully processed video {video_name} and returning predictions.")
