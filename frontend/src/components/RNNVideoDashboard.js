@@ -44,13 +44,13 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
         const aboveThresholdTmp = (predictionsData.filter(prediction => prediction.y.toFixed(2) >= thresholdValue).length) / data?.sequenceSize;
         setAboveThreshold(aboveThresholdTmp);
         setPieChartData([{
-            "id": "Por encima del umbral",
-            "label": "Por encima del umbral",
+            "id": "Above the threshold",
+            "label": "Above the threshold",
             "value": aboveThresholdTmp
         },
         {
-            "id": "Por debajo del umbral",
-            "label": "Por debajo del umbral",
+            "id": "Below the threshold",
+            "label": "Below the threshold",
             "value": data?.nSequences - aboveThresholdTmp
         }]);
     };
@@ -87,7 +87,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                         width={'35%'}>
 
                         <Flex direction={'column'} w='98%' padding='0.5em' alignItems='flex-start' backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                            <Text textColor={'black'} margin={'0.25em'}><b>Nombre del video</b></Text>
+                            <Text textColor={'black'} margin={'0.25em'}><b>Name of the video</b></Text>
                             <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data?.predictions?.id}</Text>
                         </Flex>
                         <Grid
@@ -97,33 +97,33 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                             gap={'0.25em'}
                         >
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'black'} margin={'0.25em'}><b>Secuencias analizadas</b></Text>
+                                <Text textColor={'black'} margin={'0.25em'}><b>Number of analyzed</b></Text>
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data?.nSequences}</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'black'} margin={'0.25em'}><b>Mínimo registrado</b></Text>
+                                <Text textColor={'black'} margin={'0.25em'}><b>Minimun</b></Text>
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.min * 100).toFixed(2)}%</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'black'} margin={'0.25em'}><b>Máximo registrado</b></Text>
+                                <Text textColor={'black'} margin={'0.25em'}><b>Maximun</b></Text>
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.max * 100).toFixed(2)}%</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'black'} margin={'0.25em'}><b>Número de valores distintos</b></Text>
+                                <Text textColor={'black'} margin={'0.25em'}><b>Number of different values</b></Text>
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{new Set(data?.predictions?.data?.map(prediction => prediction.y.toFixed(2))).size}</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'black'} margin={'0.25em'}><b>Varianza de los valores</b></Text>
+                                <Text textColor={'black'} margin={'0.25em'}><b>Variance of the values</b></Text>
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.var * 100).toFixed(2)}%</Text>
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'black'} margin={'0.25em'}><b>Media de los valores</b></Text>
+                                <Text textColor={'black'} margin={'0.25em'}><b>Average of the values</b></Text>
                                 <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.mean * 100).toFixed(2)}%</Text>
                             </Flex>
                         </Grid>
 
                         <Flex direction={'column'} padding={'0.5em'} width={'98%'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                            <Text textColor={'black'} margin={'0.25em'}><b>Proporción por encima del umbral</b>:</Text>
+                            <Text textColor={'black'} margin={'0.25em'}><b>Proportion above threshold</b>:</Text>
                             <Flex direction='row' height='12em' width={'100%'}>                                
                             <div style={{ height: '17em', width: '75%', overflow: 'hidden' }} marginLeft='1em' marginRight='1em'>
                                     {aboveThreshold != null ?
@@ -183,12 +183,12 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                                             }
                                         ]}
                                    /> :
-                                        <Flex justifyContent={'center'}><Text textColor={'black'} margin={'0.25em'}><b>Introduzca un umbral <br/>de decisión</b></Text></Flex>
+                                        <Flex justifyContent={'center'}><Text textColor={'black'} margin={'0.25em'}><b>Introduce the decision <br/>threshold</b></Text></Flex>
                                     }
                                 </div>
                                 <Flex direction="column" width="35%" h="100%" justifyContent="flex-end">
                                   <FormControl>
-                                    <FormLabel htmlFor="threshold">Introduce el umbral (%)</FormLabel>
+                                    <FormLabel htmlFor="threshold">Introduce the threshold (%)</FormLabel>
                                     <Input
                                       id="threshold"
                                       type="number"
@@ -196,7 +196,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                                       height="1.8em"
                                       max={100}
                                       min={0}
-                                      placeholder="Introduce el umbral (%)"
+                                      placeholder="Introduce the threshold (%)"
                                       onChange={handleThresholdChange}
                                     />
                                   </FormControl>
@@ -216,7 +216,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                         marginRight={'0.5em'}
                         borderRadius={'0.5em'}>
                         <Heading as="h2" size="4xl" mb={15} textColor={'black'}>
-                            Fotograma seleccionado
+                            Selected frame
                         </Heading>
                         <Flex
                             direction='row'
@@ -226,11 +226,11 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                             marginLeft={'1em'}
                             gap={'0.5em'}>
                                 <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                    <Text textColor={'#170C8A'} margin={'0.25em'}><b>Número del frame</b></Text>
+                                    <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame number</b></Text>
                                     <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{selectedIndex}</Text>
                                 </Flex>
                                 <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                    <Text textColor={'#170C8A'} margin={'0.25em'}><b>Predicción para la secuencia del frame</b></Text>
+                                    <Text textColor={'#170C8A'} margin={'0.25em'}><b>Prediction for the sequence's frame</b></Text>
                                     <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.predictions?.data[selectedIndex]?.y * 100).toFixed(2)}% Fake</Text>
                                 </Flex>
                         </Flex>
@@ -242,21 +242,22 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                             marginLeft={'1em'}
                             marginTop={'2em'}>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'} marginRight={'0.5em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Mapa de calor del frame</b></Text>
-                                <Image src={heatmapFrameSrc} alt='Mapa de calor del fotograma seleccionado' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
+                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Heatmap for the frame</b></Text>
+                                <Image src={heatmapFrameSrc} alt='Heatmap for the frame' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
                             </Flex>
+                            <ArrowForwardIcon boxSize={'3em'} alignSelf={'center'} />
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'} marginRight={'0.5em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Mapa de calor del frame procesado</b></Text>
-                                <Image src={heatmapFaceFrameSrc} alt='Mapa de calor del fotograma seleccionado' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
+                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Heatmap for the processed frame</b></Text>
+                                <Image src={heatmapFaceFrameSrc} alt='Heatmap for the processed frame' maxH={'20em'} maxW={'25em'} padding={'0.2em'} alignSelf={'center'} />
                             </Flex>
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame extraido del video</b></Text>
-                                <Image src={videoFrameSrc} alt='Fotograma real del video' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
+                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame extracted from the video</b></Text>
+                                <Image src={videoFrameSrc} alt='Frame extracted from the video' maxH={'20em'} maxW={'25em'} padding={'0.2em'} />
                             </Flex>
                             <ArrowForwardIcon boxSize={'3em'} alignSelf={'center'} />
                             <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame utilizado para la predicción</b></Text>
-                                <Image src={processedFrameSrc} alt='Fotograma recortado utilizado para la detección' maxH='9.5em' maxW={'9.5em'} padding={'0.2em'} alignSelf={'center'} />
+                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Cropped frame used for detection</b></Text>
+                                <Image src={processedFrameSrc} alt='Cropped frame used for detection' maxH='20em' maxW={'25em'} padding={'0.2em'} alignSelf={'center'} />
                             </Flex>
                         </Flex>
                     </Flex>
@@ -276,7 +277,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading,loading, data
                     margin={'0.5em'}
                 >
                     <Heading as='h2' size='3xl' mb={13} textColor={'#00201D'}>
-                        Análisis por secuencias
+                        Sequence analysis
                     </Heading>
                     <div style={{ height: '18em', width: '100%' }} marginLeft='1em' marginRight='1em'>
                         {data?.predictions != null?

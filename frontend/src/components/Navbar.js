@@ -14,7 +14,7 @@ const Navbar = ({setView}) => {
       
       <Image width="18em" src="./Logo Universidad de Oviedo.png" alt="Logo Universidad de Oviedo" onClick={() => setView('BodyView')} cursor="pointer"  />
       <Text fontSize="1.3em" fontWeight="bold" alignSelf={'center'}>
-        Trabajo Fin de Grado, detección de DeepFakes
+        DeepFake Detection
       </Text> 
 
       <Flex

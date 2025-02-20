@@ -38,43 +38,43 @@ const ModelDetails = ({setView}) => {
       {/* Titles */}
       <Flex direction="column" align="center" borderRadius="md" p={4}>
         <Text fontSize="1.6em" fontWeight="bold">
-          Modelo de predicción por fotogramas (CNN)
+        Frame-wise prediction model (CNN)
         </Text>
       </Flex>
       <Flex direction="column" align="center" borderRadius="md" p={4}>
         <Text fontSize="1.6em" fontWeight="bold">
-          Modelo de predicción por secuencias (RNN)
+        Sequence prediction model (RNN)
         </Text>
       </Flex>
 
       {/* Confusion Matrices */}
       <Flex direction="column" align="center" bg="grey" borderRadius="0.7em" p={4}>
-        <Text textColor={'white'} fontSize="1.3em" fontWeight="bold">Matriz de confusión CNN</Text>
-        <Image width="60%" src={cnnConfussionMatrix} alt="Matriz de confusión del modelo CNN" />
+        <Text textColor={'white'} fontSize="1.3em" fontWeight="bold">CNN confusion matrix</Text>
+        <Image width="60%" src={cnnConfussionMatrix} alt="CNN confusion matrix" />
       </Flex>
       <Flex direction="column" align="center" bg="grey" borderRadius="0.7em" p={4}>
-        <Text textColor={'white'} fontSize="1.3em" fontWeight="bold">Matriz de confusión RNN</Text>
-        <Image width="60%" src={rnnConfussionMatrix} alt="Matriz de confusión del modelo RNN" />
+        <Text textColor={'white'} fontSize="1.3em" fontWeight="bold">RNN confusion matrix</Text>
+        <Image width="60%" src={rnnConfussionMatrix} alt="RNN confusion matrix" />
       </Flex>
 
       {/* Training Graphs */}
       <Flex direction="column" align="center" bg="grey" borderRadius="0.7em" p={4}>
-        <Text textColor={'white'} fontSize="1.3em" fontWeight="bold">Gráficos de entrenamiento CNN</Text>
-        <Image width="90%" src={cnnModelGraphsImage} alt="Gráficos de entrenamiento del modelo CNN" />
+        <Text textColor={'white'} fontSize="1.3em" fontWeight="bold">CNN training graphs</Text>
+        <Image width="90%" src={cnnModelGraphsImage} alt="CNN training graphs" />
       </Flex>
       <Flex direction="column" align="center" bg="grey" borderRadius="0.7em" p={4}>
-        <Text textColor={'white'} fontSize="1.3em" fontWeight="bold">Gráficos de entrenamiento RNN</Text>
-        <Image width="90%" src={rnnModelGraphsImage} alt="Gráficos de entrenamiento del modelo RNN" />
+        <Text textColor={'white'} fontSize="1.3em" fontWeight="bold">RNN training graphs</Text>
+        <Image width="90%" src={rnnModelGraphsImage} alt="RNN training graphs" />
       </Flex>
 
       {/* Model Structures */}
       <Flex direction="column" align="center" bg="grey" borderRadius="0.7em" p={4}>
-        <Text textColor={'white'} fontSize="1.3em" fontWeight="bold">Estructura del modelo CNN</Text>
-        <Image width="80%" src={cnnModelStructureImage} alt="Estructura del modelo CNN" />
+        <Text textColor={'white'} fontSize="1.3em" fontWeight="bold">CNN model structure</Text>
+        <Image width="80%" src={cnnModelStructureImage} alt="CNN model structure" />
       </Flex>
       <Flex direction="column" align="center" bg="grey" borderRadius="0.7em" p={4}>
-        <Text textColor={'white'} fontSize="1.3em" fontWeight="bold">Estructura del modelo RNN</Text>
-        <Image width="80%" src={rnnModelStructureImage} alt="Estructura del modelo RNN" />
+        <Text textColor={'white'} fontSize="1.3em" fontWeight="bold">RNN model structure</Text>
+        <Image width="80%" src={rnnModelStructureImage} alt="RNN model structure" />
       </Flex>
     </Grid>
   );
