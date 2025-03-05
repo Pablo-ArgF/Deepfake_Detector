@@ -72,30 +72,30 @@ const BodyView = () => {
           clearTimeout(timeoutId);
 
           var timeoutIdRNN = setTimeout(() => controller.abort(), 600000);
-
-          fetch('/api/predict/sequences', {
-            method: 'POST',
-            body: formData,
-            headers: {
-              'enctype': 'multipart/form-data'
-            },
-            signal: controller.signal
-          }).then(async RNNresponse => {
-                try {
-                  const RNNTmpdata = await RNNresponse.json();
-                  setRNNData(RNNTmpdata);
-                  setRNNLoading(false);
-                } catch (error) {
-                  setError('An error occurred while processing the video sequences.');
-                  setLoading(false);
-                  setVideoUploaded(false);
-                }
-                clearTimeout(timeoutIdRNN);
-              }).catch(error => {
-                setError('An error occurred while processing the video sequences.');
-                setLoading(false);
-                setVideoUploaded(false);
-              });
+          //TODO Uncomment when CNN is implemented
+          // fetch('/api/predict/sequences', {
+          //   method: 'POST',
+          //   body: formData,
+          //   headers: {
+          //     'enctype': 'multipart/form-data'
+          //   },
+          //   signal: controller.signal
+          // }).then(async RNNresponse => {
+          //       try {
+          //         const RNNTmpdata = await RNNresponse.json();
+          //         setRNNData(RNNTmpdata);
+          //         setRNNLoading(false);
+          //       } catch (error) {
+          //         setError('An error occurred while processing the video sequences.');
+          //         setLoading(false);
+          //         setVideoUploaded(false);
+          //       }
+          //       clearTimeout(timeoutIdRNN);
+          //     }).catch(error => {
+          //       setError('An error occurred while processing the video sequences.');
+          //       setLoading(false);
+          //       setVideoUploaded(false);
+          //     });
       });
     } catch (error) {
       setError('Error predicting DeepFakes: ' + error);
@@ -189,7 +189,6 @@ const BodyView = () => {
                 accept="video/mp4"
                 onInput={handleVideoUpload}
                 style={{ display: 'none' }} // Hide the default file input
-                cornerRadius='0.5em'
               />
               <Button as="label" cursor={'pointer'} leftIcon={<IoMdVideocam color='white'/>} htmlFor="videoInput" backgroundColor={'black'} textColor={'white'} padding={'1.1em'} fontSize={'1.1em'}>
                 Upload a video

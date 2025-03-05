@@ -122,17 +122,20 @@ def generate_heatmap(frames, alpha=0.3, beta=0.7, intensity_multiplier=2.5):
     return heatmaps
 
 
-def save_images(frames, video_name):
+def save_images(frames, video_name, unique_id=str(uuid.uuid4()), discard_indices=[]):
     """
     Save frames to a unique folder and return a base URL for requesting the images.
     """
     urls = []
     # Generate a random UUID for the folder
-    unique_id = str(uuid.uuid4())
     base_folder = os.path.join(app.config['STATIC_IMAGE_FOLDER'], unique_id)
     os.makedirs(base_folder, exist_ok=True)
 
+    frame_counter = 0
     for i, frame in enumerate(frames):
+        # If frame discarted, use next number as counter
+        if i in discard_indices:
+            frame_counter += 1
         # Ensure the frame is a numpy array
         if isinstance(frame, np.ndarray):
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -140,7 +143,7 @@ def save_images(frames, video_name):
             image = image.convert('RGB')
         
             # Define the filename and path
-            filename = f"{video_name}_frame_{i}.jpg"
+            filename = f"{video_name}_frame_{frame_counter}.jpg"
             file_path = os.path.join(base_folder, filename)
             
             # Save the image
@@ -148,6 +151,8 @@ def save_images(frames, video_name):
 
             # Construct URL using url_for to serve it from the static folder
             urls.append(url_for('get_image', folder=unique_id, filename=filename, _external=True))
+            frame_counter += 1
+            
         else:
             app.logger.warning(f"Frame {i} is not a valid numpy array.")
     
@@ -269,8 +274,10 @@ def predict():
     range_ = maxVal - minVal
 
     # Save images and get URLs
-    video_frame_urls = save_images(videoFrames, video_name)
-    processed_frame_urls = save_images(processedFrames, f'{video_name}_processed')
+    # Generamos un id único para el video en el que se va a guardar todas las imagenes
+    unique_id = str(uuid.uuid4())
+    video_frame_urls = save_images(videoFrames, 'nonProcessed', unique_id)
+    processed_frame_urls = save_images(processedFrames, 'processed', unique_id)
 
     # Schedule cleanup after 3 hours
     schedule_cleanup(video_name, uploadTime = time.time())
@@ -280,10 +287,11 @@ def predict():
     heatmaps_face = generate_heatmap(processedFrames)
 
     # Guardar los mapas de calor y obtener las URLs
-    heatmap_urls = save_images(heatmaps, f'{video_name}_heatmap')
-    heatmap_face_urls = save_images(heatmaps_face, f'{video_name}_heatmap_face')
+    heatmap_urls = save_images(heatmaps, f'heatmap',unique_id)
+    heatmap_face_urls = save_images(heatmaps_face, f'heatmap_face',unique_id)
 
     return jsonify({
+        'uuid': unique_id,
         'predictions': {
             'id': video_name,
             'data': [{'x': index, 'y': value} for index, value in enumerate(predictions)]
@@ -300,6 +308,57 @@ def predict():
         'heatmaps_face':heatmap_face_urls
 
     }), 200
+
+@app.route('/api/recalculate/heatmaps/<uuid>', methods=['POST'])
+def recalculateHeatmaps(uuid):
+    app.logger.info('Request received for recalculateHeatmaps')
+    # Get the video folder
+    video_folder = os.path.join(app.config['STATIC_IMAGE_FOLDER'], uuid)
+    
+    # Check if the folder exists
+    if not os.path.exists(video_folder):
+        return 'No se encontraron imágenes para el video', 404
+
+    # Get indices to discard from request
+    discard_indices = request.json.get('discard_indices', [])
+
+    # two lists, one containing processed frames and the other one the nonProcessed ones
+    processed_frames = []
+    non_processed_frames = []
+    
+    # Find all images in folder that start with 'processed' or 'nonProcessed'
+    for filename in os.listdir(video_folder):
+        frame_index = int(filename.split('_')[-1].split('.')[0])
+        if frame_index in discard_indices:
+            continue
+        if filename.startswith('processed'):
+            processed_frames.append(filename)
+        elif filename.startswith('nonProcessed'):
+            non_processed_frames.append(filename)
+    
+    # Sort lists by index in name (frame number)
+    processed_frames.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
+    non_processed_frames.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
+
+    # Load the images
+    processed_frames = [cv2.imread(os.path.join(video_folder, frame)) for frame in processed_frames]
+    non_processed_frames = [cv2.imread(os.path.join(video_folder, frame)) for frame in non_processed_frames]
+    
+    # Generate heatmaps
+    heatmaps = generate_heatmap(non_processed_frames)
+    heatmaps_face = generate_heatmap(processed_frames)
+
+    # Guardar los mapas de calor y obtener las URLs
+    heatmap_urls = save_images(heatmaps, f'heatmap', uuid, discard_indices)
+    heatmap_face_urls = save_images(heatmaps_face, f'heatmap_face', uuid,discard_indices)
+
+    return jsonify({
+        'heatmaps': heatmap_urls,
+        'heatmaps_face': heatmap_face_urls
+    }), 200
+
+
+    
 
 @app.route('/api/predict/sequences', methods=['POST'])
 def predictSequences():
