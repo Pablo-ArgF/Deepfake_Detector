@@ -43,6 +43,7 @@ app.config['SELECTED_CNN_MODEL'] = '2024-06-20 08.29.00'
 app.config['SELECTED_RNN_MODEL'] = '2024-06-26 16.22.50'
 app.config['RNN_MODEL_SEQUENCE_LENGTH'] = 20
 app.config['STATIC_IMAGE_FOLDER'] = '/app/static/images/generated'
+app.config['LAST_CONV_LAYER_NAME'] = 'concat_2'
 EXPIRY_TIME = 3 * 60 * 60  # 3 hours in seconds
 
 # Load the cnn model
@@ -90,25 +91,15 @@ def image_to_base64(image_path):
         buffered = BytesIO()
         img.save(buffered, format="PNG")  # Save in a consistent format (PNG)
         return base64.b64encode(buffered.getvalue()).decode('utf-8')
-    
-def get_last_conv_layer(model):
-    # Busca la última capa que sea una convolución 2D
-    for layer in reversed(model.layers):
-        if isinstance(layer, tf.keras.layers.Conv2D):
-            return layer.name
-    raise ValueError("No se encontró ninguna capa Conv2D en el modelo.")
-
-# Detectar automáticamente la última capa de convolución y guardarla
-last_conv_layer_name = get_last_conv_layer(model)
-    
+        
 def generate_gradcam_images(model, frames, unique_id):
     gradcam_images = []
 
     grad_model = tf.keras.models.Model(
-        [model.inputs], [model.get_layer(last_conv_layer_name).output, model.output]
+        [model.inputs], [model.get_layer(app.config['LAST_CONV_LAYER_NAME']).output, model.output]
     )
 
-    for idx, img in enumerate(frames):
+    for img in frames:
         img_input = np.expand_dims(img, axis=0)
 
         with tf.GradientTape() as tape:
