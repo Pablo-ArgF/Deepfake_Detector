@@ -5,9 +5,14 @@ import {
     Heading,
     Text,
     Button,
-    Input, FormControl, FormLabel
+    Input, FormControl, FormLabel, Tooltip, Icon,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalBody,
+    useDisclosure,
 } from '@chakra-ui/react';
-import { ArrowForwardIcon } from '@chakra-ui/icons';
+import { InfoOutlineIcon } from '@chakra-ui/icons';
 import { ResponsiveLine } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
 
@@ -39,6 +44,15 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
             "y": prediction.y
             }))
         }]);
+
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [imageUrl, setImageUrl] = useState()
+    const handleImageClick = (url) => {
+        setImageUrl(url);
+        onOpen();
+    };
+
+
     const handleThresholdChange = (event) => {
         var thresholdValue = parseFloat(event.target.value).toFixed(2) / 100;
         if (thresholdValue > 1) thresholdValue = 1;
@@ -243,31 +257,15 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                         padding={'0.7em'}
                         borderWidth='0.2em'
                         borderColor={'black'}
-                        backgroundColor={'#786EDF'}
+                        backgroundColor={'#636363'}
                         marginLeft={'0.5em'}
                         marginRight={'0.5em'}
                         borderRadius={'0.5em'}>
                         <Heading as="h2" size="4xl" mb={15} textColor={'black'}>
-                            Selected frame
+                            Selected frame - Frame number: {selectedIndex}<br></br>Prediction: <Text as="span" textColor="#d10000">{(data?.predictions.data[selectedIndex]?.y * 100).toFixed(2)}% deepfake</Text>
                         </Heading>
                         <Flex
-                            direction='row'
-                            w={'100%'}
-                            alignItems={'flex-start'}
-                            alignContent={'center'}
-                            marginLeft={'1em'}
-                            gap={'0.5em'}>
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Frame number</b></Text>
-                                <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{selectedIndex}</Text>
-                            </Flex>
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}><b>Prediction for the frame</b></Text>
-                                <Text textColor={'black'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.predictions.data[selectedIndex]?.y * 100).toFixed(2)}% Fake</Text>
-                            </Flex>
-                        </Flex>
-                        <Flex
-                            direction='row'
+                            direction='column'
                             w={'100%'}
                             alignItems={'flex-start'}
                             alignContent={'center'}
@@ -276,101 +274,149 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                         >
                             {!discartedIndexes.includes(selectedIndex) || selectedIndex === 0 ?
                             <Flex
-                            direction='row'
-                            alignItems={'flex-start'}
-                            alignContent={'center'}
+                                direction='row'
+                                w={'100%'}
+                                alignItems={'flex-start'}
+                                alignContent={'center'}
                             >
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}>
-                                    <b>Heatmap for the frame</b>
-                                </Text>
-                                <Flex direction={'row'}>
-                                    <img
-                                        src= {'http://localhost/api/images/'+data.uuid+'/heatmap_frame_'+selectedIndex+'.jpg'}
-                                        alt='Heatmap for the frame'
-                                        style={{
-                                            maxHeight: '20em',
-                                            maxWidth: '25em',
-                                            padding: '0.2em',
-                                            marginRight: '0.5em'
-                                        }}
-                                    />
+                                <Flex
+                                    direction='row'
+                                    alignItems={'flex-start'}
+                                    alignContent={'center'}
+                                    >
+
+                                    {/* Processed Frame */}
+                                    <Flex direction={'column'} padding={'0.5em'} backgroundColor='#262626' borderRadius={'0.25em'}  marginRight={'1em'}>
+                                        <Flex alignItems="center" margin={'0.25em'}>
+                                            <Text textColor={'#ffffff'} marginRight="0.5em">
+                                            <b>Processed frame</b>
+                                            </Text>
+                                            <Tooltip label="This is the frame used for prediction after being rotated and cropped." fontSize="sm" hasArrow bg="#ffffff">
+                                            <span>
+                                                <InfoOutlineIcon color="#ffffff" cursor="pointer" />
+                                            </span>
+                                            </Tooltip>
+                                        </Flex>
+                                        <img
+                                            src={`http://localhost/api/images/${data.uuid}/processed_frame_${selectedIndex}.jpg`}
+                                            alt='Face cut used for prediction'
+                                            onClick={() => handleImageClick(`http://localhost/api/images/${data.uuid}/processed_frame_${selectedIndex}.jpg`)}
+                                            style={{
+                                                height: '13em',
+                                                width: '13em',
+                                                padding: '0.2em',
+                                                alignSelf: 'center'
+                                            }}
+                                        />
+                                    </Flex>
+                                    {/* Heatmap frame */}
+                                    <Flex direction={'column'} padding={'0.5em'} backgroundColor='#262626' borderRadius={'0.25em'} marginRight={'1em'}>
+                                        <Flex alignItems="center" margin={'0.25em'}>
+                                            <Text textColor={'#ffffff'} marginRight="0.5em">
+                                            <b>Heatmap</b>
+                                            </Text>
+                                            <Tooltip label="Highlights the parts of the processed frame that changed the most compairing with the previous frame." fontSize="sm" hasArrow bg="#ffffff">
+                                            <span>
+                                                <InfoOutlineIcon color="#ffffff" cursor="pointer" />
+                                            </span>
+                                            </Tooltip>
+                                        </Flex>
+                                        <img
+                                            src= {'http://localhost/api/images/'+data.uuid+'/heatmap_face_frame_'+selectedIndex+'.jpg'}
+                                            alt='Heatmap for the processed frame'
+                                            onClick={() => handleImageClick('http://localhost/api/images/'+data.uuid+'/heatmap_face_frame_'+selectedIndex+'.jpg')}
+                                            style={{
+                                                height: '13em',
+                                                width: '13em',
+                                                padding: '0.2em',
+                                                alignSelf: 'center'
+                                            }}
+                                        />
+                                    </Flex>
+                                    {/* GradCAM frame*/}
+                                    <Flex direction={'column'} padding={'0.5em'} backgroundColor='#262626' borderRadius={'0.25em'} marginRight={'1em'}>
+                                        <Flex alignItems="center" margin={'0.25em'}>
+                                            <Text textColor={'#ffffff'} marginRight="0.5em">
+                                            <b>Grad-CAM Image</b>
+                                            </Text>
+                                            <Tooltip label="Indicates the part of the processed frame the had more weight on the prediction." fontSize="sm" hasArrow bg="#ffffff">
+                                            <span>
+                                                <InfoOutlineIcon color="#ffffff" cursor="pointer" />
+                                            </span>
+                                            </Tooltip>
+                                        </Flex>
+                                        {/* Display Grad-CAM processed frame from URL */}
+                                        <img
+                                            src= {'http://localhost/api/images/'+data.uuid+'/gradcam_frame_'+selectedIndex+'.jpg'}
+                                            alt='Grad-CAM processed image'
+                                            onClick={() => handleImageClick('http://localhost/api/images/'+data.uuid+'/gradcam_frame_'+selectedIndex+'.jpg')}
+                                            style={{
+                                                height: '13em',
+                                                width: '13em',
+                                                padding: '0.2em',
+                                                alignSelf: 'center'
+                                            }}
+                                        />
+                                    </Flex>
+                                    
                                 </Flex>
-                            </Flex>
-                            <ArrowForwardIcon boxSize={'3em'} alignSelf={'center'} />
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}>
-                                    <b>Heatmap for the processed frame</b>
-                                </Text>
-                                <Flex direction={'row'}>
-                                    <img
-                                        src= {'http://localhost/api/images/'+data.uuid+'/heatmap_face_frame_'+selectedIndex+'.jpg'}
-                                        alt='Heatmap for the processed frame'
-                                        style={{
-                                            maxHeight: '20em',
-                                            maxWidth: '25em',
-                                            padding: '0.2em'
-                                        }}
-                                        alignSelf={'center'}
-                                    />
-                                </Flex>
-                            </Flex>
-                            </Flex>
+                                <Flex
+                                    direction='row'
+                                    alignItems={'flex-start'}
+                                    alignContent={'center'}
+                                    //marginTop={'1em'} //si se pone debajo usar esto
+                                    >
+                                    {/* Video Frame */}
+                                    <Flex direction={'column'} padding={'0.5em'} backgroundColor='#262626' borderRadius={'0.25em'} marginRight={'1em'}>
+                                        <Flex alignItems="center" margin={'0.25em'}>
+                                            <Text textColor={'#ffffff'} marginRight="0.5em">
+                                            <b>Frame</b>
+                                            </Text>
+                                            <Tooltip label="Actual frame from the video without modifications." fontSize="sm" hasArrow bg="#ffffff">
+                                            <span>
+                                                <InfoOutlineIcon color="#ffffff" cursor="pointer" />
+                                            </span>
+                                            </Tooltip>
+                                        </Flex>
+                                        {/* Display video frame from URL */}
+                                        <img
+                                            src= {'http://localhost/api/images/'+data.uuid+'/nonProcessed_frame_'+selectedIndex+'.jpg'}
+                                            alt='Extracted frame from the video'
+                                            onClick={() => handleImageClick('http://localhost/api/images/'+data.uuid+'/nonProcessed_frame_'+selectedIndex+'.jpg')}
+                                            style={{
+                                                height: '20em',
+                                                width: '13em',
+                                                padding: '0.2em'
+                                            }}
+                                        />
+                                    </Flex>
+                                    {/* Heatmap Frame */}
+                                    <Flex direction={'column'} padding={'0.5em'} backgroundColor='#262626' borderRadius={'0.25em'}>
+                                        <Flex alignItems="center" margin={'0.25em'}>
+                                            <Text textColor={'#ffffff'} marginRight="0.5em">
+                                            <b>Heatmap for frame</b>
+                                            </Text>
+                                            <Tooltip label="Highlights the parts of the frame that changed the most compairing with the previous frame." fontSize="sm" hasArrow bg="#ffffff">
+                                            <span>
+                                                <InfoOutlineIcon color="#ffffff" cursor="pointer" />
+                                            </span>
+                                            </Tooltip>
+                                        </Flex>
+                                        <img
+                                            src= {'http://localhost/api/images/'+data.uuid+'/heatmap_frame_'+selectedIndex+'.jpg'}
+                                            alt='Heatmap for the frame'
+                                            onClick={() => handleImageClick('http://localhost/api/images/'+data.uuid+'/heatmap_frame_'+selectedIndex+'.jpg')}
+                                            style={{
+                                                height: '20em',
+                                                width: '13em',
+                                                padding: '0.2em'
+                                            }}
+                                        />
+                                    </Flex>
+                                </Flex> 
+                            </Flex> 
                             :<div></div>
                             }
-                            {/* Video Frame */}
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'} marginLeft={'1em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}>
-                                    <b>Extracted frame from the video</b>
-                                </Text>
-                                {/* Display video frame from URL */}
-                                <img
-                                    src= {'http://localhost/api/images/'+data.uuid+'/nonProcessed_frame_'+selectedIndex+'.jpg'}
-                                    alt='Extracted frame from the video'
-                                    style={{
-                                        maxHeight: '20em',
-                                        maxWidth: '25em',
-                                        padding: '0.2em'
-                                    }}
-                                />
-                            </Flex>
-
-                            <ArrowForwardIcon boxSize={'3em'} alignSelf={'center'} />
-
-                            {/* Processed Frame */}
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}>
-                                    <b>Frame used for the prediction</b>
-                                </Text>
-                                {/* Display processed frame from URL */}
-                                <img
-                                    src= {'http://localhost/api/images/'+data.uuid+'/processed_frame_'+selectedIndex+'.jpg'}
-                                    alt='Face cut used for prediction'
-                                    style={{
-                                        maxHeight: '20em',
-                                        maxWidth: '25em',
-                                        padding: '0.2em',
-                                        alignSelf: 'center'
-                                    }}
-                                />
-                            </Flex>
-
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
-                                <Text textColor={'#170C8A'} margin={'0.25em'}>
-                                    <b>Grad-CAM Image</b>
-                                </Text>
-                                {/* Display Grad-CAM processed frame from URL */}
-                                <img
-                                    src= {'http://localhost/api/images/'+data.uuid+'/gradcam_frame_'+selectedIndex+'.jpg'}
-                                    alt='Grad-CAM processed image'
-                                    style={{
-                                        maxHeight: '20em',
-                                        maxWidth: '25em',
-                                        padding: '0.2em',
-                                        alignSelf: 'center'
-                                    }}
-                                />
-                            </Flex>
 
                         </Flex>
 
@@ -486,6 +532,24 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                     </div>
                 </Flex>
             </Flex>
+            {/* Modal to show fullscreen image */}
+            <Modal isOpen={isOpen} onClose={onClose} isCentered size="full">
+                <ModalOverlay backdropFilter='blur(10px)'/>
+                <ModalContent background="transparent" boxShadow="none">
+                <ModalBody  display="flex" justifyContent="center" alignItems="center">
+                    <img
+                    src={imageUrl}
+                    alt="Fullscreen frame"
+                    onClick={onClose}
+                    style={{
+                        height: '50em',
+                        maxWidth: '90vw',
+                        cursor: 'zoom-out'
+                    }}
+                    />
+                </ModalBody>
+                </ModalContent>
+            </Modal>
         </Flex >
     );
 };
