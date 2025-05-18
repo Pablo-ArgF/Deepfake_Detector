@@ -287,7 +287,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 <Flex direction={'row'}>
                                     <img
                                         src= {'http://localhost/api/images/'+data.uuid+'/heatmap_frame_'+selectedIndex+'.jpg'}
-                                        alt='Mapa de calor para el fotograma seleccionado'
+                                        alt='Heatmap for the frame'
                                         style={{
                                             maxHeight: '20em',
                                             maxWidth: '25em',
@@ -305,7 +305,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 <Flex direction={'row'}>
                                     <img
                                         src= {'http://localhost/api/images/'+data.uuid+'/heatmap_face_frame_'+selectedIndex+'.jpg'}
-                                        alt='Mapa de calor para el fotograma seleccionado tras el procesamiento'
+                                        alt='Heatmap for the processed frame'
                                         style={{
                                             maxHeight: '20em',
                                             maxWidth: '25em',
@@ -326,7 +326,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 {/* Display video frame from URL */}
                                 <img
                                     src= {'http://localhost/api/images/'+data.uuid+'/nonProcessed_frame_'+selectedIndex+'.jpg'}
-                                    alt='Fotograma real del video'
+                                    alt='Extracted frame from the video'
                                     style={{
                                         maxHeight: '20em',
                                         maxWidth: '25em',
@@ -345,7 +345,24 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 {/* Display processed frame from URL */}
                                 <img
                                     src= {'http://localhost/api/images/'+data.uuid+'/processed_frame_'+selectedIndex+'.jpg'}
-                                    alt='Fotograma recortado utilizado para la detección'
+                                    alt='Face cut used for prediction'
+                                    style={{
+                                        maxHeight: '20em',
+                                        maxWidth: '25em',
+                                        padding: '0.2em',
+                                        alignSelf: 'center'
+                                    }}
+                                />
+                            </Flex>
+
+                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#AEAAEE' borderRadius={'0.25em'}>
+                                <Text textColor={'#170C8A'} margin={'0.25em'}>
+                                    <b>Grad-CAM Image</b>
+                                </Text>
+                                {/* Display Grad-CAM processed frame from URL */}
+                                <img
+                                    src= {'http://localhost/api/images/'+data.uuid+'/gradcam_frame_'+selectedIndex+'.jpg'}
+                                    alt='Grad-CAM processed image'
                                     style={{
                                         maxHeight: '20em',
                                         maxWidth: '25em',

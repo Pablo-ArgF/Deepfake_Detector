@@ -4,6 +4,7 @@ import os
 from flask import Flask, jsonify, request, url_for, send_from_directory
 from apscheduler.schedulers.background import BackgroundScheduler #Scheduler to delete the added user images 
 from tensorflow.keras.models import load_model
+import tensorflow as tf
 from flask_cors import CORS
 import numpy as np
 from PIL import Image
@@ -89,6 +90,47 @@ def image_to_base64(image_path):
         buffered = BytesIO()
         img.save(buffered, format="PNG")  # Save in a consistent format (PNG)
         return base64.b64encode(buffered.getvalue()).decode('utf-8')
+    
+def get_last_conv_layer(model):
+    # Busca la última capa que sea una convolución 2D
+    for layer in reversed(model.layers):
+        if isinstance(layer, tf.keras.layers.Conv2D):
+            return layer.name
+    raise ValueError("No se encontró ninguna capa Conv2D en el modelo.")
+
+# Detectar automáticamente la última capa de convolución y guardarla
+last_conv_layer_name = get_last_conv_layer(model)
+    
+def generate_gradcam_images(model, frames, unique_id):
+    gradcam_images = []
+
+    grad_model = tf.keras.models.Model(
+        [model.inputs], [model.get_layer(last_conv_layer_name).output, model.output]
+    )
+
+    for idx, img in enumerate(frames):
+        img_input = np.expand_dims(img, axis=0)
+
+        with tf.GradientTape() as tape:
+            conv_outputs, predictions = grad_model(img_input)
+            loss = predictions[0]
+
+        grads = tape.gradient(loss, conv_outputs)
+        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+        conv_outputs = conv_outputs[0]
+
+        heatmap = tf.reduce_sum(tf.multiply(pooled_grads, conv_outputs), axis=-1).numpy()
+        heatmap = np.maximum(heatmap, 0)
+        heatmap /= np.max(heatmap) + 1e-6
+
+        heatmap = cv2.resize(heatmap, (img.shape[1], img.shape[0]))
+        heatmap = np.uint8(255 * heatmap)
+        heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+        overlay = cv2.addWeighted(img, 0.6, heatmap, 0.4, 0)
+
+        gradcam_images.append(overlay)
+        
+    return gradcam_images
     
 def generate_heatmap(frames, alpha=0.3, beta=0.7, intensity_multiplier=2.5):
     """
@@ -285,10 +327,12 @@ def predict():
     # Generar mapas de calor
     heatmaps = generate_heatmap(videoFrames)
     heatmaps_face = generate_heatmap(processedFrames)
-
     # Guardar los mapas de calor y obtener las URLs
     heatmap_urls = save_images(heatmaps, f'heatmap',unique_id)
     heatmap_face_urls = save_images(heatmaps_face, f'heatmap_face',unique_id)
+
+    gradcam_images = generate_gradcam_images(model, processedFrames, unique_id)
+    gradcam_urls = save_images(gradcam_images,'gradcam',unique_id)
 
     return jsonify({
         'uuid': unique_id,
@@ -305,7 +349,8 @@ def predict():
         'videoFrames': video_frame_urls,
         'processedFrames': processed_frame_urls,
         'heatmaps': heatmap_urls ,
-        'heatmaps_face':heatmap_face_urls
+        'heatmaps_face':heatmap_face_urls,
+        'gradcam_explanations': gradcam_urls
 
     }), 200
 
