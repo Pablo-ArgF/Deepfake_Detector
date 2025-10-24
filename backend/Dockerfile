@@ -1,7 +1,7 @@
 # backend/Dockerfile
 
 # Imagen base de Python
-FROM python:3.11.5-slim
+FROM python:3.10-bullseye
 
 # Establece el directorio de trabajo
 WORKDIR /app
