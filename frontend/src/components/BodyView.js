@@ -41,7 +41,7 @@ const BodyView = () => {
       const controller = new AbortController();
       var timeoutId = setTimeout(() => controller.abort(), 600000);
 
-      fetch('http://localhost/api/predict', {
+      fetch('/api/predict', {
           method: 'POST',
           body: formData,
           headers: {
