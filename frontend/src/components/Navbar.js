@@ -1,34 +1,43 @@
 import React from 'react';
-import {Text, Flex, Image } from '@chakra-ui/react';
 
-const Navbar = ({setView}) => {
+const Navbar = ({ setView }) => {
   return (
-    <Flex
-      as="nav"
-      align="left"
-      justify="space-between"
-      wrap="wrap"
-      padding="1rem"
-      bg="#C2C2C2" // Dark gray background
-      color="black">
-      
-      <Image width="18em" src="./Logo Universidad de Oviedo.png" alt="Logo Universidad de Oviedo" onClick={() => setView('BodyView')} cursor="pointer"  />
-      <Text fontSize="1.3em" fontWeight="bold" alignSelf={'center'}>
-        DeepFake Detection
-      </Text> 
+    <nav className="flex items-center justify-between flex-wrap p-6 bg-gray-800 text-gray-100 shadow-lg border-b border-gray-700">
+      <div
+        className="flex items-center flex-shrink-0 mr-6 cursor-pointer hover:opacity-80 transition-opacity"
+        onClick={() => setView('BodyView')}
+      >
+        <img
+          className="w-48 md:w-64"
+          src="./Logo Universidad de Oviedo.png"
+          alt="Logo Universidad de Oviedo"
+        />
+        <span className="hidden md:block ml-4 text-xl font-bold tracking-tight">
+          DeepFake Detection
+        </span>
+      </div>
 
-      <Flex
-        direction="row"
-        mt={{ base: 4, md: 0 }}
-        padding="2em">
-        <Text mr={50} fontSize="1.1em" cursor="pointer" fontWeight={'bold'} onClick={() => setView('About')} >
-          About
-        </Text>
-        <Text cursor="pointer" fontSize="1.1em" fontWeight={'bold'}  onClick={() => setView('ModelDetails')}>
-          Model
-        </Text>
-      </Flex>
-    </Flex>
+      <div className="block lg:hidden">
+        {/* Mobile menu button could go here if needed */}
+      </div>
+
+      <div className="w-full block flex-grow lg:flex lg:items-center lg:w-auto">
+        <div className="text-sm lg:flex-grow flex justify-end gap-8">
+          <button
+            onClick={() => setView('About')}
+            className="block mt-4 lg:inline-block lg:mt-0 text-gray-300 hover:text-white font-semibold transition-colors text-lg"
+          >
+            About
+          </button>
+          <button
+            onClick={() => setView('ModelDetails')}
+            className="block mt-4 lg:inline-block lg:mt-0 text-gray-300 hover:text-white font-semibold transition-colors text-lg"
+          >
+            Model
+          </button>
+        </div>
+      </div>
+    </nav>
   );
 };
 
