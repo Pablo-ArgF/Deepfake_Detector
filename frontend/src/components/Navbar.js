@@ -1,41 +1,44 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-const Navbar = ({ setView }) => {
+const Navbar = () => {
   return (
-    <nav className="flex items-center justify-between flex-wrap p-6 bg-gray-800 text-gray-100 shadow-lg border-b border-gray-700">
-      <div
-        className="flex items-center flex-shrink-0 mr-6 cursor-pointer hover:opacity-80 transition-opacity"
-        onClick={() => setView('BodyView')}
-      >
-        <img
-          className="w-48 md:w-64"
-          src="./Logo Universidad de Oviedo.png"
-          alt="Logo Universidad de Oviedo"
-        />
-        <span className="hidden md:block ml-4 text-xl font-bold tracking-tight">
+    <nav className="flex items-center justify-between flex-wrap p-4 bg-gray-800/80 text-gray-100 shadow-lg border-b border-gray-700 backdrop-blur-md sticky top-0 z-50">
+      {/* Logo and Mobile-only Title */}
+      <div className="flex items-center flex-shrink-0 mr-6">
+        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <img
+            className="w-12 h-12"
+            src="/favicon-dark.svg"
+            alt="Deepfake Detector Logo"
+          />
+          <span className="md:hidden text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+            DeepFake
+          </span>
+        </Link>
+      </div>
+
+      {/* Centered Desktop Title */}
+      <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2">
+        <Link to="/" className="text-2xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-blue-200 to-purple-500 hover:scale-105 transition-transform">
           DeepFake Detection
-        </span>
+        </Link>
       </div>
 
-      <div className="block lg:hidden">
-        {/* Mobile menu button could go here if needed */}
-      </div>
-
-      <div className="w-full block flex-grow lg:flex lg:items-center lg:w-auto">
-        <div className="text-sm lg:flex-grow flex justify-end gap-8">
-          <button
-            onClick={() => setView('About')}
-            className="block mt-4 lg:inline-block lg:mt-0 text-gray-300 hover:text-white font-semibold transition-colors text-lg"
-          >
-            About
-          </button>
-          <button
-            onClick={() => setView('ModelDetails')}
-            className="block mt-4 lg:inline-block lg:mt-0 text-gray-300 hover:text-white font-semibold transition-colors text-lg"
-          >
-            Model
-          </button>
-        </div>
+      {/* Navigation Links */}
+      <div className="flex items-center gap-6">
+        <Link
+          to="/about"
+          className="text-gray-300 hover:text-white font-bold transition-all text-sm uppercase tracking-widest hover:border-b-2 border-blue-500 pb-1"
+        >
+          About
+        </Link>
+        <Link
+          to="/models"
+          className="text-gray-300 hover:text-white font-bold transition-all text-sm uppercase tracking-widest hover:border-b-2 border-purple-500 pb-1"
+        >
+          Models
+        </Link>
       </div>
     </nav>
   );

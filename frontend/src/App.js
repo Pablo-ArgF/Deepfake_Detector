@@ -3,19 +3,19 @@ import Navbar from './components/Navbar.js';
 import BodyView from './components/BodyView.js';
 import ModelDetails from './components/ModelDetails.js';
 import About from './components/About.js';
-import {useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
 
 function App() {
-  //usestates for changing the main view between bodyView / ModelDetails / About
-  const [view, setView] = useState('BodyView');
   return (
     <div className="App">
-      {/*Navbar receibes the setView useState to update it*/}
-      <Navbar setView={setView}/>
-      {
-        view.match('BodyView') ? <BodyView/> : view.match('About') ? <About/> : <ModelDetails/>
-      }
-      
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<BodyView />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/models" element={<ModelDetails />} />
+        {/* Analysis routes will be handled within BodyView or as separate pages */}
+        <Route path="/:uuid/:type" element={<BodyView />} />
+      </Routes>
     </div>
   );
 }

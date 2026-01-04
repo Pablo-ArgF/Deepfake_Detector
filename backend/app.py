@@ -14,6 +14,7 @@ from logging.handlers import RotatingFileHandler
 from werkzeug.utils import secure_filename
 import uuid
 import cv2
+import json
 from io import BytesIO
 # Add the backend directory to the Python path
 from training.DataProcessing.DataProcessor import FaceExtractorMultithread
@@ -325,8 +326,9 @@ def predict():
     gradcam_images = generate_gradcam_images(model, processedFrames, unique_id)
     gradcam_urls = save_images(gradcam_images,'gradcam',unique_id)
 
-    return jsonify({
+    analysis_results = {
         'uuid': unique_id,
+        'type': 'cnn',
         'predictions': {
             'id': video_name,
             'data': [{'x': index, 'y': value} for index, value in enumerate(predictions)]
@@ -342,8 +344,14 @@ def predict():
         'heatmaps': heatmap_urls ,
         'heatmaps_face':heatmap_face_urls,
         'gradcam_explanations': gradcam_urls
+    }
 
-    }), 200
+    # Save results to json
+    results_path = os.path.join(app.config['STATIC_IMAGE_FOLDER'], unique_id, 'results.json')
+    with open(results_path, 'w') as f:
+        json.dump(analysis_results, f)
+
+    return jsonify(analysis_results), 200
 
 @app.route('/api/recalculate/heatmaps/<uuid>', methods=['POST'])
 def recalculateHeatmaps(uuid):
@@ -457,6 +465,8 @@ def predictSequences():
 
     # Construct response
     response = {
+        'uuid': str(uuid.uuid4()), # We need a UUID for RNN as well if we want linking
+        'type': 'rnn',
         'predictions': {
             'id': video_name,
             'data': [{'x': index, 'y': value} for index, value in enumerate(resultPredictions)]
@@ -475,8 +485,31 @@ def predictSequences():
         'heatmaps_face': heatmap_face_urls
     }
 
+    # If UUID not generated yet for RNN (it was missing in original response)
+    # RNN prediction was missing the UUID folder creation logic in original code
+    # Let's ensure it's saved in a consistent place
+    rnn_uuid = response['uuid']
+    base_folder = os.path.join(app.config['STATIC_IMAGE_FOLDER'], rnn_uuid)
+    os.makedirs(base_folder, exist_ok=True)
+    
+    results_path = os.path.join(base_folder, 'results.json')
+    with open(results_path, 'w') as f:
+        json.dump(response, f)
+
     app.logger.info(f"Successfully processed video {video_name} and returning predictions.")
     return jsonify(response), 200
+
+@app.route('/api/results/<uuid>', methods=['GET'])
+def get_results(uuid):
+    """
+    Retrieve saved analysis results for a given UUID.
+    """
+    results_path = os.path.join(app.config['STATIC_IMAGE_FOLDER'], uuid, 'results.json')
+    if os.path.exists(results_path):
+        with open(results_path, 'r') as f:
+            data = json.load(f)
+        return jsonify(data), 200
+    return 'Results not found', 404
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
