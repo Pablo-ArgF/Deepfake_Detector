@@ -16,6 +16,11 @@ import uuid
 import cv2
 import json
 from io import BytesIO
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
 # Add the backend directory to the Python path
 from training.DataProcessing.DataProcessor import FaceExtractorMultithread
 
@@ -202,6 +207,14 @@ def get_image(folder, filename):
     base_folder = os.path.join(app.config['STATIC_IMAGE_FOLDER'], folder)
     return send_from_directory(base_folder, filename)
 
+@app.route('/api/video/<uuid>')
+def get_video(uuid):
+    """
+    Serve the video file directly for a given UUID.
+    """
+    base_folder = os.path.join(app.config['STATIC_IMAGE_FOLDER'], uuid)
+    return send_from_directory(base_folder, 'video.mp4')
+
 def save_sequences(sequences, video_name):
     """
     Save images from sequences to a unique upload directory.
@@ -272,9 +285,21 @@ def getRNNConfussionMatrix():
     app.logger.info('Request received for getRNNConfussionMatrix')
     return image_to_base64(f"/app/models/{app.config['SELECTED_RNN_MODEL']}/confusionMatrix_{app.config['SELECTED_RNN_MODEL']}.png")
 
+def verify_password():
+    password = request.headers.get('X-Upload-Password')
+    expected_password = os.getenv('UPLOAD_PASSWORD')
+    if not expected_password:
+        # If no password is set in .env, allow upload (for dev convenience)
+        return True
+    return password == expected_password
+
 @app.route('/api/predict', methods=['POST'])
 def predict():
     app.logger.info('Request received for predict')
+    
+    if not verify_password():
+        return jsonify({'error': 'Incorrect or missing password. Contact me if you want access.'}), 403
+
     if 'video' not in request.files:
         return 'No se ha subido ningún video', 400
     
@@ -325,6 +350,10 @@ def predict():
 
     gradcam_images = generate_gradcam_images(model, processedFrames, unique_id)
     gradcam_urls = save_images(gradcam_images,'gradcam',unique_id)
+
+    # Save the original video file into the same unique folder for the frontend to access
+    final_video_path = os.path.join(app.config['STATIC_IMAGE_FOLDER'], unique_id, 'video.mp4')
+    shutil.copy(video_path, final_video_path)
 
     analysis_results = {
         'uuid': unique_id,
@@ -407,7 +436,10 @@ def recalculateHeatmaps(uuid):
 @app.route('/api/predict/sequences', methods=['POST'])
 def predictSequences():
     app.logger.info('Request received for predict sequences')
-    
+
+    if not verify_password():
+        return jsonify({'error': 'Incorrect or missing password. Contact me if you want access.'}), 403
+
     # Validate video upload
     if 'video' not in request.files:
         return 'No video file uploaded', 400
@@ -497,6 +529,11 @@ def predictSequences():
         json.dump(response, f)
 
     app.logger.info(f"Successfully processed video {video_name} and returning predictions.")
+
+    # Save the original video file into the same unique folder for the frontend to access
+    final_video_path = os.path.join(base_folder, 'video.mp4')
+    shutil.copy(video_path, final_video_path)
+
     return jsonify(response), 200
 
 @app.route('/api/results/<uuid>', methods=['GET'])

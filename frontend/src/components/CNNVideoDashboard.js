@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ResponsiveLine } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
-import { HiOutlineInformationCircle, HiXCircle } from 'react-icons/hi';
+import { HiOutlineInformationCircle, HiXCircle, HiVideoCamera, HiPhotograph } from 'react-icons/hi';
 
 const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSelectedIndex, selectedIndex }) => {
 
     const [discartedIndexes, setDiscartedIndexes] = useState([]);
-    const [threshold, setThreshold] = useState(0);
+    const [threshold, setThreshold] = useState(0.5);
     const [aboveThreshold, setAboveThreshold] = useState(data?.predictions.data.filter(prediction => !discartedIndexes.includes(prediction.x) && prediction.y.toFixed(2) >= threshold).length);
     const [pieChartData, setPieChartData] = useState([{
         "id": "Above",
@@ -29,6 +29,8 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [imageUrl, setImageUrl] = useState()
+    const [viewMode, setViewMode] = useState('images'); // 'images' or 'video'
+    const [videoRef, setVideoRef] = useState(null);
 
     const handleImageClick = (url) => {
         setImageUrl(url);
@@ -64,6 +66,30 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
         }]);
     }, [threshold, discartedIndexes, data?.predictions.data]);
 
+    const handleVideoTimeUpdate = (e) => {
+        if (viewMode !== 'video') return;
+        const video = e.target;
+        const duration = video.duration;
+        const currentTime = video.currentTime;
+        if (duration > 0) {
+            const frameCount = data?.predictions.data.length || 1;
+            const currentFrame = Math.floor((currentTime / duration) * (frameCount - 1));
+            if (currentFrame !== selectedIndex) {
+                setSelectedIndex(currentFrame);
+            }
+        }
+    };
+
+    const handleChartClick = (point) => {
+        const index = point.data.x;
+        setSelectedIndex(index);
+        if (viewMode === 'video' && videoRef) {
+            const duration = videoRef.duration;
+            const frameCount = data?.predictions.data.length || 1;
+            videoRef.currentTime = (index / (frameCount - 1)) * duration;
+        }
+    };
+
 
     const discartCurrentFrame = () => {
         let newDiscartedIndexes;
@@ -73,20 +99,22 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
             newDiscartedIndexes = [...discartedIndexes, selectedIndex];
         }
         setDiscartedIndexes(newDiscartedIndexes);
-        fetch(`http://localhost/api/recalculate/heatmaps/${data.uuid}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ discard_indices: newDiscartedIndexes })
-        })
-            .then(response => response.json())
-            .then(updatedData => {
-                setData(prevData => ({
-                    ...prevData,
-                    heatmaps: updatedData.heatmaps,
-                    heatmaps_face: updatedData.heatmaps_face
-                }));
+        if (!data.isDemo) {
+            fetch(`/api/recalculate/heatmaps/${data.uuid}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ discard_indices: newDiscartedIndexes })
             })
-            .catch(error => console.error('Error recalculating heatmaps:', error));
+                .then(response => response.json())
+                .then(updatedData => {
+                    setData(prevData => ({
+                        ...prevData,
+                        heatmaps: updatedData.heatmaps,
+                        heatmaps_face: updatedData.heatmaps_face
+                    }));
+                })
+                .catch(error => console.error('Error recalculating heatmaps:', error));
+        }
     };
 
     const filteredData = data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(index));
@@ -159,6 +187,20 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                 <div className="lg:col-span-7 flex flex-col p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl overflow-hidden">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
                         <h2 className="text-xl font-bold">Frame: <span className="text-blue-400">{selectedIndex}</span></h2>
+                        <div className="flex bg-gray-900 rounded-xl p-1 border border-gray-700">
+                            <button
+                                onClick={() => setViewMode('images')}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${viewMode === 'images' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
+                            >
+                                <HiPhotograph /> <span className="text-xs font-bold uppercase">Images</span>
+                            </button>
+                            <button
+                                onClick={() => setViewMode('video')}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${viewMode === 'video' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
+                            >
+                                <HiVideoCamera /> <span className="text-xs font-bold uppercase">Video</span>
+                            </button>
+                        </div>
                         <div className="bg-red-500/20 border border-red-500/50 px-4 py-1 rounded-full text-red-300 font-bold">
                             Prediction: {(data?.predictions.data[selectedIndex]?.y * 100).toFixed(2)}% Deepfake
                         </div>
@@ -166,43 +208,57 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
 
                     {!discartedIndexes.includes(selectedIndex) || selectedIndex === 0 ? (
                         <div className="flex flex-col gap-6">
-                            {/* Processed Images Row */}
-                            <div className="grid grid-cols-3 gap-4">
-                                <ImageLink
-                                    label="Processed"
-                                    src={`http://localhost/api/images/${data.uuid}/processed_frame_${selectedIndex}.jpg`}
-                                    onClick={handleImageClick}
-                                    tooltip="Frame used for prediction after rotation and crop."
-                                />
-                                <ImageLink
-                                    label="Heatmap"
-                                    src={`http://localhost/api/images/${data.uuid}/heatmap_face_frame_${selectedIndex}.jpg`}
-                                    onClick={handleImageClick}
-                                    tooltip="Temporal changes compared to previous frame."
-                                />
-                                <ImageLink
-                                    label="Grad-CAM"
-                                    src={`http://localhost/api/images/${data.uuid}/gradcam_frame_${selectedIndex}.jpg`}
-                                    onClick={handleImageClick}
-                                    tooltip="AI attention regions for the prediction."
-                                />
-                            </div>
+                            {viewMode === 'video' ? (
+                                <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border-2 border-blue-500/30">
+                                    <video
+                                        ref={(ref) => setVideoRef(ref)}
+                                        src={data.isDemo ? '/demo/demo.mp4' : `/api/video/${data.uuid}`}
+                                        className="w-full h-full object-contain"
+                                        controls
+                                        onTimeUpdate={handleVideoTimeUpdate}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-3 gap-4 animate-in fade-in duration-500">
+                                    <ImageLink
+                                        label="Processed"
+                                        src={data.isDemo ? data.processedFrames[selectedIndex] : `/api/images/${data.uuid}/processed_frame_${selectedIndex}.jpg`}
+                                        onClick={handleImageClick}
+                                        tooltip="Frame used for prediction after rotation and crop."
+                                    />
+                                    <ImageLink
+                                        label="Heatmap"
+                                        src={data.isDemo ? data.heatmaps_face[selectedIndex] : `/api/images/${data.uuid}/heatmap_face_frame_${selectedIndex}.jpg`}
+                                        onClick={handleImageClick}
+                                        tooltip="Temporal changes compared to previous frame."
+                                        message={selectedIndex === 0 ? "Heatmap can not be computed for first frame of the video" : null}
+                                    />
+                                    <ImageLink
+                                        label="Grad-CAM"
+                                        src={data.isDemo ? data.gradcam_explanations[selectedIndex] : `/api/images/${data.uuid}/gradcam_frame_${selectedIndex}.jpg`}
+                                        onClick={handleImageClick}
+                                        tooltip="AI attention regions for the prediction."
+                                    />
+                                </div>
+                            )}
 
-                            {/* Original vs Heatmap Row */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <ImageLink
-                                    label="Source Frame"
-                                    src={`http://localhost/api/images/${data.uuid}/nonProcessed_frame_${selectedIndex}.jpg`}
-                                    onClick={handleImageClick}
-                                    large
-                                />
-                                <ImageLink
-                                    label="Full Heatmap"
-                                    src={`http://localhost/api/images/${data.uuid}/heatmap_frame_${selectedIndex}.jpg`}
-                                    onClick={handleImageClick}
-                                    large
-                                />
-                            </div>
+                            {viewMode === 'images' && (
+                                <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-500">
+                                    <ImageLink
+                                        label="Source Frame"
+                                        src={data.isDemo ? data.videoFrames[selectedIndex] : `/api/images/${data.uuid}/nonProcessed_frame_${selectedIndex}.jpg`}
+                                        onClick={handleImageClick}
+                                        large
+                                    />
+                                    <ImageLink
+                                        label="Full Heatmap"
+                                        src={data.isDemo ? data.heatmaps[selectedIndex] : `/api/images/${data.uuid}/heatmap_frame_${selectedIndex}.jpg`}
+                                        onClick={handleImageClick}
+                                        large
+                                        message={selectedIndex === 0 ? "Heatmap can not be computed for first frame of the video" : null}
+                                    />
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center p-12 opacity-50 italic">
@@ -291,10 +347,25 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                         enableArea={true}
                         areaOpacity={0.1}
                         useMesh={true}
-                        onClick={(point) => {
-                            const index = point.data.x;
-                            setSelectedIndex(index);
-                        }}
+                        markers={[
+                            {
+                                axis: 'x',
+                                value: selectedIndex,
+                                lineStyle: { stroke: '#ffffff', strokeWidth: 2, strokeDasharray: '4 4' },
+                                legend: 'Current',
+                                legendOrientation: 'vertical',
+                                textStyle: { fill: '#ffffff', fontSize: 10, fontWeight: 'bold' }
+                            },
+                            {
+                                axis: 'y',
+                                value: threshold,
+                                lineStyle: { stroke: '#a855f7', strokeWidth: 2, strokeDasharray: '4 4' },
+                                legend: `Threshold: ${Math.round(threshold * 100)}%`,
+                                legendPosition: 'top-left',
+                                textStyle: { fill: '#a855f7', fontSize: 10, fontWeight: 'bold' }
+                            }
+                        ]}
+                        onClick={handleChartClick}
                     />
                 </div>
             </div>
@@ -326,7 +397,7 @@ const StatCard = ({ label, value }) => (
     </div>
 );
 
-const ImageLink = ({ label, src, onClick, tooltip, large }) => (
+const ImageLink = ({ label, src, onClick, tooltip, large, message }) => (
     <div className="flex flex-col gap-2">
         <div className="flex items-center gap-1">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{label}</span>
@@ -340,15 +411,21 @@ const ImageLink = ({ label, src, onClick, tooltip, large }) => (
             )}
         </div>
         <div
-            className={`relative overflow-hidden rounded-xl border-2 border-transparent hover:border-blue-500 transition-all cursor-zoom-in group bg-black/50 ${large ? 'h-48 md:h-72' : 'h-24 md:h-32'}`}
-            onClick={() => onClick(src)}
+            className={`relative overflow-hidden rounded-xl border-2 border-transparent ${!message ? 'hover:border-blue-500 cursor-zoom-in' : ''} transition-all group bg-black/50 ${large ? 'h-48 md:h-72' : 'h-24 md:h-32'} flex items-center justify-center`}
+            onClick={() => !message && onClick(src)}
         >
-            <img
-                src={src}
-                alt={label}
-                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            {message ? (
+                <p className="text-[10px] text-gray-500 font-medium px-4 text-center italic">{message}</p>
+            ) : (
+                <>
+                    <img
+                        src={src}
+                        alt={label}
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </>
+            )}
         </div>
     </div>
 );

@@ -11,24 +11,24 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     volumes:
-      - ./backend/models:/app/models             # Mount the models in the container
-      - ./backend/training:/app/training                 # Mount the training code in the container
+      - ./backend/models:/app/models # Mount the models in the container
+      - ./backend/training:/app/training # Mount the training code in the container
     environment:
       - FLASK_ENV=production
     ports:
-      - "5000:5000"                                   
+      - "5000:5000"
     networks:
       - app-network
 
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"                                  # Expose Nginx on port 80
+      - "80:80" # Expose Nginx on port 80
     depends_on:
       - build-frontend
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./frontend/build:/usr/share/nginx/html  # Volumen montado para servir los archivos construidos
+      - ./frontend/build:/usr/share/nginx/html # Volumen montado para servir los archivos construidos
     networks:
       - app-network
 networks:

@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ResponsiveLine } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
+import { HiOutlineInformationCircle, HiXCircle, HiVideoCamera, HiPhotograph } from 'react-icons/hi';
+import { IoMdTrendingUp } from 'react-icons/io';
 
 const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, loading, data, setSelectedIndex, selectedIndex }) => {
+    const [threshold, setThreshold] = useState(0.5);
     const [aboveThreshold, setAboveThreshold] = useState(null);
     const [pieChartData, setPieChartData] = useState([{
         "id": "Above",
@@ -15,19 +18,9 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, loading, dat
         "value": 1
     }]);
 
-    // Currently displayed image 
-    const [videoFrameSrc, setVideoFrameSrc] = useState(data?.videoFrames[selectedIndex]);
-    const [processedFrameSrc, setProcessedFrameSrc] = useState(data?.processedFrames[selectedIndex]);
-    const [heatmapFrameSrc, setHeatmapFrameSrc] = useState(data?.heatmaps[selectedIndex]);
-    const [heatmapFaceFrameSrc, setHeatmapFaceFrameSrc] = useState(data?.heatmaps_face[selectedIndex]);
-
-    const handleThresholdChange = (event) => {
-        var thresholdValue = parseFloat(event.target.value).toFixed(2) / 100;
-        if (thresholdValue > 1) thresholdValue = 1;
-        if (event.target.value === '') thresholdValue = 0;
-
+    useEffect(() => {
         const predictionsData = data?.predictions?.data || [];
-        const countAbove = predictionsData.filter(prediction => prediction.y.toFixed(2) >= thresholdValue).length;
+        const countAbove = predictionsData.filter(prediction => prediction.y.toFixed(2) >= threshold).length;
         const normalizedAbove = countAbove / (data?.sequenceSize || 1);
 
         setAboveThreshold(normalizedAbove);
@@ -41,13 +34,59 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, loading, dat
             "label": "Below",
             "value": (data?.nSequences || 1) - normalizedAbove
         }]);
+    }, [threshold, data]);
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [imageUrl, setImageUrl] = useState('');
+    const [viewMode, setViewMode] = useState('images'); // 'images' or 'video'
+    const [videoRef, setVideoRef] = useState(null);
+
+    const handleImageClick = (url) => {
+        setImageUrl(url);
+        setIsModalOpen(true);
+    };
+
+    const handleThresholdChange = (event) => {
+        var thresholdValue = parseFloat(event.target.value).toFixed(2) / 100;
+        if (thresholdValue > 1) thresholdValue = 1;
+        if (event.target.value === '') thresholdValue = 0;
+        setThreshold(thresholdValue);
+    };
+
+    const handleVideoTimeUpdate = (e) => {
+        if (viewMode !== 'video') return;
+        const video = e.target;
+        const duration = video.duration;
+        const currentTime = video.currentTime;
+        if (duration > 0) {
+            const frameCount = data?.predictions.data.length || 1;
+            const currentFrame = Math.floor((currentTime / duration) * (frameCount - 1));
+            if (currentFrame !== selectedIndex) {
+                setSelectedIndex(currentFrame);
+            }
+        }
+    };
+
+    const handleChartClick = (point) => {
+        const index = point.data.x;
+        setSelectedIndex(index);
+        if (viewMode === 'video' && videoRef) {
+            const duration = videoRef.duration;
+            const frameCount = data?.predictions.data.length || 1;
+            videoRef.currentTime = (index / (frameCount - 1)) * duration;
+        }
     };
 
     useEffect(() => {
         if (data?.predictions?.data && (selectedIndex < 0 || selectedIndex >= data.predictions.data.length)) {
             setSelectedIndex(0);
         }
-    }, [selectedIndex, data, setSelectedIndex]);
+        // Sync video player with selectedIndex if in video mode
+        if (viewMode === 'video' && videoRef && data?.predictions?.data) {
+            const frameRate = data.frameRate || 30;
+            videoRef.currentTime = selectedIndex / frameRate;
+        }
+    }, [selectedIndex, data, setSelectedIndex, viewMode, videoRef]);
 
     if (loading) {
         return (
@@ -113,6 +152,7 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, loading, dat
                                     type="number"
                                     max={100}
                                     min={0}
+                                    value={threshold * 100}
                                     onChange={handleThresholdChange}
                                     placeholder="Enter %"
                                     className="bg-gray-800 border border-gray-600 rounded-xl px-4 py-2 focus:ring-2 focus:ring-purple-500 outline-none transition-all text-white font-bold"
@@ -128,23 +168,84 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, loading, dat
                 {/* Selected Frame Details */}
                 <div className="lg:col-span-7 flex flex-col p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl overflow-hidden">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
-                        <h2 className="text-xl font-bold">Frame: <span className="text-purple-400">{selectedIndex}</span></h2>
+                        <h2 className="text-xl font-bold">Frame: <span className="text-blue-400">{selectedIndex}</span></h2>
+                        <div className="flex bg-gray-900 rounded-xl p-1 border border-gray-700">
+                            <button
+                                onClick={() => setViewMode('images')}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${viewMode === 'images' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
+                            >
+                                <HiPhotograph /> <span className="text-xs font-bold uppercase">Images</span>
+                            </button>
+                            <button
+                                onClick={() => setViewMode('video')}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${viewMode === 'video' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
+                            >
+                                <HiVideoCamera /> <span className="text-xs font-bold uppercase">Video</span>
+                            </button>
+                        </div>
                         <div className="bg-red-500/20 border border-red-500/50 px-4 py-1 rounded-full text-red-300 font-bold">
-                            Prediction: {(data?.predictions?.data[selectedIndex]?.y * 100).toFixed(2)}% Fake
+                            Prediction: {(data?.predictions.data[selectedIndex]?.y * 100).toFixed(2)}% Deepfake
                         </div>
                     </div>
 
                     <div className="flex flex-col gap-6">
-                        {/* Processed row */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <ImageDisplay label="Heatmap (Full)" src={heatmapFrameSrc} />
-                            <ImageDisplay label="Heatmap (Face)" src={heatmapFaceFrameSrc} />
-                        </div>
-                        {/* Source row */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <ImageDisplay label="Original Frame" src={videoFrameSrc} />
-                            <ImageDisplay label="Cropped Face" src={processedFrameSrc} />
-                        </div>
+                        {viewMode === 'video' ? (
+                            <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border-2 border-blue-500/30">
+                                <video
+                                    ref={(ref) => setVideoRef(ref)}
+                                    src={data.isDemo ? '/demo/demo.mp4' : `/api/video/${data.uuid}`}
+                                    className="w-full h-full object-contain"
+                                    controls
+                                    onTimeUpdate={handleVideoTimeUpdate}
+                                />
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-500">
+                                <div className="flex flex-col gap-2">
+                                    <div className="aspect-square bg-black/50 rounded-xl border border-gray-700 overflow-hidden">
+                                        <ImageLink
+                                            label="Processed Face"
+                                            src={data.isDemo ? data.processedFrames[selectedIndex] : `/api/images/${data.uuid}/processed_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <div className="aspect-square bg-black/50 rounded-xl border border-gray-700 overflow-hidden">
+                                        <ImageLink
+                                            label="Original Frame"
+                                            src={data.isDemo ? data.videoFrames[selectedIndex] : `/api/images/${data.uuid}/nonProcessed_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {viewMode === 'images' && (
+                            <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-500">
+                                <div className="flex flex-col gap-2">
+                                    <div className="aspect-square bg-black/50 rounded-xl border border-gray-700 overflow-hidden">
+                                        <ImageLink
+                                            label="Heatmap Face"
+                                            src={data.isDemo ? data.heatmaps_face[selectedIndex] : `/api/images/${data.uuid}/heatmap_face_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                            message={selectedIndex === 0 ? "Heatmap can not be computed for first frame of the video" : null}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <div className="aspect-square bg-black/50 rounded-xl border border-gray-700 overflow-hidden">
+                                        <ImageLink
+                                            label="Full Heatmap"
+                                            src={data.isDemo ? data.heatmaps[selectedIndex] : `/api/images/${data.uuid}/heatmap_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                            message={selectedIndex === 0 ? "Heatmap can not be computed for first frame of the video" : null}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -182,30 +283,54 @@ const RNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, loading, dat
                                 grid: { line: { stroke: '#334155', strokeWidth: 1 } },
                                 tooltip: { container: { background: '#1f2937', color: '#fff' } }
                             }}
-                            colors={['#a855f7']}
+                            colors={['#ef4444']}
                             lineWidth={3}
-                            enablePoints={true}
-                            pointSize={8}
-                            pointColor="#a855f7"
-                            pointBorderWidth={2}
-                            pointBorderColor="#1f2937"
+                            enablePoints={false}
                             enableArea={true}
                             areaOpacity={0.1}
                             useMesh={true}
-                            onClick={(point) => {
-                                const index = point.index;
-                                setSelectedIndex(index);
-                                setVideoFrameSrc(data.videoFrames[index]);
-                                setProcessedFrameSrc(data.processedFrames[index]);
-                                setHeatmapFrameSrc(data.heatmaps[index]);
-                                setHeatmapFaceFrameSrc(data.heatmaps_face[index]);
-                            }}
+                            markers={[
+                                {
+                                    axis: 'x',
+                                    value: selectedIndex,
+                                    lineStyle: { stroke: '#ffffff', strokeWidth: 2, strokeDasharray: '4 4' },
+                                    legend: 'Current',
+                                    legendOrientation: 'vertical',
+                                    textStyle: { fill: '#ffffff', fontSize: 10, fontWeight: 'bold' }
+                                },
+                                {
+                                    axis: 'y',
+                                    value: threshold,
+                                    lineStyle: { stroke: '#a855f7', strokeWidth: 2, strokeDasharray: '4 4' },
+                                    legend: `Threshold: ${Math.round(threshold * 100)}%`,
+                                    legendPosition: 'top-left',
+                                    textStyle: { fill: '#a855f7', fontSize: 10, fontWeight: 'bold' }
+                                }
+                            ]}
+                            onClick={handleChartClick}
                         />
                     ) : (
                         <div className="flex items-center justify-center h-full text-gray-500 italic">No prediction data available</div>
                     )}
                 </div>
             </div>
+
+            {/* Modal */}
+            {isModalOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-300"
+                    onClick={() => setIsModalOpen(false)}
+                >
+                    <button className="absolute top-6 right-6 text-white text-4xl hover:text-red-500 transition-colors">
+                        <HiXCircle />
+                    </button>
+                    <img
+                        src={imageUrl}
+                        alt="Fullscreen frame"
+                        className="max-h-full max-w-full rounded-lg shadow-2xl transform scale-100 hover:scale-105 transition-transform duration-500 cursor-zoom-out"
+                    />
+                </div>
+            )}
         </div>
     );
 };
@@ -217,15 +342,35 @@ const StatCard = ({ label, value }) => (
     </div>
 );
 
-const ImageDisplay = ({ label, src }) => (
+const ImageLink = ({ label, src, onClick, tooltip, large, message }) => (
     <div className="flex flex-col gap-2">
-        <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{label}</span>
-        <div className="relative overflow-hidden rounded-xl border-2 border-transparent hover:border-purple-500 transition-all bg-black/50 h-32 md:h-48 flex items-center justify-center">
-            <img
-                src={src}
-                alt={label}
-                className="max-h-full max-w-full object-contain"
-            />
+        <div className="flex items-center gap-1">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{label}</span>
+            {tooltip && (
+                <div className="group relative">
+                    <HiOutlineInformationCircle className="text-gray-600 cursor-help" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900 border border-gray-700 rounded-lg text-[10px] text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-2xl">
+                        {tooltip}
+                    </div>
+                </div>
+            )}
+        </div>
+        <div
+            className={`relative overflow-hidden rounded-xl border-2 border-transparent ${!message ? 'hover:border-blue-500 cursor-zoom-in' : ''} transition-all group bg-black/50 ${large ? 'h-48 md:h-72' : 'h-24 md:h-32'} flex items-center justify-center`}
+            onClick={() => !message && onClick ? onClick(src) : null}
+        >
+            {message ? (
+                <p className="text-[10px] text-gray-500 font-medium px-4 text-center italic">{message}</p>
+            ) : (
+                <>
+                    <img
+                        src={src}
+                        alt={label}
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </>
+            )}
         </div>
     </div>
 );
