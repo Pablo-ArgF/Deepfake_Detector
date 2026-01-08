@@ -1,7 +1,7 @@
 # backend/Dockerfile
 
 # Imagen base de Python
-FROM python:3.11.5-slim
+FROM tensorflow/tensorflow:2.15.0-gpu
 
 # Establece el directorio de trabajo
 WORKDIR /app
@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
 
 # Instala las dependencias del backend y entrenamiento
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --ignore-installed -r requirements.txt
 
 # Copia el código de la aplicación Flask, modelos y código de entrenamiento
 COPY . .

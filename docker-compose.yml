@@ -19,6 +19,12 @@ services:
       - "5000:5000"
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 2G
 
   nginx:
     image: nginx:alpine

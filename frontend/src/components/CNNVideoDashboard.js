@@ -31,6 +31,8 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
     const [imageUrl, setImageUrl] = useState()
     const [viewMode, setViewMode] = useState('images'); // 'images' or 'video'
     const [videoRef, setVideoRef] = useState(null);
+    const [imageErrors, setImageErrors] = useState({});
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const handleImageClick = (url) => {
         setImageUrl(url);
@@ -85,8 +87,53 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
         setSelectedIndex(index);
         if (viewMode === 'video' && videoRef) {
             const duration = videoRef.duration;
-            const frameCount = data?.predictions.data.length || 1;
-            videoRef.currentTime = (index / (frameCount - 1)) * duration;
+            const frameCount = data?.predictions?.data?.length || 1;
+            if (isFinite(duration) && duration > 0 && frameCount > 1) {
+                const targetTime = (index / (frameCount - 1)) * duration;
+                if (isFinite(targetTime)) {
+                    videoRef.currentTime = targetTime;
+                }
+            }
+        }
+    };
+
+    // Polling function to check if background generation is finished
+    useEffect(() => {
+        if (!data?.uuid || data?.isDemo) return;
+
+        // If there are no errors yet, we check if we need to start polling
+        // (Initial load might have errors)
+        const hasErrors = Object.keys(imageErrors).length > 0;
+        if (!hasErrors) {
+            setIsGenerating(false);
+            return;
+        }
+
+        setIsGenerating(true);
+        const interval = setInterval(async () => {
+            try {
+                // We check specifically for the existence of the last expected asset or results.json
+                // But a simple fetch of results.json is enough to "ping" the backend
+                const response = await fetch(`/api/results/${data.uuid}`);
+                if (response.ok) {
+                    const freshData = await response.json();
+
+                    // Silent retry: check if images that failed now load
+                    // We don't clear the whole state to avoid flicker
+                    // Instead, we just let the browser retry or manually clear only what's needed
+                    setImageErrors({});
+                }
+            } catch (e) {
+                console.error("Polling error", e);
+            }
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [data?.uuid, data?.isDemo, Object.keys(imageErrors).length]);
+
+    const handleImageError = (id) => {
+        if (!imageErrors[id]) {
+            setImageErrors(prev => ({ ...prev, [id]: true }));
         }
     };
 
@@ -129,10 +176,10 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
     return (
         <div className="flex flex-col w-full gap-6">
             {/* Top Section: Stats and Current Frame */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
                 {/* Stats Panel */}
-                <div className="lg:col-span-5 flex flex-col gap-4 p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl">
+                <div className="lg:col-span-5 flex flex-col gap-4 p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl h-full">
                     <div className="bg-blue-600/20 border border-blue-500/50 p-4 rounded-2xl">
                         <p className="text-blue-300 text-sm font-bold uppercase tracking-wider mb-1">Video Name</p>
                         <h2 className="text-xl md:text-2xl font-black text-white truncate">{data?.predictions.id}</h2>
@@ -184,93 +231,115 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                 </div>
 
                 {/* Selected Frame Details */}
-                <div className="lg:col-span-7 flex flex-col p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl overflow-hidden">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
-                        <h2 className="text-xl font-bold">Frame: <span className="text-blue-400">{selectedIndex}</span></h2>
-                        <div className="flex bg-gray-900 rounded-xl p-1 border border-gray-700">
-                            <button
-                                onClick={() => setViewMode('images')}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${viewMode === 'images' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
-                            >
-                                <HiPhotograph /> <span className="text-xs font-bold uppercase">Images</span>
-                            </button>
-                            <button
-                                onClick={() => setViewMode('video')}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${viewMode === 'video' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
-                            >
-                                <HiVideoCamera /> <span className="text-xs font-bold uppercase">Video</span>
-                            </button>
+                <div className="lg:col-span-7 flex flex-col p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl overflow-hidden h-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-4">
+                            <h2 className="text-xl font-bold">Frame: <span className="text-blue-400">{selectedIndex}</span></h2>
+                            <div className="hidden md:flex bg-gray-900 rounded-lg p-0.5 border border-gray-700">
+                                <button
+                                    onClick={() => setViewMode('images')}
+                                    className={`flex items-center gap-2 px-3 py-1 rounded-md transition-all ${viewMode === 'images' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
+                                >
+                                    <HiPhotograph className="text-sm" /> <span className="text-[10px] font-bold uppercase">Images</span>
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('video')}
+                                    className={`flex items-center gap-2 px-3 py-1 rounded-md transition-all ${viewMode === 'video' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
+                                >
+                                    <HiVideoCamera className="text-sm" /> <span className="text-[10px] font-bold uppercase">Video</span>
+                                </button>
+                            </div>
                         </div>
-                        <div className="bg-red-500/20 border border-red-500/50 px-4 py-1 rounded-full text-red-300 font-bold">
-                            Prediction: {(data?.predictions.data[selectedIndex]?.y * 100).toFixed(2)}% Deepfake
+                        <div className="bg-red-500/20 border border-red-500/50 px-4 py-1.5 rounded-full text-red-300 font-black text-xs uppercase tracking-wider">
+                            Frame Prediction: {(data?.predictions.data[selectedIndex]?.y * 100).toFixed(1)}%
                         </div>
                     </div>
 
-                    {!discartedIndexes.includes(selectedIndex) || selectedIndex === 0 ? (
-                        <div className="flex flex-col gap-6">
-                            {viewMode === 'video' ? (
-                                <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border-2 border-blue-500/30">
-                                    <video
-                                        ref={(ref) => setVideoRef(ref)}
-                                        src={data.isDemo ? '/demo/demo.mp4' : `/api/video/${data.uuid}`}
-                                        className="w-full h-full object-contain"
-                                        controls
-                                        onTimeUpdate={handleVideoTimeUpdate}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-3 gap-4 animate-in fade-in duration-500">
-                                    <ImageLink
-                                        label="Processed"
-                                        src={data.isDemo ? data.processedFrames[selectedIndex] : `/api/images/${data.uuid}/processed_frame_${selectedIndex}.jpg`}
-                                        onClick={handleImageClick}
-                                        tooltip="Frame used for prediction after rotation and crop."
-                                    />
-                                    <ImageLink
-                                        label="Heatmap"
-                                        src={data.isDemo ? data.heatmaps_face[selectedIndex] : `/api/images/${data.uuid}/heatmap_face_frame_${selectedIndex}.jpg`}
-                                        onClick={handleImageClick}
-                                        tooltip="Temporal changes compared to previous frame."
-                                        message={selectedIndex === 0 ? "Heatmap can not be computed for first frame of the video" : null}
-                                    />
-                                    <ImageLink
-                                        label="Grad-CAM"
-                                        src={data.isDemo ? data.gradcam_explanations[selectedIndex] : `/api/images/${data.uuid}/gradcam_frame_${selectedIndex}.jpg`}
-                                        onClick={handleImageClick}
-                                        tooltip="AI attention regions for the prediction."
-                                    />
-                                </div>
-                            )}
+                    <div className="flex-grow flex flex-col justify-center">
+                        {!discartedIndexes.includes(selectedIndex) || selectedIndex === 0 ? (
+                            <div className="flex flex-col gap-6">
+                                {viewMode === 'video' ? (
+                                    <div className="flex-grow flex items-center justify-center min-h-0">
+                                        <div className="relative h-full max-h-[450px] aspect-video bg-black rounded-2xl overflow-hidden border-2 border-blue-500/30 shadow-2xl mx-auto">
+                                            <video
+                                                ref={(ref) => setVideoRef(ref)}
+                                                src={data.isDemo ? '/demo/demo.mp4' : `/api/video/${data.uuid}`}
+                                                className="w-full h-full object-contain"
+                                                controls
+                                                onTimeUpdate={handleVideoTimeUpdate}
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-3 gap-4 animate-in fade-in duration-500">
+                                        <ImageLink
+                                            label="Processed"
+                                            src={data.isDemo ? `/demo/frames/demo/images/processed_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/processed_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                            tooltip="Frame used for prediction after rotation and crop."
+                                            isError={imageErrors[`proc_${selectedIndex}`]}
+                                            onError={() => handleImageError(`proc_${selectedIndex}`)}
+                                        />
+                                        <ImageLink
+                                            label="Heatmap"
+                                            src={data.isDemo ? `/demo/frames/demo/images/heatmap_face_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/heatmap_face_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                            tooltip="Temporal changes compared to previous frame."
+                                            message={selectedIndex === 0 ? "Heatmap can not be computed for first frame of the video" : null}
+                                            isError={imageErrors[`hmf_${selectedIndex}`]}
+                                            onError={() => handleImageError(`hmf_${selectedIndex}`)}
+                                        />
+                                        <ImageLink
+                                            label="Grad-CAM"
+                                            src={data.isDemo ? `/demo/frames/demo/images/gradcam_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/gradcam_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                            tooltip="AI attention regions for the prediction."
+                                            isError={imageErrors[`gc_${selectedIndex}`]}
+                                            onError={() => handleImageError(`gc_${selectedIndex}`)}
+                                        />
+                                    </div>
+                                )}
 
-                            {viewMode === 'images' && (
-                                <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-500">
-                                    <ImageLink
-                                        label="Source Frame"
-                                        src={data.isDemo ? data.videoFrames[selectedIndex] : `/api/images/${data.uuid}/nonProcessed_frame_${selectedIndex}.jpg`}
-                                        onClick={handleImageClick}
-                                        large
-                                    />
-                                    <ImageLink
-                                        label="Full Heatmap"
-                                        src={data.isDemo ? data.heatmaps[selectedIndex] : `/api/images/${data.uuid}/heatmap_frame_${selectedIndex}.jpg`}
-                                        onClick={handleImageClick}
-                                        large
-                                        message={selectedIndex === 0 ? "Heatmap can not be computed for first frame of the video" : null}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center p-12 opacity-50 italic">
-                            <p>This frame has been discarded from analysis.</p>
-                            <button
-                                onClick={discartCurrentFrame}
-                                className="mt-4 px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-xl transition-colors"
-                            >
-                                Recover Frame
-                            </button>
-                        </div>
-                    )}
+                                {viewMode === 'images' && (
+                                    <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-500">
+                                        <ImageLink
+                                            label="Source Frame"
+                                            src={data.isDemo ? `/demo/frames/demo/images/nonProcessed_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/nonProcessed_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                            large
+                                            isError={imageErrors[`src_${selectedIndex}`]}
+                                            onError={() => handleImageError(`src_${selectedIndex}`)}
+                                        />
+                                        <ImageLink
+                                            label="Full Heatmap"
+                                            src={data.isDemo ? `/demo/frames/demo/images/heatmap_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/heatmap_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                            large
+                                            message={selectedIndex === 0 ? "Heatmap can not be computed for first frame of the video" : null}
+                                            isError={imageErrors[`hm_${selectedIndex}`]}
+                                            onError={() => handleImageError(`hm_${selectedIndex}`)}
+                                        />
+                                    </div>
+                                )}
+                                {isGenerating && (
+                                    <div className="mt-2 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl flex items-center justify-center gap-3">
+                                        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                                        <span className="text-xs font-bold text-blue-300 uppercase tracking-widest">Generating visualizations in background...</span>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center p-12 opacity-50 italic">
+                                <p>This frame has been discarded from analysis.</p>
+                                <button
+                                    onClick={discartCurrentFrame}
+                                    className="mt-4 px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-xl transition-colors"
+                                >
+                                    Recover Frame
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -397,7 +466,7 @@ const StatCard = ({ label, value }) => (
     </div>
 );
 
-const ImageLink = ({ label, src, onClick, tooltip, large, message }) => (
+const ImageLink = ({ label, src, onClick, tooltip, large, message, isError, onError }) => (
     <div className="flex flex-col gap-2">
         <div className="flex items-center gap-1">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{label}</span>
@@ -411,17 +480,23 @@ const ImageLink = ({ label, src, onClick, tooltip, large, message }) => (
             )}
         </div>
         <div
-            className={`relative overflow-hidden rounded-xl border-2 border-transparent ${!message ? 'hover:border-blue-500 cursor-zoom-in' : ''} transition-all group bg-black/50 ${large ? 'h-48 md:h-72' : 'h-24 md:h-32'} flex items-center justify-center`}
-            onClick={() => !message && onClick(src)}
+            className={`relative overflow-hidden rounded-xl border-2 border-transparent ${(!message && !isError) ? 'hover:border-blue-500 cursor-zoom-in' : ''} transition-all group bg-black/50 ${large ? 'h-48 md:h-72' : 'h-24 md:h-32'} flex items-center justify-center`}
+            onClick={() => !message && !isError && onClick(src)}
         >
             {message ? (
                 <p className="text-[10px] text-gray-500 font-medium px-4 text-center italic">{message}</p>
+            ) : isError ? (
+                <div className="flex flex-col items-center gap-2 px-4 text-center">
+                    <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase animate-pulse">Generating...</p>
+                </div>
             ) : (
                 <>
                     <img
                         src={src}
                         alt={label}
                         className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                        onError={onError}
                     />
                     <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </>

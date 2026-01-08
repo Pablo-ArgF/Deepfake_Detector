@@ -108,7 +108,7 @@ const BodyView = () => {
     if (uuid) {
       setLoading(true);
       const isDemo = uuid === 'demo';
-      const url = isDemo ? '/demo/demo.json' : `/api/results/${uuid}`;
+      let url = isDemo ? (type === 'rnn' ? '/demo/sequences/demo/demo.json' : '/demo/frames/demo/demo.json') : `/api/results/${uuid}`;
 
       fetch(url)
         .then(res => {
@@ -185,18 +185,23 @@ const BodyView = () => {
       // Navigate to CNN view after prediction
       navigate(`/${CNNData.uuid}/cnn`);
 
-      // Start RNN prediction in background if needed
-      fetch('/api/predict/sequences', {
+      // Start RNN prediction in background using the SAME UUID
+      // We pass the uuid as a query parameter so the backend reuses the folder/video
+      fetch(`/api/predict/sequences?uuid=${CNNData.uuid}`, {
         method: 'POST',
         headers: {
           'X-Upload-Password': password
-        },
-        body: formData,
+        }
+        // No body needed if uuid is provided as it reuses the file!
       }).then(async RNNresponse => {
+        if (!RNNresponse.ok) throw new Error('RNN analysis failed');
         const RNNTmpdata = await RNNresponse.json();
         setRNNData(RNNTmpdata);
         setRNNLoading(false);
-      }).catch(err => console.error('RNN error:', err));
+      }).catch(err => {
+        console.error('RNN error:', err);
+        setRNNLoading(false); // Stop spinner even if it fails
+      });
 
     } catch (err) {
       setError(err.message);
@@ -207,7 +212,7 @@ const BodyView = () => {
   const handleDemo = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/demo/demo.json');
+      const response = await fetch('/demo/frames/demo/demo.json');
       if (!response.ok) throw new Error('Demo data not found');
       const demoData = await response.json();
 
@@ -250,7 +255,7 @@ const BodyView = () => {
           </div>
           <button
             onClick={() => navigate(`/${uuid}/${isRNN ? 'cnn' : 'rnn'}`)}
-            className="w-full md:w-64 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg transform hover:scale-105"
+            className={`w-full md:w-64 py-3 px-6 ${isRNN ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'} text-white font-bold rounded-xl transition-all shadow-lg transform hover:scale-105 uppercase tracking-tight text-xs`}
           >
             {isRNN ? 'Analyze frame by frame' : 'Analyze sequences'}
           </button>
