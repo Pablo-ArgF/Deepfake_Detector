@@ -101,35 +101,45 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
     useEffect(() => {
         if (!data?.uuid || data?.isDemo) return;
 
-        // If there are no errors yet, we check if we need to start polling
-        // (Initial load might have errors)
         const hasErrors = Object.keys(imageErrors).length > 0;
-        if (!hasErrors) {
-            setIsGenerating(false);
-            return;
+
+        // If we have errors, we are definitely generating
+        if (hasErrors) {
+            setIsGenerating(true);
         }
 
-        setIsGenerating(true);
+        // If we aren't generating and no errors, no need to poll
+        if (!isGenerating && !hasErrors) return;
+
         const interval = setInterval(async () => {
             try {
-                // We check specifically for the existence of the last expected asset or results.json
-                // But a simple fetch of results.json is enough to "ping" the backend
-                const response = await fetch(`/api/results/${data.uuid}`);
-                if (response.ok) {
-                    const freshData = await response.json();
+                // Clear errors to trigger a retry in the browser
+                setImageErrors({});
 
-                    // Silent retry: check if images that failed now load
-                    // We don't clear the whole state to avoid flicker
-                    // Instead, we just let the browser retry or manually clear only what's needed
-                    setImageErrors({});
-                }
+                // We just clear them, the handleImageError will set isGenerating(true) 
+                // if they fail again. The separate effect below will handle 
+                // turning off the message after a stable period.
             } catch (e) {
                 console.error("Polling error", e);
             }
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [data?.uuid, data?.isDemo, Object.keys(imageErrors).length]);
+    }, [data?.uuid, data?.isDemo, isGenerating, Object.keys(imageErrors).length > 0]);
+
+    // Separate effect to handle the "turning off" of isGenerating with a delay to avoid flicker
+    useEffect(() => {
+        const hasErrors = Object.keys(imageErrors).length > 0;
+        if (!hasErrors && isGenerating) {
+            const timer = setTimeout(() => {
+                // Double check if still no errors after 2 seconds
+                if (Object.keys(imageErrors).length === 0) {
+                    setIsGenerating(false);
+                }
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [Object.keys(imageErrors).length, isGenerating]);
 
     const handleImageError = (id) => {
         if (!imageErrors[id]) {
@@ -466,43 +476,59 @@ const StatCard = ({ label, value }) => (
     </div>
 );
 
-const ImageLink = ({ label, src, onClick, tooltip, large, message, isError, onError }) => (
-    <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-1">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{label}</span>
-            {tooltip && (
-                <div className="group relative">
-                    <HiOutlineInformationCircle className="text-gray-600 cursor-help" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900 border border-gray-700 rounded-lg text-[10px] text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-2xl">
-                        {tooltip}
+const ImageLink = ({ label, src, onClick, tooltip, large, message, isError, onError }) => {
+    const [isReady, setIsReady] = React.useState(false);
+
+    // Reset ready state when src changes to show loader for the new image
+    React.useEffect(() => {
+        setIsReady(false);
+    }, [src]);
+
+    const showLoader = (isError || !isReady) && !message;
+
+    return (
+        <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-1">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{label}</span>
+                {tooltip && (
+                    <div className="group relative">
+                        <HiOutlineInformationCircle className="text-gray-600 cursor-help" />
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900 border border-gray-700 rounded-lg text-[10px] text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-2xl">
+                            {tooltip}
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
+            <div
+                className={`relative overflow-hidden rounded-xl border-2 border-transparent ${(!message && !showLoader) ? 'hover:border-blue-500 cursor-zoom-in' : ''} transition-all group bg-black/50 ${large ? 'h-48 md:h-72' : 'h-24 md:h-32'} flex items-center justify-center`}
+                onClick={() => !message && !showLoader && onClick(src)}
+            >
+                {message ? (
+                    <p className="text-[10px] text-gray-500 font-medium px-4 text-center italic">{message}</p>
+                ) : (
+                    <>
+                        {showLoader && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gray-800/50 backdrop-blur-sm z-10 animate-in fade-in duration-300">
+                                <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase animate-pulse">Generating...</p>
+                            </div>
+                        )}
+                        <img
+                            src={src}
+                            alt={label}
+                            className={`w-full h-full object-contain transition-all duration-500 group-hover:scale-110 ${!isReady ? 'opacity-0' : 'opacity-100'}`}
+                            onLoad={() => setIsReady(true)}
+                            onError={(e) => {
+                                setIsReady(false);
+                                if (onError) onError(e);
+                            }}
+                        />
+                        {!showLoader && <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                    </>
+                )}
+            </div>
         </div>
-        <div
-            className={`relative overflow-hidden rounded-xl border-2 border-transparent ${(!message && !isError) ? 'hover:border-blue-500 cursor-zoom-in' : ''} transition-all group bg-black/50 ${large ? 'h-48 md:h-72' : 'h-24 md:h-32'} flex items-center justify-center`}
-            onClick={() => !message && !isError && onClick(src)}
-        >
-            {message ? (
-                <p className="text-[10px] text-gray-500 font-medium px-4 text-center italic">{message}</p>
-            ) : isError ? (
-                <div className="flex flex-col items-center gap-2 px-4 text-center">
-                    <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase animate-pulse">Generating...</p>
-                </div>
-            ) : (
-                <>
-                    <img
-                        src={src}
-                        alt={label}
-                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-                        onError={onError}
-                    />
-                    <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </>
-            )}
-        </div>
-    </div>
-);
+    );
+};
 
 export default CNNVideoDashboard;

@@ -89,11 +89,19 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
         }
     }, [selectedIndex, data, videoRef]);
 
-    if (loading) {
+    if (loading || !data) {
         return (
-            <div className="flex flex-col items-center justify-center p-12">
-                <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-                <p className="mt-4 text-blue-400 font-medium animate-pulse">Running sequence analysis...</p>
+            <div className="flex flex-col items-center justify-center p-20 min-h-[400px]">
+                <div className="relative">
+                    <div className="w-20 h-20 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin-slow"></div>
+                    </div>
+                </div>
+                <div className="mt-8 text-center">
+                    <p className="text-xl text-purple-400 font-black uppercase tracking-widest animate-pulse">Running sequence analysis...</p>
+                    <p className="mt-2 text-gray-500 font-medium">Procesando el video por secuencias usando una <span className="text-blue-400 font-bold italic">Recurrent Neural Network (RNN)</span></p>
+                </div>
             </div>
         );
     }

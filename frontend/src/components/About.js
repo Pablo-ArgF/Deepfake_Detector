@@ -49,7 +49,7 @@ const About = () => {
 
                     <div className="space-y-4 text-gray-300 text-lg leading-relaxed">
                         <p>
-                            This research initiative represents the academic evolution of the Deepfake Detection Final Degree Project, shifting focus from pure detection accuracy to interpretability and transparency in AI systems. The primary objective is to contribute to the scientific community by producing a detailed paper on Explainable AI (XAI) applied to forensic video analysis.
+                            This research initiative represents the academic evolution of the <a href="https://hdl.handle.net/10651/74464" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 font-bold underline underline-offset-4 decoration-blue-500/30 hover:decoration-blue-400 transition-all">Deepfake Detection Final Degree Project</a>, shifting focus from pure detection accuracy to interpretability and transparency in AI systems. The primary objective is to contribute to the scientific community by producing a detailed paper on Explainable AI (XAI) applied to forensic video analysis.
                         </p>
                         <p>
                             Building upon the original hybrid CNN-RNN architecture, I implemented advanced interpretability mechanisms to visualize the model’s decision-making process:

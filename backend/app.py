@@ -506,8 +506,17 @@ def predictSequences():
         video_path = os.path.join(base_folder, "video.mp4")
         if not os.path.exists(video_path):
              return jsonify({'error': 'Existing analysis folder or video not found.'}), 404
-        # We assume video_name is not strictly needed or can be inferred
-        video_name = "reanalyzed_video" 
+        # Try to recover original video name from existing results
+        results_path = os.path.join(base_folder, 'results.json')
+        if os.path.exists(results_path):
+            try:
+                with open(results_path, 'r') as f:
+                    old_data = json.load(f)
+                    video_name = old_data.get('predictions', {}).get('id', 'reanalyzed_video')
+            except Exception:
+                video_name = "reanalyzed_video"
+        else:
+            video_name = "reanalyzed_video" 
     else:
         if 'video' not in request.files:
             return 'No video file uploaded', 400
