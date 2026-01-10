@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { IoMdVideocam } from 'react-icons/io';
-import { HiArrowLeft } from 'react-icons/hi';
+import { HiArrowLeft, HiAcademicCap } from 'react-icons/hi';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import CNNVideoDashboard from './CNNVideoDashboard';
 import RNNVideoDashboard from './RNNVideoDashboard';
 import { FaLinkedin, FaExternalLinkAlt } from 'react-icons/fa';
+import {
+  trackDemoAccess,
+  trackCNNDemoAccess,
+  trackRNNDemoAccess,
+  trackVideoUploadSubmit,
+  trackVideoAnalysisSuccess,
+  trackVideoAnalysisError,
+  trackModelSwitch,
+  trackTutorialClick
+} from '../utils/analytics';
+
 
 const UploadModal = ({ isOpen, onClose, onUpload, password, setPassword, error, loading }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   return (
@@ -15,16 +28,16 @@ const UploadModal = ({ isOpen, onClose, onUpload, password, setPassword, error, 
         {loading && (
           <div className="absolute inset-0 z-10 bg-gray-800/80 flex flex-col items-center justify-center backdrop-blur-sm transition-all">
             <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-            <p className="text-blue-400 font-bold animate-pulse text-xl uppercase tracking-widest">Processing video...</p>
-            <p className="text-gray-400 text-sm mt-2">This may take a few minutes</p>
+            <p className="text-blue-400 font-bold animate-pulse text-xl uppercase tracking-widest">{t('body.processing')}</p>
+            <p className="text-gray-400 text-sm mt-2">{t('body.processing_desc')}</p>
           </div>
         )}
 
         <h2 className="text-3xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-          Upload Video
+          {t('body.upload_title')}
         </h2>
         <p className="text-gray-300 mb-6 leading-relaxed">
-          To ensure server security, video uploading is restricted. If you don't have a password, you can use the <b>Demo</b> mode or contact me to request access.
+          {t('body.upload_desc')}
         </p>
 
         <div className="flex flex-col gap-4 mb-8">
@@ -49,7 +62,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, password, setPassword, error, 
         </div>
 
         <div className="flex flex-col gap-3">
-          <label className="text-sm font-semibold text-gray-400">Enter Upload Password</label>
+          <label className="text-sm font-semibold text-gray-400">{t('body.enter_password')}</label>
           <input
             type="password"
             value={password}
@@ -72,14 +85,14 @@ const UploadModal = ({ isOpen, onClose, onUpload, password, setPassword, error, 
             disabled={loading}
             className="flex-1 py-4 px-6 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-2xl transition-all disabled:opacity-50"
           >
-            Cancel
+            {t('body.cancel')}
           </button>
           <button
             onClick={onUpload}
             disabled={loading}
             className="flex-1 py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50"
           >
-            Submit
+            {t('body.submit')}
           </button>
         </div>
       </div>
@@ -90,6 +103,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, password, setPassword, error, 
 const BodyView = () => {
   const navigate = useNavigate();
   const { uuid, type } = useParams();
+  const { t } = useTranslation();
 
   const [error, setError] = useState('');
   const [data, setData] = useState(null);
@@ -102,6 +116,7 @@ const BodyView = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [tempFile, setTempFile] = useState(null);
+  const [runTutorial, setRunTutorial] = useState(false);
 
   // Effect to load data if UUID is in URL
   useEffect(() => {
@@ -118,6 +133,16 @@ const BodyView = () => {
         .then(resultData => {
           const finalData = isDemo ? { ...resultData, isDemo: true, uuid: 'demo' } : resultData;
           setSelectedIndex(0);
+
+          // Track demo access
+          if (isDemo) {
+            if (type === 'rnn') {
+              trackRNNDemoAccess();
+            } else {
+              trackCNNDemoAccess();
+            }
+          }
+
           if (finalData.type === 'cnn') {
             setData(finalData);
             setVideoUploaded(true);
@@ -129,7 +154,7 @@ const BodyView = () => {
           setLoading(false);
         })
         .catch(err => {
-          setError('Analysis not found or expired.');
+          setError(t('body.error_not_found'));
           setLoading(false);
           navigate('/');
         });
@@ -140,7 +165,7 @@ const BodyView = () => {
       setRNNData(null);
       setSelectedIndex(0);
     }
-  }, [uuid, navigate]);
+  }, [uuid, navigate, t]);
 
   const handleVideoUpload = async (event) => {
     setError('');
@@ -156,6 +181,10 @@ const BodyView = () => {
 
     try {
       setLoading(true);
+
+      // Track video upload submission
+      trackVideoUploadSubmit();
+
       const formData = new FormData();
       formData.append('video', tempFile);
 
@@ -173,11 +202,20 @@ const BodyView = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Error processing video');
+        const errorMsg = errorData.error || t('body.processing_error');
+
+        // Track CNN analysis error
+        trackVideoAnalysisError('cnn', errorMsg);
+
+        throw new Error(errorMsg);
       }
 
       const CNNData = await response.json();
       clearTimeout(timeoutId);
+
+      // Track successful CNN analysis
+      trackVideoAnalysisSuccess('cnn');
+
       setIsModalOpen(false);
       setTempFile(null);
       setPassword('');
@@ -194,12 +232,20 @@ const BodyView = () => {
         }
         // No body needed if uuid is provided as it reuses the file!
       }).then(async RNNresponse => {
-        if (!RNNresponse.ok) throw new Error('RNN analysis failed');
+        if (!RNNresponse.ok) {
+          trackVideoAnalysisError('rnn', 'RNN analysis failed');
+          throw new Error('RNN analysis failed');
+        }
         const RNNTmpdata = await RNNresponse.json();
+
+        // Track successful RNN analysis
+        trackVideoAnalysisSuccess('rnn');
+
         setRNNData(RNNTmpdata);
         setRNNLoading(false);
       }).catch(err => {
         console.error('RNN error:', err);
+        trackVideoAnalysisError('rnn', err.message);
         setRNNLoading(false); // Stop spinner even if it fails
       });
 
@@ -212,12 +258,15 @@ const BodyView = () => {
   const handleDemo = async () => {
     try {
       setLoading(true);
+
+      // Track demo access
+      trackDemoAccess();
+
       const response = await fetch('/demo/frames/demo/demo.json');
       if (!response.ok) throw new Error('Demo data not found');
       const demoData = await response.json();
 
       // Inject demo flag and dummy UUID for demo images to work if needed
-      // Actually our paths are already absolute /demo/images/...
       const preparedData = {
         ...demoData,
         isDemo: true,
@@ -249,15 +298,31 @@ const BodyView = () => {
             >
               <HiArrowLeft className="text-2xl" />
             </button>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              {isRNN ? 'Sequence Analysis (RNN)' : 'Frame-by-Frame Analysis (CNN)'}
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-3 main-dashboard-header">
+              {isRNN ? t('body.seq_analysis_title') : t('body.frame_analysis_title')}
+              <button
+                onClick={() => {
+                  trackTutorialClick(isRNN ? 'rnn' : 'cnn');
+                  setRunTutorial(true);
+                }}
+                className={`p-2 ${isRNN ? 'bg-purple-600 hover:bg-purple-700' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-xl transition-all shadow-lg flex items-center gap-2`}
+                title={t('common.tutorial')}
+              >
+                <HiAcademicCap className="text-xl" />
+                <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">{t('common.tutorial')}</span>
+              </button>
             </h1>
           </div>
           <button
-            onClick={() => navigate(`/${uuid}/${isRNN ? 'cnn' : 'rnn'}`)}
+            onClick={() => {
+              const from = isRNN ? 'rnn' : 'cnn';
+              const to = isRNN ? 'cnn' : 'rnn';
+              trackModelSwitch(from, to);
+              navigate(`/${uuid}/${to}`);
+            }}
             className={`w-full md:w-64 py-3 px-6 ${isRNN ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'} text-white font-bold rounded-xl transition-all shadow-lg transform hover:scale-105 uppercase tracking-tight text-xs`}
           >
-            {isRNN ? 'Analyze frame by frame' : 'Analyze sequences'}
+            {isRNN ? t('body.analyze_frames') : t('body.analyze_sequences')}
           </button>
         </div>
       )}
@@ -271,6 +336,8 @@ const BodyView = () => {
             data={RNNdata}
             setSelectedIndex={setSelectedIndex}
             selectedIndex={selectedIndex}
+            runTutorial={runTutorial}
+            setRunTutorial={setRunTutorial}
           />
         ) : (
           <CNNVideoDashboard
@@ -280,12 +347,14 @@ const BodyView = () => {
             data={data}
             setSelectedIndex={setSelectedIndex}
             selectedIndex={selectedIndex}
+            runTutorial={runTutorial}
+            setRunTutorial={setRunTutorial}
           />
         )
       ) : (
         <div className="flex flex-col items-center max-w-4xl mx-auto py-12 px-6 bg-gray-800 rounded-3xl shadow-2xl border border-gray-700 mt-10">
           <h1 className="text-4xl md:text-6xl font-black mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-            DeepFake Detection
+            {t('body.hero_title')}
           </h1>
 
           <div className="mb-8 w-48 md:w-64 rounded-3xl overflow-hidden shadow-2xl border border-gray-700">
@@ -296,9 +365,9 @@ const BodyView = () => {
             />
           </div>
           <p className="text-lg text-gray-300 text-justify leading-relaxed mb-8 max-w-2xl px-4">
-            The increasing use of artificial intelligence has enabled identity impersonation through <b>DeepFakes</b>, synthetic content generated by AI algorithms that combine and overlay existing images and videos to create a new one.<br /><br />
-            The realism achieved using current DeepFake algorithms poses a <b>risk to society</b>. From 'fake news' to identity theft, AI-generated content makes it increasingly difficult to distinguish real from fake.<br /><br />
-            This <b>DeepFake detection tool</b> aims to help identify synthetic material through predictive model analysis.
+            {t('body.intro_p1')}<br /><br />
+            {t('body.intro_p2')}<br /><br />
+            {t('body.intro_p3')}
           </p>
 
           {error && (
@@ -320,20 +389,20 @@ const BodyView = () => {
               className="group flex items-center gap-3 py-4 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl rounded-2xl cursor-pointer transition-all shadow-xl hover:shadow-blue-500/20 transform hover:-translate-y-1"
             >
               <IoMdVideocam className="text-2xl transition-transform group-hover:scale-110" />
-              Upload a video
+              {t('body.upload_btn')}
             </label>
 
             <button
               onClick={handleDemo}
               className="group flex items-center gap-3 py-4 px-8 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xl rounded-2xl cursor-pointer transition-all shadow-xl hover:shadow-purple-500/20 transform hover:-translate-y-1"
             >
-              🚀 View Demo
+              🚀 {t('body.demo_btn')}
             </button>
 
             {loading && !isModalOpen && (
               <div className="mt-8 flex flex-col items-center gap-4">
                 <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-                <p className="text-blue-400 font-medium animate-pulse">Processing video...</p>
+                <p className="text-blue-400 font-medium animate-pulse">{t('body.processing')}</p>
               </div>
             )}
           </div>

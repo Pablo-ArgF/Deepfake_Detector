@@ -1,9 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { ResponsiveLine } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
-import { HiOutlineInformationCircle, HiXCircle, HiVideoCamera, HiPhotograph } from 'react-icons/hi';
+import { HiOutlineInformationCircle, HiXCircle, HiVideoCamera, HiPhotograph, HiAcademicCap } from 'react-icons/hi';
+import { useTranslation } from 'react-i18next';
+import Joyride, { STATUS } from 'react-joyride';
+import { trackFrameSelection, trackVideoPlayback } from '../utils/analytics';
 
-const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSelectedIndex, selectedIndex }) => {
+
+const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSelectedIndex, selectedIndex, runTutorial, setRunTutorial }) => {
+    const { t } = useTranslation();
+
+    const steps = [
+        {
+            target: '.main-dashboard-header',
+            title: t('tutorial.cnn.step1_title'),
+            content: t('tutorial.cnn.step1_content'),
+            disableBeacon: true,
+        },
+        {
+            target: '.stats-panel',
+            title: t('tutorial.cnn.step2_title'),
+            content: t('tutorial.cnn.step2_content'),
+        },
+        {
+            target: '.view-mode-selector',
+            title: t('tutorial.cnn.step3_title'),
+            content: t('tutorial.cnn.step3_content'),
+        },
+        {
+            target: '.frame-forensics',
+            title: t('tutorial.cnn.step4_title'),
+            content: t('tutorial.cnn.step4_content'),
+        },
+        {
+            target: '.temporal-chart',
+            title: t('tutorial.cnn.step5_title'),
+            content: t('tutorial.cnn.step5_content'),
+        }
+    ];
+
+    const handleJoyrideCallback = (data) => {
+        const { status } = data;
+        if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+            setRunTutorial(false);
+        }
+    };
 
     const [discartedIndexes, setDiscartedIndexes] = useState([]);
     const [threshold, setThreshold] = useState(0.5);
@@ -85,6 +126,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
     const handleChartClick = (point) => {
         const index = point.data.x;
         setSelectedIndex(index);
+        trackFrameSelection(index);
         if (viewMode === 'video' && videoRef) {
             const duration = videoRef.duration;
             const frameCount = data?.predictions?.data?.length || 1;
@@ -185,23 +227,47 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
 
     return (
         <div className="flex flex-col w-full gap-6">
+            <Joyride
+                steps={steps}
+                run={runTutorial}
+                continuous={true}
+                showProgress={true}
+                showSkipButton={true}
+                callback={handleJoyrideCallback}
+                styles={{
+                    options: {
+                        primaryColor: '#3b82f6',
+                        backgroundColor: '#1f2937',
+                        textColor: '#fff',
+                        arrowColor: '#1f2937',
+                    }
+                }}
+                locale={{
+                    back: t('tutorial.back'),
+                    close: t('tutorial.last'),
+                    last: t('tutorial.last'),
+                    next: t('tutorial.next'),
+                    skip: t('tutorial.skip'),
+                }}
+            />
+
             {/* Top Section: Stats and Current Frame */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
                 {/* Stats Panel */}
-                <div className="lg:col-span-5 flex flex-col gap-4 p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl h-full">
+                <div className="lg:col-span-5 flex flex-col gap-4 p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl h-full stats-panel">
                     <div className="bg-blue-600/20 border border-blue-500/50 p-4 rounded-2xl">
-                        <p className="text-blue-300 text-sm font-bold uppercase tracking-wider mb-1">Video Name</p>
+                        <p className="text-blue-300 text-sm font-bold uppercase tracking-wider mb-1">{t('common.video_name')}</p>
                         <h2 className="text-xl md:text-2xl font-black text-white truncate">{data?.predictions.id}</h2>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        <StatCard label="Frames" value={stats.total} />
-                        <StatCard label="Min" value={`${(stats.min * 100).toFixed(2)}%`} />
-                        <StatCard label="Max" value={`${(stats.max * 100).toFixed(2)}%`} />
-                        <StatCard label="Unique" value={stats.unique} />
-                        <StatCard label="Average" value={`${(stats.avg * 100).toFixed(2)}%`} />
-                        <StatCard label="Threshold" value={`${(threshold * 100).toFixed(0)}%`} />
+                        <StatCard label={t('common.frames')} value={stats.total} />
+                        <StatCard label={t('common.min')} value={`${(stats.min * 100).toFixed(2)}%`} />
+                        <StatCard label={t('common.max')} value={`${(stats.max * 100).toFixed(2)}%`} />
+                        <StatCard label={t('common.unique')} value={stats.unique} />
+                        <StatCard label={t('common.average')} value={`${(stats.avg * 100).toFixed(2)}%`} />
+                        <StatCard label={t('common.threshold')} value={`${(threshold * 100).toFixed(0)}%`} />
                     </div>
 
                     {/* Threshold & Pie */}
@@ -225,7 +291,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 />
                             </div>
                             <div className="w-full sm:w-1/2 flex flex-col gap-3">
-                                <label className="text-sm font-semibold text-gray-400">Decision Threshold (%)</label>
+                                <label className="text-sm font-semibold text-gray-400">{t('common.decision_threshold')}</label>
                                 <input
                                     type="number"
                                     value={threshold * 100}
@@ -234,34 +300,34 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                     onChange={handleThresholdChange}
                                     className="bg-gray-800 border border-gray-600 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-white font-bold"
                                 />
-                                <p className="text-xs text-gray-500 italic">Frames above threshold: <span className="text-blue-400 font-bold">{aboveThreshold}</span></p>
+                                <p className="text-xs text-gray-500 italic">{t('common.frames_above_threshold')}: <span className="text-blue-400 font-bold">{aboveThreshold}</span></p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Selected Frame Details */}
-                <div className="lg:col-span-7 flex flex-col p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl overflow-hidden h-full">
+                <div className="lg:col-span-7 flex flex-col p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl overflow-hidden h-full frame-forensics">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-4">
-                            <h2 className="text-xl font-bold">Frame: <span className="text-blue-400">{selectedIndex}</span></h2>
-                            <div className="hidden md:flex bg-gray-900 rounded-lg p-0.5 border border-gray-700">
+                            <h2 className="text-xl font-bold">{t('common.frame')}: <span className="text-blue-400">{selectedIndex}</span></h2>
+                            <div className="hidden md:flex bg-gray-900 rounded-lg p-0.5 border border-gray-700 view-mode-selector">
                                 <button
                                     onClick={() => setViewMode('images')}
                                     className={`flex items-center gap-2 px-3 py-1 rounded-md transition-all ${viewMode === 'images' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
                                 >
-                                    <HiPhotograph className="text-sm" /> <span className="text-[10px] font-bold uppercase">Images</span>
+                                    <HiPhotograph className="text-sm" /> <span className="text-[10px] font-bold uppercase">{t('cnn.images')}</span>
                                 </button>
                                 <button
                                     onClick={() => setViewMode('video')}
                                     className={`flex items-center gap-2 px-3 py-1 rounded-md transition-all ${viewMode === 'video' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
                                 >
-                                    <HiVideoCamera className="text-sm" /> <span className="text-[10px] font-bold uppercase">Video</span>
+                                    <HiVideoCamera className="text-sm" /> <span className="text-[10px] font-bold uppercase">{t('cnn.video')}</span>
                                 </button>
                             </div>
                         </div>
                         <div className="bg-red-500/20 border border-red-500/50 px-4 py-1.5 rounded-full text-red-300 font-black text-xs uppercase tracking-wider">
-                            Frame Prediction: {(data?.predictions.data[selectedIndex]?.y * 100).toFixed(1)}%
+                            {t('common.frame_prediction')}: {(data?.predictions.data[selectedIndex]?.y * 100).toFixed(1)}%
                         </div>
                     </div>
 
@@ -277,33 +343,34 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                                 className="w-full h-full object-contain"
                                                 controls
                                                 onTimeUpdate={handleVideoTimeUpdate}
+                                                onPlay={() => trackVideoPlayback('cnn')}
                                             />
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-3 gap-4 animate-in fade-in duration-500">
                                         <ImageLink
-                                            label="Processed"
+                                            label={t('cnn.processed')}
                                             src={data.isDemo ? `/demo/frames/demo/images/processed_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/processed_frame_${selectedIndex}.jpg`}
                                             onClick={handleImageClick}
-                                            tooltip="Frame used for prediction after rotation and crop."
+                                            tooltip={t('cnn.processed_tooltip')}
                                             isError={imageErrors[`proc_${selectedIndex}`]}
                                             onError={() => handleImageError(`proc_${selectedIndex}`)}
                                         />
                                         <ImageLink
-                                            label="Heatmap"
+                                            label={t('cnn.heatmap')}
                                             src={data.isDemo ? `/demo/frames/demo/images/heatmap_face_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/heatmap_face_frame_${selectedIndex}.jpg`}
                                             onClick={handleImageClick}
-                                            tooltip="Temporal changes compared to previous frame."
-                                            message={selectedIndex === 0 ? "Heatmap can not be computed for first frame of the video" : null}
+                                            tooltip={t('cnn.heatmap_tooltip')}
+                                            message={selectedIndex === 0 ? t('cnn.heatmap_error_0') : null}
                                             isError={imageErrors[`hmf_${selectedIndex}`]}
                                             onError={() => handleImageError(`hmf_${selectedIndex}`)}
                                         />
                                         <ImageLink
-                                            label="Grad-CAM"
+                                            label={t('cnn.gradcam')}
                                             src={data.isDemo ? `/demo/frames/demo/images/gradcam_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/gradcam_frame_${selectedIndex}.jpg`}
                                             onClick={handleImageClick}
-                                            tooltip="AI attention regions for the prediction."
+                                            tooltip={t('cnn.gradcam_tooltip')}
                                             isError={imageErrors[`gc_${selectedIndex}`]}
                                             onError={() => handleImageError(`gc_${selectedIndex}`)}
                                         />
@@ -313,7 +380,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 {viewMode === 'images' && (
                                     <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-500">
                                         <ImageLink
-                                            label="Source Frame"
+                                            label={t('cnn.source_frame')}
                                             src={data.isDemo ? `/demo/frames/demo/images/nonProcessed_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/nonProcessed_frame_${selectedIndex}.jpg`}
                                             onClick={handleImageClick}
                                             large
@@ -321,11 +388,11 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                             onError={() => handleImageError(`src_${selectedIndex}`)}
                                         />
                                         <ImageLink
-                                            label="Full Heatmap"
+                                            label={t('cnn.full_heatmap')}
                                             src={data.isDemo ? `/demo/frames/demo/images/heatmap_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/heatmap_frame_${selectedIndex}.jpg`}
                                             onClick={handleImageClick}
                                             large
-                                            message={selectedIndex === 0 ? "Heatmap can not be computed for first frame of the video" : null}
+                                            message={selectedIndex === 0 ? t('cnn.heatmap_error_0') : null}
                                             isError={imageErrors[`hm_${selectedIndex}`]}
                                             onError={() => handleImageError(`hm_${selectedIndex}`)}
                                         />
@@ -334,18 +401,18 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 {isGenerating && (
                                     <div className="mt-2 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl flex items-center justify-center gap-3">
                                         <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                                        <span className="text-xs font-bold text-blue-300 uppercase tracking-widest">Generating visualizations in background...</span>
+                                        <span className="text-xs font-bold text-blue-300 uppercase tracking-widest">{t('common.generating_visualizations')}</span>
                                     </div>
                                 )}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center p-12 opacity-50 italic">
-                                <p>This frame has been discarded from analysis.</p>
+                                <p>{t('common.discarded_message')}</p>
                                 <button
                                     onClick={discartCurrentFrame}
                                     className="mt-4 px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-xl transition-colors"
                                 >
-                                    Recover Frame
+                                    {t('common.recovery_frame')}
                                 </button>
                             </div>
                         )}
@@ -354,10 +421,10 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
             </div>
 
             {/* Bottom Section: Chart */}
-            <div className="flex flex-col gap-6 p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl">
+            <div className="flex flex-col gap-6 p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl temporal-chart">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <h2 className="text-2xl font-black">Frame Analysis</h2>
+                        <h2 className="text-2xl font-black dashboard-header">{t('common.frame_analysis')}</h2>
                         <button
                             onClick={discartCurrentFrame}
                             className={`px-6 py-2 rounded-xl font-bold transition-all shadow-md transform hover:scale-105 ${discartedIndexes.includes(selectedIndex)
@@ -365,7 +432,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 : 'bg-gray-900 border border-gray-600 hover:border-blue-500 text-gray-300'
                                 }`}
                         >
-                            {discartedIndexes.includes(selectedIndex) ? 'Recover Frame' : 'Discard Frame'}
+                            {discartedIndexes.includes(selectedIndex) ? t('common.recovery_frame') : t('common.discard_frame')}
                         </button>
                     </div>
 
@@ -394,7 +461,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                         xScale={{ type: 'linear', min: 'auto', max: 'auto' }}
                         yScale={{ type: 'linear', min: 0, max: 1 }}
                         axisBottom={{
-                            legend: 'Frame Number',
+                            legend: t('common.frame_number'),
                             legendOffset: 45,
                             legendPosition: 'middle',
                             tickSize: 5,
@@ -402,7 +469,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                             tickRotation: 0,
                         }}
                         axisLeft={{
-                            legend: 'Fake Probability',
+                            legend: t('common.fake_probability'),
                             legendOffset: -50,
                             legendPosition: 'middle',
                             tickSize: 5,
@@ -431,7 +498,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 axis: 'x',
                                 value: selectedIndex,
                                 lineStyle: { stroke: '#ffffff', strokeWidth: 2, strokeDasharray: '4 4' },
-                                legend: 'Current',
+                                legend: t('common.current'),
                                 legendOrientation: 'vertical',
                                 textStyle: { fill: '#ffffff', fontSize: 10, fontWeight: 'bold' }
                             },
@@ -439,7 +506,7 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                                 axis: 'y',
                                 value: threshold,
                                 lineStyle: { stroke: '#a855f7', strokeWidth: 2, strokeDasharray: '4 4' },
-                                legend: `Threshold: ${Math.round(threshold * 100)}%`,
+                                legend: `${t('common.threshold')}: ${Math.round(threshold * 100)}%`,
                                 legendPosition: 'top-left',
                                 textStyle: { fill: '#a855f7', fontSize: 10, fontWeight: 'bold' }
                             }
@@ -477,6 +544,7 @@ const StatCard = ({ label, value }) => (
 );
 
 const ImageLink = ({ label, src, onClick, tooltip, large, message, isError, onError }) => {
+    const { t } = useTranslation();
     const [isReady, setIsReady] = React.useState(false);
 
     // Reset ready state when src changes to show loader for the new image
@@ -510,7 +578,7 @@ const ImageLink = ({ label, src, onClick, tooltip, large, message, isError, onEr
                         {showLoader && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gray-800/50 backdrop-blur-sm z-10 animate-in fade-in duration-300">
                                 <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-                                <p className="text-[10px] text-gray-400 font-bold uppercase animate-pulse">Generating...</p>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase animate-pulse">{t('common.generating_visualizations')}</p>
                             </div>
                         )}
                         <img

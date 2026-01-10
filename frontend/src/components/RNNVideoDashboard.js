@@ -1,8 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { ResponsiveLine } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
+import { HiAcademicCap } from 'react-icons/hi';
+import { useTranslation } from 'react-i18next';
+import Joyride, { STATUS } from 'react-joyride';
+import { trackFrameSelection, trackVideoPlayback } from '../utils/analytics';
 
-const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) => {
+const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading, runTutorial, setRunTutorial }) => {
+    const { t } = useTranslation();
+
+    const steps = [
+        {
+            target: '.main-dashboard-header',
+            title: t('tutorial.rnn.step1_title'),
+            content: t('tutorial.rnn.step1_content'),
+            disableBeacon: true,
+        },
+        {
+            target: '.stats-panel-rnn',
+            title: t('tutorial.rnn.step2_title'),
+            content: t('tutorial.rnn.step2_content'),
+        },
+        {
+            target: '.video-player-rnn',
+            title: t('tutorial.rnn.step3_title'),
+            content: t('tutorial.rnn.step3_content'),
+        },
+        {
+            target: '.chart-section-rnn',
+            title: t('tutorial.rnn.step4_title'),
+            content: t('tutorial.rnn.step4_content'),
+        }
+    ];
+
+    const handleJoyrideCallback = (data) => {
+        const { status } = data;
+        if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+            setRunTutorial(false);
+        }
+    };
+
     const [threshold, setThreshold] = useState(0.5);
     const [aboveThreshold, setAboveThreshold] = useState(null);
     const [videoRef, setVideoRef] = useState(null);
@@ -33,10 +70,10 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
 
         setAboveThreshold(countAbove);
         setPieChartData([
-            { "id": "Above", "label": "Deepfake", "value": countAbove },
-            { "id": "Below", "label": "Real", "value": Math.max(0, totalToDisplay - countAbove) }
+            { "id": "Above", "label": t('common.deepfake'), "value": countAbove },
+            { "id": "Below", "label": t('common.real'), "value": Math.max(0, totalToDisplay - countAbove) }
         ]);
-    }, [threshold, data]);
+    }, [threshold, data, t]);
 
     const handleThresholdChange = (event) => {
         let val = parseFloat(event.target.value) / 100;
@@ -61,6 +98,7 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
     const handleChartClick = (point) => {
         const index = point.data.x;
         setSelectedIndex(index);
+        trackFrameSelection(index);
         if (videoRef) {
             const duration = videoRef.duration;
             const frameCount = data?.predictions?.data?.length || 1;
@@ -99,8 +137,8 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
                     </div>
                 </div>
                 <div className="mt-8 text-center">
-                    <p className="text-xl text-purple-400 font-black uppercase tracking-widest animate-pulse">Running sequence analysis...</p>
-                    <p className="mt-2 text-gray-500 font-medium">Procesando el video por secuencias usando una <span className="text-blue-400 font-bold italic">Recurrent Neural Network (RNN)</span></p>
+                    <p className="text-xl text-purple-400 font-black uppercase tracking-widest animate-pulse">{t('common.running_analysis')}</p>
+                    <p className="mt-2 text-gray-500 font-medium">{t('common.processing_video')}</p>
                 </div>
             </div>
         );
@@ -117,21 +155,45 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
 
     return (
         <div className="flex flex-col w-full gap-6">
+            <Joyride
+                steps={steps}
+                run={runTutorial}
+                continuous={true}
+                showProgress={true}
+                showSkipButton={true}
+                callback={handleJoyrideCallback}
+                styles={{
+                    options: {
+                        primaryColor: '#8b5cf6',
+                        backgroundColor: '#1f2937',
+                        textColor: '#fff',
+                        arrowColor: '#1f2937',
+                    }
+                }}
+                locale={{
+                    back: t('tutorial.back'),
+                    close: t('tutorial.last'),
+                    last: t('tutorial.last'),
+                    next: t('tutorial.next'),
+                    skip: t('tutorial.skip'),
+                }}
+            />
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                 {/* Global Stats Panel */}
-                <div className="lg:col-span-5 flex flex-col gap-4 p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl h-full">
+                <div className="lg:col-span-5 flex flex-col gap-4 p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl h-full stats-panel-rnn">
                     <div className="bg-purple-600/20 border border-purple-500/50 p-4 rounded-2xl">
-                        <p className="text-purple-300 text-sm font-bold uppercase tracking-wider mb-1">Video Name</p>
+                        <p className="text-purple-300 text-sm font-bold uppercase tracking-wider mb-1">{t('common.video_name')}</p>
                         <h2 className="text-xl md:text-2xl font-black text-white truncate">{data?.predictions?.id}</h2>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        <StatCard label="Sequences" value={stats.total} />
-                        <StatCard label="Min" value={`${(stats.min * 100).toFixed(2)}%`} />
-                        <StatCard label="Max" value={`${(stats.max * 100).toFixed(2)}%`} />
-                        <StatCard label="Unique" value={stats.unique} />
-                        <StatCard label="Average" value={`${(stats.avg * 100).toFixed(2)}%`} />
-                        <StatCard label="Variance" value={`${(stats.var * 100).toFixed(2)}%`} />
+                        <StatCard label={t('common.frames')} value={stats.total} />
+                        <StatCard label={t('common.min')} value={`${(stats.min * 100).toFixed(2)}%`} />
+                        <StatCard label={t('common.max')} value={`${(stats.max * 100).toFixed(2)}%`} />
+                        <StatCard label={t('common.unique')} value={stats.unique} />
+                        <StatCard label={t('common.average')} value={`${(stats.avg * 100).toFixed(2)}%`} />
+                        <StatCard label={t('common.variance')} value={`${(stats.var * 100).toFixed(2)}%`} />
                     </div>
 
                     <div className="mt-auto p-4 bg-gray-900/50 rounded-2xl border border-gray-700">
@@ -150,7 +212,7 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
                                 />
                             </div>
                             <div className="w-full sm:w-1/2 flex flex-col gap-3">
-                                <label className="text-xs font-semibold text-gray-400">Decision Threshold (%)</label>
+                                <label className="text-xs font-semibold text-gray-400">{t('common.decision_threshold')}</label>
                                 <input
                                     type="number"
                                     max={100}
@@ -160,7 +222,7 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
                                     className="bg-gray-800 border border-gray-600 rounded-xl px-4 py-2 focus:ring-2 focus:ring-purple-500 outline-none transition-all text-white font-bold"
                                 />
                                 {aboveThreshold !== null && (
-                                    <p className="text-[10px] text-gray-500 italic">Sequences above: <span className="text-purple-400 font-bold">{aboveThreshold}</span></p>
+                                    <p className="text-[10px] text-gray-500 italic">{t('common.sequences_above')}: <span className="text-purple-400 font-bold">{aboveThreshold}</span></p>
                                 )}
                             </div>
                         </div>
@@ -168,11 +230,13 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
                 </div>
 
                 {/* Video and Prediction Integrated Card */}
-                <div className="lg:col-span-7 flex flex-col p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl overflow-hidden focus-within:border-blue-500/50 transition-colors h-full">
+                <div className="lg:col-span-7 flex flex-col p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl overflow-hidden focus-within:border-blue-500/50 transition-colors h-full video-player-rnn">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-bold">Frame: <span className="text-blue-400">{selectedIndex}</span></h2>
-                        <div className="bg-red-500/20 border border-red-500/50 px-4 py-1.5 rounded-full text-red-300 font-black text-xs uppercase tracking-wider">
-                            Sequence Prediction: {(data?.predictions?.data?.[selectedIndex]?.y * 100 || 0).toFixed(1)}%
+                        <h2 className="text-xl font-bold">{t('common.frame')}: <span className="text-blue-400">{selectedIndex}</span></h2>
+                        <div className="flex items-center gap-3">
+                            <div className="bg-red-500/20 border border-red-500/50 px-4 py-1.5 rounded-full text-red-300 font-black text-xs uppercase tracking-wider">
+                                {t('common.frame_prediction')}: {(data?.predictions?.data?.[selectedIndex]?.y * 100 || 0).toFixed(1)}%
+                            </div>
                         </div>
                     </div>
 
@@ -185,6 +249,7 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
                                 className="w-full h-full object-contain"
                                 controls
                                 onTimeUpdate={handleVideoTimeUpdate}
+                                onPlay={() => trackVideoPlayback('rnn')}
                             />
                         </div>
                     </div>
@@ -192,12 +257,12 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
             </div>
 
             {/* Chart Section */}
-            <div className="flex flex-col gap-6 p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl">
+            <div className="flex flex-col gap-6 p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl chart-section-rnn">
                 <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-black">Sequence Block Analysis</h2>
+                    <h2 className="text-2xl font-black dashboard-header-rnn">{t('common.sequence_block_analysis')}</h2>
                     <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase">
                         <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
-                        <span>Prediction per 20 frames</span>
+                        <span>{t('common.prediction_per_20')}</span>
                     </div>
                 </div>
                 <div className="h-[20em] w-full bg-gray-900/50 rounded-2xl p-2 border border-gray-700">
@@ -207,8 +272,8 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
                             margin={{ top: 20, right: 40, bottom: 60, left: 60 }}
                             xScale={{ type: 'linear', min: 'auto', max: 'auto' }}
                             yScale={{ type: 'linear', min: 0, max: 1 }}
-                            axisBottom={{ legend: 'Frame Number', legendOffset: 45, legendPosition: 'middle' }}
-                            axisLeft={{ legend: 'Fake Probability', legendOffset: -50, legendPosition: 'middle', format: (v) => `${(v * 100).toFixed(0)}%` }}
+                            axisBottom={{ legend: t('common.frame_number'), legendOffset: 45, legendPosition: 'middle' }}
+                            axisLeft={{ legend: t('common.fake_probability'), legendOffset: -50, legendPosition: 'middle', format: (v) => `${(v * 100).toFixed(0)}%` }}
                             theme={{
                                 axis: {
                                     legend: { text: { fill: '#94a3b8', fontWeight: 600 } },
@@ -228,7 +293,7 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
                                     axis: 'x',
                                     value: selectedIndex,
                                     lineStyle: { stroke: '#ffffff', strokeWidth: 2, strokeDasharray: '4 4' },
-                                    legend: 'Current',
+                                    legend: t('common.current'),
                                     legendOrientation: 'vertical',
                                     textStyle: { fill: '#ffffff', fontSize: 10, fontWeight: 'bold' }
                                 },
@@ -236,7 +301,7 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
                                     axis: 'y',
                                     value: threshold,
                                     lineStyle: { stroke: '#a855f7', strokeWidth: 2, strokeDasharray: '4 4' },
-                                    legend: 'Decision Threshold',
+                                    legend: t('common.threshold'),
                                     legendPosition: 'top-left',
                                     textStyle: { fill: '#a855f7', fontSize: 10, fontWeight: 'bold' }
                                 }
@@ -244,7 +309,7 @@ const RNNVideoDashboard = ({ data, selectedIndex, setSelectedIndex, loading }) =
                             onClick={handleChartClick}
                         />
                     ) : (
-                        <div className="flex items-center justify-center h-full text-gray-500 italic">No prediction data available</div>
+                        <div className="flex items-center justify-center h-full text-gray-500 italic">{t('common.no_data')}</div>
                     )}
                 </div>
             </div>
