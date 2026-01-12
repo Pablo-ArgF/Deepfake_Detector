@@ -1,57 +1,84 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Flex,
-    Grid,
-    Heading,
-    Text,
-    Button,
-    Input, FormControl, FormLabel, Tooltip, Icon,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalBody,
-    useDisclosure,
-} from '@chakra-ui/react';
-import { InfoOutlineIcon } from '@chakra-ui/icons';
 import { ResponsiveLine } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
+import { HiOutlineInformationCircle, HiXCircle, HiVideoCamera, HiPhotograph, HiAcademicCap } from 'react-icons/hi';
+import { useTranslation } from 'react-i18next';
+import Joyride, { STATUS } from 'react-joyride';
+import { trackFrameSelection, trackVideoPlayback } from '../utils/analytics';
 
-const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSelectedIndex, selectedIndex }) => {
-    
-    // Currently displayed image 
-    const [videoFrameSrc, setVideoFrameSrc] = useState(data?.videoFrames[selectedIndex]);
-    const [processedFrameSrc, setProcessedFrameSrc] = useState(data?.processedFrames[selectedIndex]);
-    const [heatmapFrameSrc, setHeatmapFrameSrc] = useState(data?.heatmaps[selectedIndex]);
-    const [heatmapFaceFrameSrc, setHeatmapFaceFrameSrc] = useState(data?.heatmaps_face[selectedIndex]);
-    const [discartedIndexes, setDiscartedIndexes] = useState([]);
-    const [threshold, setThreshold] = useState(0);
-    const [aboveThreshold, setAboveThreshold] = useState(data?.predictions.data.filter(prediction => !discartedIndexes.includes(prediction.x) && prediction.y.toFixed(2) >= threshold).length);
-    const [pieChartData, setPieChartData] = useState([{
-            "id": "Above the threshold",
-            "label": "Above the threshold",
-            "value": aboveThreshold
+
+const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSelectedIndex, selectedIndex, runTutorial, setRunTutorial }) => {
+    const { t } = useTranslation();
+
+    const steps = [
+        {
+            target: '.main-dashboard-header',
+            title: t('tutorial.cnn.step1_title'),
+            content: t('tutorial.cnn.step1_content'),
+            disableBeacon: true,
         },
         {
-            "id": "Below the threshold",
-            "label": "Below the threshold",
-            "value": data?.predictions.data.filter(prediction =>!discartedIndexes.includes(prediction.x)).length - aboveThreshold
-        }]);
+            target: '.stats-panel',
+            title: t('tutorial.cnn.step2_title'),
+            content: t('tutorial.cnn.step2_content'),
+        },
+        {
+            target: '.view-mode-selector',
+            title: t('tutorial.cnn.step3_title'),
+            content: t('tutorial.cnn.step3_content'),
+        },
+        {
+            target: '.frame-forensics',
+            title: t('tutorial.cnn.step4_title'),
+            content: t('tutorial.cnn.step4_content'),
+        },
+        {
+            target: '.temporal-chart',
+            title: t('tutorial.cnn.step5_title'),
+            content: t('tutorial.cnn.step5_content'),
+        }
+    ];
 
-    const [lineChartData,setLineChartData] = useState([{
+    const handleJoyrideCallback = (data) => {
+        const { status } = data;
+        if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+            setRunTutorial(false);
+        }
+    };
+
+    const [discartedIndexes, setDiscartedIndexes] = useState([]);
+    const [threshold, setThreshold] = useState(0.5);
+    const [aboveThreshold, setAboveThreshold] = useState(data?.predictions.data.filter(prediction => !discartedIndexes.includes(prediction.x) && prediction.y.toFixed(2) >= threshold).length);
+    const [pieChartData, setPieChartData] = useState([{
+        "id": "Above",
+        "label": "Above",
+        "value": aboveThreshold
+    },
+    {
+        "id": "Below",
+        "label": "Below",
+        "value": data?.predictions.data.filter(prediction => !discartedIndexes.includes(prediction.x)).length - aboveThreshold
+    }]);
+
+    const [lineChartData, setLineChartData] = useState([{
         "id": "Fake",
         "data": data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(prediction.x)).map((prediction, index) => ({
             "x": prediction.x,
             "y": prediction.y
-            }))
-        }]);
+        }))
+    }]);
 
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [imageUrl, setImageUrl] = useState()
+    const [viewMode, setViewMode] = useState('images'); // 'images' or 'video'
+    const [videoRef, setVideoRef] = useState(null);
+    const [imageErrors, setImageErrors] = useState({});
+    const [isGenerating, setIsGenerating] = useState(false);
+
     const handleImageClick = (url) => {
         setImageUrl(url);
-        onOpen();
+        setIsModalOpen(true);
     };
-
 
     const handleThresholdChange = (event) => {
         var thresholdValue = parseFloat(event.target.value).toFixed(2) / 100;
@@ -60,17 +87,18 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
         setThreshold(thresholdValue);
     };
 
-    useEffect(() => {  
-        setAboveThreshold(data?.predictions.data.filter(prediction => !discartedIndexes.includes(prediction.x) && prediction.y.toFixed(2) >= threshold).length);
+    useEffect(() => {
+        const countAbove = data?.predictions.data.filter(prediction => !discartedIndexes.includes(prediction.x) && prediction.y.toFixed(2) >= threshold).length;
+        setAboveThreshold(countAbove);
         setPieChartData([{
-            "id": "Above the threshold",
-            "label": "Above the threshold",
-            "value": aboveThreshold
+            "id": "Above",
+            "label": "Above",
+            "value": countAbove
         },
         {
-            "id": "Below the threshold",
-            "label": "Below the threshold",
-            "value": data?.predictions.data.filter(prediction => !discartedIndexes.includes(prediction.x)).length - aboveThreshold
+            "id": "Below",
+            "label": "Below",
+            "value": data?.predictions.data.filter(prediction => !discartedIndexes.includes(prediction.x)).length - countAbove
         }]);
         setLineChartData([{
             "id": "Fake",
@@ -79,478 +107,495 @@ const CNNVideoDashboard = ({ setVideoUploaded, setData, setLoading, data, setSel
                 "y": prediction.y
             }))
         }]);
-    }, [threshold, discartedIndexes, aboveThreshold, data?.predictions.data]);
+    }, [threshold, discartedIndexes, data?.predictions.data]);
+
+    const handleVideoTimeUpdate = (e) => {
+        if (viewMode !== 'video') return;
+        const video = e.target;
+        const duration = video.duration;
+        const currentTime = video.currentTime;
+        if (duration > 0) {
+            const frameCount = data?.predictions.data.length || 1;
+            const currentFrame = Math.floor((currentTime / duration) * (frameCount - 1));
+            if (currentFrame !== selectedIndex) {
+                setSelectedIndex(currentFrame);
+            }
+        }
+    };
+
+    const handleChartClick = (point) => {
+        const index = point.data.x;
+        setSelectedIndex(index);
+        trackFrameSelection(index);
+        if (viewMode === 'video' && videoRef) {
+            const duration = videoRef.duration;
+            const frameCount = data?.predictions?.data?.length || 1;
+            if (isFinite(duration) && duration > 0 && frameCount > 1) {
+                const targetTime = (index / (frameCount - 1)) * duration;
+                if (isFinite(targetTime)) {
+                    videoRef.currentTime = targetTime;
+                }
+            }
+        }
+    };
+
+    // Polling function to check if background generation is finished
+    useEffect(() => {
+        if (!data?.uuid || data?.isDemo) return;
+
+        const hasErrors = Object.keys(imageErrors).length > 0;
+
+        // If we have errors, we are definitely generating
+        if (hasErrors) {
+            setIsGenerating(true);
+        }
+
+        // If we aren't generating and no errors, no need to poll
+        if (!isGenerating && !hasErrors) return;
+
+        const interval = setInterval(async () => {
+            try {
+                // Clear errors to trigger a retry in the browser
+                setImageErrors({});
+
+                // We just clear them, the handleImageError will set isGenerating(true) 
+                // if they fail again. The separate effect below will handle 
+                // turning off the message after a stable period.
+            } catch (e) {
+                console.error("Polling error", e);
+            }
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [data?.uuid, data?.isDemo, isGenerating, Object.keys(imageErrors).length > 0]);
+
+    // Separate effect to handle the "turning off" of isGenerating with a delay to avoid flicker
+    useEffect(() => {
+        const hasErrors = Object.keys(imageErrors).length > 0;
+        if (!hasErrors && isGenerating) {
+            const timer = setTimeout(() => {
+                // Double check if still no errors after 2 seconds
+                if (Object.keys(imageErrors).length === 0) {
+                    setIsGenerating(false);
+                }
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [Object.keys(imageErrors).length, isGenerating]);
+
+    const handleImageError = (id) => {
+        if (!imageErrors[id]) {
+            setImageErrors(prev => ({ ...prev, [id]: true }));
+        }
+    };
 
 
     const discartCurrentFrame = () => {
         let newDiscartedIndexes;
-        
-        // if already discarded 
         if (discartedIndexes.includes(selectedIndex)) {
-            // Recuperar el frame descartado
             newDiscartedIndexes = discartedIndexes.filter(index => index !== selectedIndex);
         } else {
-            // Descartar el frame actual
             newDiscartedIndexes = [...discartedIndexes, selectedIndex];
         }
-    
         setDiscartedIndexes(newDiscartedIndexes);
-    
-        fetch(`http://localhost/api/recalculate/heatmaps/${data.uuid}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ discard_indices: newDiscartedIndexes })
-        })
-        .then(response => response.json())
-        .then(updatedData => {
-            setData(prevData => ({
-                ...prevData,
-                heatmaps: updatedData.heatmaps,
-                heatmaps_face: updatedData.heatmaps_face
-            }));
-            setHeatmapFrameSrc(updatedData.heatmaps[selectedIndex]);
-            setHeatmapFaceFrameSrc(updatedData.heatmaps_face[selectedIndex]);
-        })
-        .catch(error => console.error('Error recalculating heatmaps:', error));
+        if (!data.isDemo) {
+            fetch(`/api/recalculate/heatmaps/${data.uuid}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ discard_indices: newDiscartedIndexes })
+            })
+                .then(response => response.json())
+                .then(updatedData => {
+                    setData(prevData => ({
+                        ...prevData,
+                        heatmaps: updatedData.heatmaps,
+                        heatmaps_face: updatedData.heatmaps_face
+                    }));
+                })
+                .catch(error => console.error('Error recalculating heatmaps:', error));
+        }
     };
 
+    const filteredData = data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(index));
+    const stats = {
+        total: filteredData.length,
+        min: filteredData.length > 0 ? Math.min(...filteredData.map(p => p.y)) : 0,
+        max: filteredData.length > 0 ? Math.max(...filteredData.map(p => p.y)) : 0,
+        avg: filteredData.length > 0 ? filteredData.reduce((a, b) => a + b.y, 0) / filteredData.length : 0,
+        unique: new Set(filteredData.map(p => p.y.toFixed(2))).size
+    };
 
     return (
-        <Flex direction='column' width={'100%'} placeContent={'flex-start'} h={'80%'} w='100%'>
-            <Flex direction='column' width={'100%'} alignContent={'flex-start'} >
-                <Flex direction='row' width={'100%'} alignContent={'flex-start'} flex-wrap='wrap'>
-                    <Flex
-                        direction={'column'}
-                        wrap={'wrap'}
-                        gap={'0.5em'}
-                        alignItems={'flex-start'}
-                        borderWidth='0.2em'
-                        borderRadius='0.5em'
-                        backgroundColor={'#A7E6FF'}
-                        padding={'1em'}
-                        marginLeft={'0.5em'}
-                        width={'35%'}>
-                        <Flex direction={'column'} w='98%' padding='0.5em' alignItems='flex-start' backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                            <Text textColor={'black'} margin={'0.25em'}><b>Name of the video</b></Text>
-                            <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data?.predictions.id}</Text>
-                        </Flex>
-                        <Grid
-                            w='98%'
-                            templateRows='repeat(2, 6.5em)'
-                            templateColumns='repeat(3, 33.333%)'
-                            gap={'0.25em'}
-                        >
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'black'} margin={'0.25em'}><b>Number of analyzed frames</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(index)).length}</Text>
-                            </Flex>
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'black'} margin={'0.25em'}><b>Minimum</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(Math.min(...data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(index)).map(prediction => prediction.y)) * 100).toFixed(2)}%</Text>
-                            </Flex>
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'black'} margin={'0.25em'}><b>Maximum</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(Math.max(...data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(index)).map(prediction => prediction.y)) * 100).toFixed(2)}%</Text>
-                            </Flex>
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'black'} margin={'0.25em'}><b>Number of different values</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{new Set(data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(index)).map(prediction => prediction.y.toFixed(2))).size}</Text>
-                            </Flex>
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'black'} margin={'0.25em'}><b>Variance of the values</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(index)).reduce((acc, prediction) => acc + Math.pow(prediction.y - data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(index)).reduce((a, b) => a + b.y, 0) / data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(index)).length, 2), 0) / data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(index)).length * 100).toFixed(2)}%</Text>
-                            </Flex>
-                            <Flex direction={'column'} padding={'0.5em'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                                <Text textColor={'black'} margin={'0.25em'}><b>Average of the values</b></Text>
-                                <Text textColor={'white'} fontSize={'1.6em'} fontFamily={'revert'} margin={'0.25em'}>{(data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(index)).reduce((a, b) => a + b.y, 0) / data?.predictions.data.filter((prediction, index) => !discartedIndexes.includes(index)).length * 100).toFixed(2)}%</Text>
-                            </Flex>
-                        </Grid>
-                        {/* Threshold Control and Pie Chart */}
-                        <Flex direction={'column'} padding={'0.5em'} width={'98%'} backgroundColor='#3572EF' borderRadius={'0.25em'}>
-                            <Text textColor={'black'} margin={'0.25em'}><b>Proportion above threshold</b>:</Text>
-                            <Flex direction='row' height='12em' width={'100%'}>
-                                <div style={{ height: '17em', width: '75%', overflow: 'hidden' }} marginLeft='1em' marginRight='1em'>
-                                    {aboveThreshold != null ?
-                                        <ResponsivePie
-                                            data={pieChartData}
-                                            margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
-                                            innerRadius={0.5}
-                                            padAngle={0.7}
-                                            cornerRadius={3}
-                                            activeOuterRadiusOffset={8}
-                                            colors={{ scheme: 'dark2' }}
-                                            borderWidth={1}
-                                            borderColor={{
-                                                from: 'color',
-                                                modifiers: [
-                                                    [
-                                                        'darker',
-                                                        0.2
-                                                    ]
-                                                ]
-                                            }}
-                                            enableArcLinkLabels={false}
-                                            arcLabelsSkipAngle={10}
-                                            arcLabelsTextColor={{
-                                                from: 'color',
-                                                modifiers: [
-                                                    [
-                                                        'brighter',
-                                                        3
-                                                    ]
-                                                ]
-                                            }}
-                                            animate={true}
-                                            legends={[
-                                                {
-                                                    anchor: 'top-left',
-                                                    direction: 'column',
-                                                    justify: false,
-                                                    translateX: -80,
-                                                    translateY: -30,
-                                                    itemsSpacing: 3,
-                                                    itemWidth: 100,
-                                                    itemHeight: 18,
-                                                    itemTextColor: '#A7E6FF',
-                                                    itemDirection: 'left-to-right',
-                                                    itemOpacity: 1,
-                                                    symbolSize: 18,
-                                                    symbolShape: 'circle',
-                                                    effects: [
-                                                        {
-                                                            on: 'hover',
-                                                            style: {
-                                                                itemTextColor: 'white'
-                                                            }
-                                                        }
-                                                    ]
-                                                }
-                                            ]}
-                                        /> :
-                                        <Flex justifyContent={'center'}><Text textColor={'black'} margin={'0.25em'}><b>Introduce the decision <br />threshold</b></Text></Flex>
-                                    }
-                                </div>
-                                <Flex direction="column" width="35%" h="100%" justifyContent="flex-end">
-                                    <FormControl>
-                                        <FormLabel htmlFor="threshold">Introduce the threshold (%)</FormLabel>
-                                        <Input
-                                            id="threshold"
-                                            type="number"
-                                            width="90%"
-                                            height="1.8em"
-                                            max={100}
-                                            min={0}
-                                            placeholder="Introduce the threshold (%)"
-                                            onChange={handleThresholdChange}
-                                        />
-                                    </FormControl>
-                                </Flex>
-                            </Flex>
-                        </Flex>
-                    </Flex>
-                    <Flex
-                        direction={'column'}
-                        alignItems={'flex-start'}
-                        w='65%'
-                        padding={'0.7em'}
-                        borderWidth='0.2em'
-                        borderColor={'black'}
-                        backgroundColor={'#636363'}
-                        marginLeft={'0.5em'}
-                        marginRight={'0.5em'}
-                        borderRadius={'0.5em'}>
-                        <Heading as="h2" size="4xl" mb={15} textColor={'black'}>
-                            Selected frame - Frame number: {selectedIndex}<br></br>Prediction: <Text as="span" textColor="#d10000">{(data?.predictions.data[selectedIndex]?.y * 100).toFixed(2)}% deepfake</Text>
-                        </Heading>
-                        <Flex
-                            direction='column'
-                            w={'100%'}
-                            alignItems={'flex-start'}
-                            alignContent={'center'}
-                            marginLeft={'1em'}
-                            marginTop={'2em'}
-                        >
-                            {!discartedIndexes.includes(selectedIndex) || selectedIndex === 0 ?
-                            <Flex
-                                direction='row'
-                                w={'100%'}
-                                alignItems={'flex-start'}
-                                alignContent={'center'}
-                            >
-                                <Flex
-                                    direction='row'
-                                    alignItems={'flex-start'}
-                                    alignContent={'center'}
-                                    >
+        <div className="flex flex-col w-full gap-6">
+            <Joyride
+                steps={steps}
+                run={runTutorial}
+                continuous={true}
+                showProgress={true}
+                showSkipButton={true}
+                callback={handleJoyrideCallback}
+                styles={{
+                    options: {
+                        primaryColor: '#3b82f6',
+                        backgroundColor: '#1f2937',
+                        textColor: '#fff',
+                        arrowColor: '#1f2937',
+                    }
+                }}
+                locale={{
+                    back: t('tutorial.back'),
+                    close: t('tutorial.last'),
+                    last: t('tutorial.last'),
+                    next: t('tutorial.next'),
+                    skip: t('tutorial.skip'),
+                }}
+            />
 
-                                    {/* Processed Frame */}
-                                    <Flex direction={'column'} padding={'0.5em'} backgroundColor='#262626' borderRadius={'0.25em'}  marginRight={'1em'}>
-                                        <Flex alignItems="center" margin={'0.25em'}>
-                                            <Text textColor={'#ffffff'} marginRight="0.5em">
-                                            <b>Processed frame</b>
-                                            </Text>
-                                            <Tooltip label="This is the frame used for prediction after being rotated and cropped." fontSize="sm" hasArrow bg="#ffffff">
-                                            <span>
-                                                <InfoOutlineIcon color="#ffffff" cursor="pointer" />
-                                            </span>
-                                            </Tooltip>
-                                        </Flex>
-                                        <img
-                                            src={`http://localhost/api/images/${data.uuid}/processed_frame_${selectedIndex}.jpg`}
-                                            alt='Face cut used for prediction'
-                                            onClick={() => handleImageClick(`http://localhost/api/images/${data.uuid}/processed_frame_${selectedIndex}.jpg`)}
-                                            style={{
-                                                height: '13em',
-                                                width: '13em',
-                                                padding: '0.2em',
-                                                alignSelf: 'center'
-                                            }}
-                                        />
-                                    </Flex>
-                                    {/* Heatmap frame */}
-                                    <Flex direction={'column'} padding={'0.5em'} backgroundColor='#262626' borderRadius={'0.25em'} marginRight={'1em'}>
-                                        <Flex alignItems="center" margin={'0.25em'}>
-                                            <Text textColor={'#ffffff'} marginRight="0.5em">
-                                            <b>Heatmap</b>
-                                            </Text>
-                                            <Tooltip label="Highlights the parts of the processed frame that changed the most compairing with the previous frame." fontSize="sm" hasArrow bg="#ffffff">
-                                            <span>
-                                                <InfoOutlineIcon color="#ffffff" cursor="pointer" />
-                                            </span>
-                                            </Tooltip>
-                                        </Flex>
-                                        <img
-                                            src= {'http://localhost/api/images/'+data.uuid+'/heatmap_face_frame_'+selectedIndex+'.jpg'}
-                                            alt='Heatmap for the processed frame'
-                                            onClick={() => handleImageClick('http://localhost/api/images/'+data.uuid+'/heatmap_face_frame_'+selectedIndex+'.jpg')}
-                                            style={{
-                                                height: '13em',
-                                                width: '13em',
-                                                padding: '0.2em',
-                                                alignSelf: 'center'
-                                            }}
-                                        />
-                                    </Flex>
-                                    {/* GradCAM frame*/}
-                                    <Flex direction={'column'} padding={'0.5em'} backgroundColor='#262626' borderRadius={'0.25em'} marginRight={'1em'}>
-                                        <Flex alignItems="center" margin={'0.25em'}>
-                                            <Text textColor={'#ffffff'} marginRight="0.5em">
-                                            <b>Grad-CAM Image</b>
-                                            </Text>
-                                            <Tooltip label="Indicates the part of the processed frame the had more weight on the prediction." fontSize="sm" hasArrow bg="#ffffff">
-                                            <span>
-                                                <InfoOutlineIcon color="#ffffff" cursor="pointer" />
-                                            </span>
-                                            </Tooltip>
-                                        </Flex>
-                                        {/* Display Grad-CAM processed frame from URL */}
-                                        <img
-                                            src= {'http://localhost/api/images/'+data.uuid+'/gradcam_frame_'+selectedIndex+'.jpg'}
-                                            alt='Grad-CAM processed image'
-                                            onClick={() => handleImageClick('http://localhost/api/images/'+data.uuid+'/gradcam_frame_'+selectedIndex+'.jpg')}
-                                            style={{
-                                                height: '13em',
-                                                width: '13em',
-                                                padding: '0.2em',
-                                                alignSelf: 'center'
-                                            }}
-                                        />
-                                    </Flex>
-                                    
-                                </Flex>
-                                <Flex
-                                    direction='row'
-                                    alignItems={'flex-start'}
-                                    alignContent={'center'}
-                                    //marginTop={'1em'} //si se pone debajo usar esto
-                                    >
-                                    {/* Video Frame */}
-                                    <Flex direction={'column'} padding={'0.5em'} backgroundColor='#262626' borderRadius={'0.25em'} marginRight={'1em'}>
-                                        <Flex alignItems="center" margin={'0.25em'}>
-                                            <Text textColor={'#ffffff'} marginRight="0.5em">
-                                            <b>Frame</b>
-                                            </Text>
-                                            <Tooltip label="Actual frame from the video without modifications." fontSize="sm" hasArrow bg="#ffffff">
-                                            <span>
-                                                <InfoOutlineIcon color="#ffffff" cursor="pointer" />
-                                            </span>
-                                            </Tooltip>
-                                        </Flex>
-                                        {/* Display video frame from URL */}
-                                        <img
-                                            src= {'http://localhost/api/images/'+data.uuid+'/nonProcessed_frame_'+selectedIndex+'.jpg'}
-                                            alt='Extracted frame from the video'
-                                            onClick={() => handleImageClick('http://localhost/api/images/'+data.uuid+'/nonProcessed_frame_'+selectedIndex+'.jpg')}
-                                            style={{
-                                                height: '20em',
-                                                width: '13em',
-                                                padding: '0.2em'
-                                            }}
-                                        />
-                                    </Flex>
-                                    {/* Heatmap Frame */}
-                                    <Flex direction={'column'} padding={'0.5em'} backgroundColor='#262626' borderRadius={'0.25em'}>
-                                        <Flex alignItems="center" margin={'0.25em'}>
-                                            <Text textColor={'#ffffff'} marginRight="0.5em">
-                                            <b>Heatmap for frame</b>
-                                            </Text>
-                                            <Tooltip label="Highlights the parts of the frame that changed the most compairing with the previous frame." fontSize="sm" hasArrow bg="#ffffff">
-                                            <span>
-                                                <InfoOutlineIcon color="#ffffff" cursor="pointer" />
-                                            </span>
-                                            </Tooltip>
-                                        </Flex>
-                                        <img
-                                            src= {'http://localhost/api/images/'+data.uuid+'/heatmap_frame_'+selectedIndex+'.jpg'}
-                                            alt='Heatmap for the frame'
-                                            onClick={() => handleImageClick('http://localhost/api/images/'+data.uuid+'/heatmap_frame_'+selectedIndex+'.jpg')}
-                                            style={{
-                                                height: '20em',
-                                                width: '13em',
-                                                padding: '0.2em'
-                                            }}
-                                        />
-                                    </Flex>
-                                </Flex> 
-                            </Flex> 
-                            :<div></div>
-                            }
+            {/* Top Section: Stats and Current Frame */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
-                        </Flex>
+                {/* Stats Panel */}
+                <div className="lg:col-span-5 flex flex-col gap-4 p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl h-full stats-panel">
+                    <div className="bg-blue-600/20 border border-blue-500/50 p-4 rounded-2xl">
+                        <p className="text-blue-300 text-sm font-bold uppercase tracking-wider mb-1">{t('common.video_name')}</p>
+                        <h2 className="text-xl md:text-2xl font-black text-white truncate">{data?.predictions.id}</h2>
+                    </div>
 
-                    </Flex>
-                </Flex>
-                {/* Frame Analysis Chart */}
-                <Flex
-                    height={'100%'}
-                    padding='0.5em'
-                    direction='column'
-                    alignContent={'flex-start'}
-                    alignItems={'start'}
-                    backgroundColor={'white'}
-                    borderWidth='0.3em'
-                    borderColor={'black'}
-                    borderRadius={'0.5em'}
-                    borderStyle={'solid'}
-                    margin={'0.5em'}
-                >
-                    <Flex direction='row' width={'100%'} alignContent={'flex-start'} alignItems={'center'}> 
-                        <Heading as='h2' size='3xl' mb={13} textColor={'#00201D'}>
-                            Frame analysis
-                        </Heading>
-                        <Button 
-                            marginLeft={'1em'}
-                            marginTop={'1em'}
-                            borderRadius={'1em'}
-                            backgroundColor={ discartedIndexes.includes(selectedIndex) ? 'red' : 'black'}
-                            textColor={'white'}
-                            fontSize={'1em'}
-                            padding={'0.7em'}
-                            colorScheme='blue'
-                            w={'10em'}
-                            h={'3em'}
-                            onClick={() => discartCurrentFrame()}
-                            cursor='pointer'
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <StatCard label={t('common.frames')} value={stats.total} />
+                        <StatCard label={t('common.min')} value={`${(stats.min * 100).toFixed(2)}%`} />
+                        <StatCard label={t('common.max')} value={`${(stats.max * 100).toFixed(2)}%`} />
+                        <StatCard label={t('common.unique')} value={stats.unique} />
+                        <StatCard label={t('common.average')} value={`${(stats.avg * 100).toFixed(2)}%`} />
+                        <StatCard label={t('common.threshold')} value={`${(threshold * 100).toFixed(0)}%`} />
+                    </div>
+
+                    {/* Threshold & Pie */}
+                    <div className="mt-4 p-4 bg-gray-900/50 rounded-2xl border border-gray-700">
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                            <div className="h-48 w-full sm:w-1/2">
+                                <ResponsivePie
+                                    data={pieChartData}
+                                    margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                                    innerRadius={0.6}
+                                    padAngle={2}
+                                    cornerRadius={4}
+                                    activeOuterRadiusOffset={8}
+                                    colors={['#3b82f6', '#1f2937']}
+                                    enableArcLinkLabels={false}
+                                    arcLabelsTextColor="#ffffff"
+                                    arcLabelsSkipAngle={10}
+                                    theme={{
+                                        tooltip: { container: { background: '#1f2937', color: '#fff' } }
+                                    }}
+                                />
+                            </div>
+                            <div className="w-full sm:w-1/2 flex flex-col gap-3">
+                                <label className="text-sm font-semibold text-gray-400">{t('common.decision_threshold')}</label>
+                                <input
+                                    type="number"
+                                    value={threshold * 100}
+                                    max={100}
+                                    min={0}
+                                    onChange={handleThresholdChange}
+                                    className="bg-gray-800 border border-gray-600 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-white font-bold"
+                                />
+                                <p className="text-xs text-gray-500 italic">{t('common.frames_above_threshold')}: <span className="text-blue-400 font-bold">{aboveThreshold}</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Selected Frame Details */}
+                <div className="lg:col-span-7 flex flex-col p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl overflow-hidden h-full frame-forensics">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-4">
+                            <h2 className="text-xl font-bold">{t('common.frame')}: <span className="text-blue-400">{selectedIndex}</span></h2>
+                            <div className="hidden md:flex bg-gray-900 rounded-lg p-0.5 border border-gray-700 view-mode-selector">
+                                <button
+                                    onClick={() => setViewMode('images')}
+                                    className={`flex items-center gap-2 px-3 py-1 rounded-md transition-all ${viewMode === 'images' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
+                                >
+                                    <HiPhotograph className="text-sm" /> <span className="text-[10px] font-bold uppercase">{t('cnn.images')}</span>
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('video')}
+                                    className={`flex items-center gap-2 px-3 py-1 rounded-md transition-all ${viewMode === 'video' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
+                                >
+                                    <HiVideoCamera className="text-sm" /> <span className="text-[10px] font-bold uppercase">{t('cnn.video')}</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div className="bg-red-500/20 border border-red-500/50 px-4 py-1.5 rounded-full text-red-300 font-black text-xs uppercase tracking-wider">
+                            {t('common.frame_prediction')}: {(data?.predictions.data[selectedIndex]?.y * 100).toFixed(1)}%
+                        </div>
+                    </div>
+
+                    <div className="flex-grow flex flex-col justify-center">
+                        {!discartedIndexes.includes(selectedIndex) || selectedIndex === 0 ? (
+                            <div className="flex flex-col gap-6">
+                                {viewMode === 'video' ? (
+                                    <div className="flex-grow flex items-center justify-center min-h-0">
+                                        <div className="relative h-full max-h-[450px] aspect-video bg-black rounded-2xl overflow-hidden border-2 border-blue-500/30 shadow-2xl mx-auto">
+                                            <video
+                                                ref={(ref) => setVideoRef(ref)}
+                                                src={data.isDemo ? '/demo/demo.mp4' : `/api/video/${data.uuid}`}
+                                                className="w-full h-full object-contain"
+                                                controls
+                                                onTimeUpdate={handleVideoTimeUpdate}
+                                                onPlay={() => trackVideoPlayback('cnn')}
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-3 gap-4 animate-in fade-in duration-500">
+                                        <ImageLink
+                                            label={t('cnn.processed')}
+                                            src={data.isDemo ? `/demo/frames/demo/images/processed_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/processed_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                            tooltip={t('cnn.processed_tooltip')}
+                                            isError={imageErrors[`proc_${selectedIndex}`]}
+                                            onError={() => handleImageError(`proc_${selectedIndex}`)}
+                                        />
+                                        <ImageLink
+                                            label={t('cnn.heatmap')}
+                                            src={data.isDemo ? `/demo/frames/demo/images/heatmap_face_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/heatmap_face_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                            tooltip={t('cnn.heatmap_tooltip')}
+                                            message={selectedIndex === 0 ? t('cnn.heatmap_error_0') : null}
+                                            isError={imageErrors[`hmf_${selectedIndex}`]}
+                                            onError={() => handleImageError(`hmf_${selectedIndex}`)}
+                                        />
+                                        <ImageLink
+                                            label={t('cnn.gradcam')}
+                                            src={data.isDemo ? `/demo/frames/demo/images/gradcam_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/gradcam_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                            tooltip={t('cnn.gradcam_tooltip')}
+                                            isError={imageErrors[`gc_${selectedIndex}`]}
+                                            onError={() => handleImageError(`gc_${selectedIndex}`)}
+                                        />
+                                    </div>
+                                )}
+
+                                {viewMode === 'images' && (
+                                    <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-500">
+                                        <ImageLink
+                                            label={t('cnn.source_frame')}
+                                            src={data.isDemo ? `/demo/frames/demo/images/nonProcessed_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/nonProcessed_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                            large
+                                            isError={imageErrors[`src_${selectedIndex}`]}
+                                            onError={() => handleImageError(`src_${selectedIndex}`)}
+                                        />
+                                        <ImageLink
+                                            label={t('cnn.full_heatmap')}
+                                            src={data.isDemo ? `/demo/frames/demo/images/heatmap_frame_${selectedIndex}.jpg` : `/api/images/${data.uuid}/heatmap_frame_${selectedIndex}.jpg`}
+                                            onClick={handleImageClick}
+                                            large
+                                            message={selectedIndex === 0 ? t('cnn.heatmap_error_0') : null}
+                                            isError={imageErrors[`hm_${selectedIndex}`]}
+                                            onError={() => handleImageError(`hm_${selectedIndex}`)}
+                                        />
+                                    </div>
+                                )}
+                                {isGenerating && (
+                                    <div className="mt-2 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl flex items-center justify-center gap-3">
+                                        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                                        <span className="text-xs font-bold text-blue-300 uppercase tracking-widest">{t('common.generating_visualizations')}</span>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center p-12 opacity-50 italic">
+                                <p>{t('common.discarded_message')}</p>
+                                <button
+                                    onClick={discartCurrentFrame}
+                                    className="mt-4 px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-xl transition-colors"
+                                >
+                                    {t('common.recovery_frame')}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Section: Chart */}
+            <div className="flex flex-col gap-6 p-6 bg-gray-800 rounded-3xl border border-gray-700 shadow-xl temporal-chart">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <h2 className="text-2xl font-black dashboard-header">{t('common.frame_analysis')}</h2>
+                        <button
+                            onClick={discartCurrentFrame}
+                            className={`px-6 py-2 rounded-xl font-bold transition-all shadow-md transform hover:scale-105 ${discartedIndexes.includes(selectedIndex)
+                                ? 'bg-red-600 hover:bg-red-700 text-white'
+                                : 'bg-gray-900 border border-gray-600 hover:border-blue-500 text-gray-300'
+                                }`}
                         >
-                            {discartedIndexes.includes(selectedIndex) ? 'Recover Frame' : 'Discard Frame'}
-                        </Button>
-                        {discartedIndexes.length > 0 ?
-                            <Flex direction='row' alignContent={'flex-start'} alignItems={'center'}> 
-                                <Text textColor={'#00201D'} fontSize={'1em'} fontFamily={'revert'} margin={'0.25em'}>
-                                    {discartedIndexes.length} frames discarded
-                                </Text> 
-                                {discartedIndexes.sort().map((index) => (
-                                    <Button 
-                                        marginLeft={'1em'}
-                                        marginTop={'1em'}
-                                        borderRadius={'1em'}
-                                        backgroundColor={'black'}
-                                        textColor={'white'}
-                                        fontSize={'1em'}
-                                        padding={'0.7em'}
-                                        colorScheme='blue'
-                                        w={'4em'}
-                                        h={'3em'}
-                                        onClick={() => {
-                                            setSelectedIndex(index); // Set the selected index
-                                            setVideoFrameSrc(data?.videoFrames[index]);
-                                            setProcessedFrameSrc(data?.processedFrames[index]);
-                                            setHeatmapFrameSrc(data?.heatmaps[index]);
-                                            setHeatmapFaceFrameSrc(data?.heatmaps_face[index]);
-                                        }}
-                                        cursor='pointer'
-                                    >
-                                        {index}
-                                    </Button>
-                                ))}
-                            </Flex>   
-                            : null
-                        }
-                    </Flex>
-                    <div style={{ height: '18em', width: '100%' }} marginLeft='1em' marginRight='1em'>
+                            {discartedIndexes.includes(selectedIndex) ? t('common.recovery_frame') : t('common.discard_frame')}
+                        </button>
+                    </div>
+
+                    {discartedIndexes.length > 0 && (
+                        <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-2">
+                            <span className="text-gray-500 text-xs font-bold uppercase whitespace-nowrap">{discartedIndexes.length} Discarded:</span>
+                            {discartedIndexes.sort((a, b) => a - b).map((index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => {
+                                        setSelectedIndex(index);
+                                    }}
+                                    className="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-900 border border-red-900 text-red-500 text-xs flex items-center justify-center hover:bg-red-900 transition-colors"
+                                >
+                                    {index}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className="h-[20em] w-full bg-gray-900/50 rounded-2xl p-2 border border-gray-700">
                     <ResponsiveLine
                         data={lineChartData}
-                        margin={{ top: 20, right: 50, bottom: 70, left: 50 }}
+                        margin={{ top: 20, right: 40, bottom: 60, left: 60 }}
                         xScale={{ type: 'linear', min: 'auto', max: 'auto' }}
-                        yScale={{ type: 'linear', min: 0, max: 1, stacked: true }}
-                        yFormat=" >-.2f"
+                        yScale={{ type: 'linear', min: 0, max: 1 }}
                         axisBottom={{
-                            tickSize: 5,
-                            tickPadding: 5,
-                            tickRotation: 0,
-                            legend: 'Número de frame',
-                            legendOffset: 36,
+                            legend: t('common.frame_number'),
+                            legendOffset: 45,
                             legendPosition: 'middle',
-                            truncateTickAt: 0
+                            tickSize: 5,
+                            tickPadding: 10,
+                            tickRotation: 0,
                         }}
                         axisLeft={{
-                            tickSize: 5,
-                            tickPadding: 5,
-                            tickRotation: 0,
-                            legend: '% Fake',
-                            legendOffset: -40,
+                            legend: t('common.fake_probability'),
+                            legendOffset: -50,
                             legendPosition: 'middle',
-                            truncateTickAt: 0
+                            tickSize: 5,
+                            tickPadding: 10,
                         }}
-                        enableTouchCrosshair={true}
-                        useMesh={true}
+                        theme={{
+                            axis: {
+                                legend: { text: { fill: '#94a3b8', fontWeight: 600 } },
+                                ticks: { text: { fill: '#64748b' } }
+                            },
+                            grid: { line: { stroke: '#334155', strokeWidth: 1 } },
+                            tooltip: { container: { background: '#1f2937', color: '#fff' } }
+                        }}
+                        colors={['#ef4444']}
+                        lineWidth={3}
+                        enablePoints={true}
+                        pointSize={8}
+                        pointColor="#ef4444"
                         pointBorderWidth={2}
-                        pointBorderColor={{ from: 'serieColor' }}
-                        colors={{ scheme: 'set1' }}
-                        curve="monotoneX"
-                        onClick={(point) => {
-                            const index = point.data.x;
-                            setSelectedIndex(index); // Set the selected index
-                            setVideoFrameSrc(data?.videoFrames[index]);
-                            setProcessedFrameSrc(data?.processedFrames[index]);
-                            setHeatmapFrameSrc(data?.heatmaps[index]);
-                            setHeatmapFaceFrameSrc(data?.heatmaps_face[index]);
-                        }}
+                        pointBorderColor="#1f2937"
+                        enableArea={true}
+                        areaOpacity={0.1}
+                        useMesh={true}
+                        markers={[
+                            {
+                                axis: 'x',
+                                value: selectedIndex,
+                                lineStyle: { stroke: '#ffffff', strokeWidth: 2, strokeDasharray: '4 4' },
+                                legend: t('common.current'),
+                                legendOrientation: 'vertical',
+                                textStyle: { fill: '#ffffff', fontSize: 10, fontWeight: 'bold' }
+                            },
+                            {
+                                axis: 'y',
+                                value: threshold,
+                                lineStyle: { stroke: '#a855f7', strokeWidth: 2, strokeDasharray: '4 4' },
+                                legend: `${t('common.threshold')}: ${Math.round(threshold * 100)}%`,
+                                legendPosition: 'top-left',
+                                textStyle: { fill: '#a855f7', fontSize: 10, fontWeight: 'bold' }
+                            }
+                        ]}
+                        onClick={handleChartClick}
                     />
-                    </div>
-                </Flex>
-            </Flex>
-            {/* Modal to show fullscreen image */}
-            <Modal isOpen={isOpen} onClose={onClose} isCentered size="full">
-                <ModalOverlay backdropFilter='blur(10px)'/>
-                <ModalContent background="transparent" boxShadow="none">
-                <ModalBody  display="flex" justifyContent="center" alignItems="center">
+                </div>
+            </div>
+
+            {/* Modal */}
+            {isModalOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-300"
+                    onClick={() => setIsModalOpen(false)}
+                >
+                    <button className="absolute top-6 right-6 text-white text-4xl hover:text-red-500 transition-colors">
+                        <HiXCircle />
+                    </button>
                     <img
-                    src={imageUrl}
-                    alt="Fullscreen frame"
-                    onClick={onClose}
-                    style={{
-                        height: '50em',
-                        maxWidth: '90vw',
-                        cursor: 'zoom-out'
-                    }}
+                        src={imageUrl}
+                        alt="Fullscreen frame"
+                        className="max-h-full max-w-full rounded-lg shadow-2xl transform scale-100 hover:scale-105 transition-transform duration-500 cursor-zoom-out"
                     />
-                </ModalBody>
-                </ModalContent>
-            </Modal>
-        </Flex >
+                </div>
+            )}
+        </div>
+    );
+};
+
+const StatCard = ({ label, value }) => (
+    <div className="bg-gray-900 border border-gray-700/50 p-3 rounded-xl flex flex-col items-center">
+        <span className="text-[10px] uppercase font-bold text-gray-500 mb-1">{label}</span>
+        <span className="text-lg font-black text-white">{value}</span>
+    </div>
+);
+
+const ImageLink = ({ label, src, onClick, tooltip, large, message, isError, onError }) => {
+    const { t } = useTranslation();
+    const [isReady, setIsReady] = React.useState(false);
+
+    // Reset ready state when src changes to show loader for the new image
+    React.useEffect(() => {
+        setIsReady(false);
+    }, [src]);
+
+    const showLoader = (isError || !isReady) && !message;
+
+    return (
+        <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-1">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{label}</span>
+                {tooltip && (
+                    <div className="group relative">
+                        <HiOutlineInformationCircle className="text-gray-600 cursor-help" />
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900 border border-gray-700 rounded-lg text-[10px] text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-2xl">
+                            {tooltip}
+                        </div>
+                    </div>
+                )}
+            </div>
+            <div
+                className={`relative overflow-hidden rounded-xl border-2 border-transparent ${(!message && !showLoader) ? 'hover:border-blue-500 cursor-zoom-in' : ''} transition-all group bg-black/50 ${large ? 'h-48 md:h-72' : 'h-24 md:h-32'} flex items-center justify-center`}
+                onClick={() => !message && !showLoader && onClick(src)}
+            >
+                {message ? (
+                    <p className="text-[10px] text-gray-500 font-medium px-4 text-center italic">{message}</p>
+                ) : (
+                    <>
+                        {showLoader && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gray-800/50 backdrop-blur-sm z-10 animate-in fade-in duration-300">
+                                <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase animate-pulse">{t('common.generating_visualizations')}</p>
+                            </div>
+                        )}
+                        <img
+                            src={src}
+                            alt={label}
+                            className={`w-full h-full object-contain transition-all duration-500 group-hover:scale-110 ${!isReady ? 'opacity-0' : 'opacity-100'}`}
+                            onLoad={() => setIsReady(true)}
+                            onError={(e) => {
+                                setIsReady(false);
+                                if (onError) onError(e);
+                            }}
+                        />
+                        {!showLoader && <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                    </>
+                )}
+            </div>
+        </div>
     );
 };
 
