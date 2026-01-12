@@ -3,8 +3,8 @@ tensorflow==2.15.0.post1
 pandas==2.1.1
 numpy==1.23.5
 flask==2.3.2  # Compatible Flask version
-flask-cors==3.0.10  # Added to handle CORS
-Pillow==10.0.0  # Added to handle images
+flask-cors==6.0.0  # Added to handle CORS
+Pillow==10.3.0  # Added to handle images
 scikit-learn==1.2.2  # Compatible version of scikit-learn
 apscheduler
 python-dotenv
