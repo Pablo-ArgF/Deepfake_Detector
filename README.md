@@ -62,9 +62,20 @@ Para poder ejecutar este proyecto, es necesario tener **Docker** instalado en tu
    ```
 2. En el directorio raíz del repositorio, ejecuta el siguiente comando para construir y levantar los contenedores de Docker:
    ```bash
-   docker-compose up --build
+   sudo docker compose up --build
    ```
-3. Una vez que el contenedor esté corriendo, la aplicación estará disponible y podrás interactuar con ella accediendo a http://localhost
+   El frontend se compila dentro de la imagen de Nginx y el resultado queda
+   cacheado por Docker. Así, los siguientes arranques no vuelven a ejecutar
+   `npm ci`; solo se descargan dependencias si cambia el manifiesto del
+   frontend.
+
+   Si aparece `EAI_AGAIN registry.npmjs.org`, el servidor no ha podido
+   resolver temporalmente el DNS. Comprueba desde el servidor que
+   `getent hosts registry.npmjs.org` devuelve una dirección IP y vuelve a
+   lanzar el comando. El Dockerfile ya configura reintentos para fallos
+   transitorios; si persiste, revisa el DNS de Docker en `/etc/docker/daemon.json`
+   y reinicia Docker.
+3. Una vez que el contenedor esté corriendo, la aplicación estará disponible y podrás interactuar con ella accediendo a http://localhost:8080
 
 
 

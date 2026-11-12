@@ -1,11 +1,4 @@
 services:
-  build-frontend:
-    image: node:14-alpine
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-    command: sh -c "npm install && npm run build"
-
   backend:
     build:
       context: ./backend
@@ -27,14 +20,13 @@ services:
           memory: 2G
 
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     ports:
       - "8080:80" # Expose Nginx on port 8080
     depends_on:
-      - build-frontend
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./frontend/build:/usr/share/nginx/html # Volumen montado para servir los archivos construidos
+      - backend
     networks:
       - app-network
 networks:
