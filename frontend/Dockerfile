@@ -10,7 +10,9 @@ COPY frontend/package*.json ./
 
 # npm puede encontrarse con fallos DNS transitorios (EAI_AGAIN) en servidores.
 # Los reintentos evitan que un fallo puntual invalide todo el despliegue.
-RUN npm ci --no-audit --no-fund \
+# CRA 5 e i18next declaran rangos opcionales de TypeScript incompatibles;
+# el proyecto no contiene código TypeScript, por lo que fijamos esa resolución.
+RUN npm ci --legacy-peer-deps --no-audit --no-fund \
     --fetch-retries=5 \
     --fetch-retry-factor=2 \
     --fetch-retry-mintimeout=1000 \
